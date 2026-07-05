@@ -91,9 +91,22 @@ export default function HearingPage() {
   const canProceed = hasExtracted && unverifiedCount === 0;
 
   const handleProceed = () => {
-    // 案件データに抽出・確認結果を保存する
-    updateCase(caseId, { extractedItems: extractedData });
-    router.push(`/cases/${caseId}/rule-design`);
+    // 現在の案件情報を取得して分岐
+    const existingCase = getCaseById(caseId);
+    const isSubsidy = existingCase?.templateId === 'subsidy_v1' || existingCase?.caseType === '補助金支援';
+
+    // 案件データに抽出・確認結果と次のステータスを保存する
+    updateCase(caseId, { 
+      extractedItems: extractedData,
+      progressStatus: isSubsidy ? 'guideline_review' : 'rule_design'
+    });
+    
+    // テンプレートに応じた遷移先へ進む
+    if (isSubsidy) {
+      router.push(`/cases/${caseId}/subsidy-guideline`);
+    } else {
+      router.push(`/cases/${caseId}/rule-design`);
+    }
   };
 
   return (
