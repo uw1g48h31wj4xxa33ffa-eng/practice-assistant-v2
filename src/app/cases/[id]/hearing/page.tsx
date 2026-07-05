@@ -19,6 +19,7 @@ export default function HearingPage() {
   const [extractedData, setExtractedData] = useState<ExtractedInfo[]>([]);
   const resultsRef = useRef<HTMLDivElement>(null);
   const isManualExtractionRef = useRef(false);
+  const pendingScrollRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (hasExtracted && isManualExtractionRef.current && resultsRef.current) {
@@ -26,6 +27,17 @@ export default function HearingPage() {
       isManualExtractionRef.current = false;
     }
   }, [hasExtracted]);
+
+  useEffect(() => {
+    if (pendingScrollRef.current) {
+      const targetId = pendingScrollRef.current;
+      pendingScrollRef.current = null;
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [extractedData]);
 
   useEffect(() => {
     const existingCase = getCaseById(caseId);
@@ -83,6 +95,20 @@ export default function HearingPage() {
   };
 
   const handleStatusChange = (id: string, newStatus: VerificationStatus, newContent?: string, rejectReason?: string) => {
+    if (newStatus === 'verified') {
+      const currentIndex = extractedData.findIndex(item => item.id === id);
+      let nextUnverified = extractedData.slice(currentIndex + 1).find(item => item.status === 'unverified');
+      if (!nextUnverified) {
+        nextUnverified = extractedData.slice(0, currentIndex).find(item => item.status === 'unverified');
+      }
+      
+      if (nextUnverified) {
+        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      } else {
+        pendingScrollRef.current = 'completion-area';
+      }
+    }
+
     setExtractedData(prev => prev.map(item => {
       if (item.id === id) {
         return { 
@@ -180,7 +206,8 @@ export default function HearingPage() {
             {extractedData.map((info, idx) => (
               <div 
                 key={info.id} 
-                className="animate-[fadeIn_0.3s_ease-out_both]"
+                id={`card-${info.id}`}
+                className="animate-[fadeIn_0.3s_ease-out_both] scroll-mt-24"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <VerificationCard 
@@ -191,7 +218,7 @@ export default function HearingPage() {
             ))}
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center mt-8">
+          <div id="completion-area" className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center mt-8 scroll-mt-24">
             <h3 className="font-bold text-slate-800 mb-2">確認作業は完了しましたか？</h3>
             <p className="text-sm text-slate-500 mb-6 max-w-md">
               すべての抽出項目を確認（または修正・却下）すると、承認して次の工程（{getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? '公募要項整理' : '規程設計'}）へ進むことができます。
