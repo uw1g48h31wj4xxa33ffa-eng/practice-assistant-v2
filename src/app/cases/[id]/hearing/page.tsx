@@ -137,7 +137,7 @@ export default function HearingPage() {
           <button 
             onClick={handleStartExtraction}
             disabled={isExtracting}
-            className={`px-8 py-3 rounded-lg font-bold text-white transition-all shadow-sm ${
+            className={`w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-white transition-all shadow-sm ${
               isExtracting ? 'bg-indigo-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-md'
             }`}
           >
@@ -154,7 +154,7 @@ export default function HearingPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="flex justify-between items-end">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h2 className="text-lg font-bold text-slate-800">AIによる抽出結果</h2>
               <p className="text-sm text-slate-500">抽出された内容を確認し、正しければ「確認する」を押してください。修正も可能です。</p>
@@ -196,7 +196,7 @@ export default function HearingPage() {
             <button 
               disabled={!canProceed}
               onClick={handleProceed}
-              className={`px-8 py-3 rounded-lg font-bold transition-all ${
+              className={`w-full sm:w-auto px-8 py-3 rounded-lg font-bold transition-all ${
                 canProceed 
                   ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md' 
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'

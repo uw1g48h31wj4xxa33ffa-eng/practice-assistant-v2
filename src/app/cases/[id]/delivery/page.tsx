@@ -188,7 +188,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
 
       {/* 提出・納品前チェックリスト (AI抽出結果) */}
       <div className="space-y-4">
-        <div className="flex justify-between items-end">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
               <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
