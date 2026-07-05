@@ -85,13 +85,13 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
         <div className="flex flex-col gap-1.5 w-full md:w-auto">
           <div className="flex flex-row items-center justify-between w-full md:w-auto gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded whitespace-nowrap">
                 {item.category}
               </span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded ${pConf.color}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded whitespace-nowrap ${pConf.color}`}>
                 {pConf.label}
               </span>
-              <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded border transition-colors duration-300 ${vConf.color}`}>
+              <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded border transition-colors duration-300 whitespace-nowrap ${vConf.color}`}>
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={vConf.icon} />
                 </svg>
@@ -100,12 +100,12 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
             </div>
             
             {item.importance === 'high' && item.verificationStatus !== 'rejected' && (
-              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full flex shrink-0 items-center gap-1">
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full flex shrink-0 items-center gap-1 whitespace-nowrap">
                 重要
               </span>
             )}
           </div>
-          <h3 className={`font-bold text-base mt-1 ${item.verificationStatus === 'rejected' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+          <h3 className={`font-bold text-base mt-1 min-w-0 break-words whitespace-normal leading-relaxed ${item.verificationStatus === 'rejected' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
             {item.title}
           </h3>
           <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-100 p-2 rounded-lg mt-1 w-fit">
@@ -119,9 +119,9 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
 
       <div className="mb-4 space-y-2 text-sm text-slate-600">
         {item.aiMemo && (
-          <div className="p-2 bg-indigo-50 border border-indigo-100 rounded text-indigo-900 text-xs">
-            <span className="font-bold flex items-center gap-1 mb-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-2 bg-indigo-50 border border-indigo-100 rounded text-indigo-900 text-xs min-w-0 break-words whitespace-normal leading-relaxed">
+            <span className="font-bold flex items-center gap-1 mb-1 whitespace-nowrap w-fit">
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               AIメモ
@@ -177,9 +177,9 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
         ) : (
           <div className="space-y-2">
             {item.riskNote && item.verificationStatus !== 'rejected' && (
-              <div className="text-sm p-2 bg-amber-50 rounded border border-amber-200 text-amber-800 transition-all duration-300">
-                <span className="font-semibold text-amber-700 text-xs flex items-center gap-1 mb-1">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="text-sm p-2 bg-amber-50 rounded border border-amber-200 text-amber-800 transition-all duration-300 min-w-0 break-words whitespace-normal leading-relaxed">
+                <span className="font-semibold text-amber-700 text-xs flex items-center gap-1 mb-1 whitespace-nowrap w-fit">
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   リスク・注意点
@@ -188,8 +188,8 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
               </div>
             )}
             {item.notes && (
-              <div className={`text-sm p-2 bg-slate-50 rounded border border-slate-200 transition-all duration-300 ${item.verificationStatus === 'rejected' ? 'opacity-50' : 'text-slate-700'}`}>
-                <span className="font-semibold text-slate-500 text-xs block mb-1">メモ：</span>
+              <div className={`text-sm p-2 bg-slate-50 rounded border border-slate-200 transition-all duration-300 min-w-0 break-words whitespace-normal leading-relaxed ${item.verificationStatus === 'rejected' ? 'opacity-50' : 'text-slate-700'}`}>
+                <span className="font-semibold text-slate-500 text-xs block mb-1 whitespace-nowrap w-fit">メモ：</span>
                 {item.notes}
               </div>
             )}
@@ -232,21 +232,27 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
 
           <div className="relative flex justify-end sm:justify-start">
             {isRejecting ? (
-              <div className="absolute bottom-full right-0 mb-2 w-64 bg-white border border-slate-200 shadow-lg rounded-lg p-3 z-10 animate-[fadeIn_0.15s_ease-out]">
-                <label className="block text-xs font-bold text-slate-700 mb-1">対象外とする理由（任意）</label>
-                <input 
-                  type="text" 
-                  className="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-indigo-500 mb-2 transition-colors" 
-                  placeholder="例: スケジュール調整不要のため"
-                  value={rejectReason}
-                  onChange={e => setRejectReason(e.target.value)}
-                  autoFocus
-                />
-                <div className="flex justify-end gap-2">
-                  <button onClick={() => setIsRejecting(false)} className="text-xs text-slate-500 hover:text-slate-700 transition-colors">キャンセル</button>
-                  <button onClick={handleReject} className="text-xs bg-slate-800 text-white px-3 py-1 rounded hover:bg-slate-900 transition-colors">対象外にする</button>
+              <>
+                {/* スマホ用背景オーバーレイ */}
+                <div className="fixed inset-0 bg-slate-900/20 z-[60] sm:hidden" onClick={() => setIsRejecting(false)} />
+                {/* ポップアップ本体 */}
+                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm bg-white border border-slate-200 shadow-xl rounded-xl p-5 z-[70] animate-[fadeIn_0.15s_ease-out]
+                                sm:absolute sm:top-auto sm:left-auto sm:bottom-full sm:right-0 sm:transform-none sm:w-64 sm:shadow-lg sm:rounded-lg sm:p-3 sm:mb-2 sm:z-10">
+                  <label className="block text-sm sm:text-xs font-bold text-slate-700 mb-2 sm:mb-1">対象外とする理由（任意）</label>
+                  <input 
+                    type="text" 
+                    className="w-full text-base sm:text-xs border border-slate-300 rounded p-3 sm:p-2 focus:ring-2 focus:ring-indigo-500 mb-4 sm:mb-2 transition-colors" 
+                    placeholder="例: スケジュール調整不要のため"
+                    value={rejectReason}
+                    onChange={e => setRejectReason(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-2">
+                    <button onClick={() => setIsRejecting(false)} className="w-full sm:w-auto text-sm sm:text-xs py-2 sm:px-3 sm:py-1.5 font-medium text-slate-600 border border-slate-300 sm:border-transparent sm:text-slate-500 rounded-lg sm:rounded hover:bg-slate-50 sm:hover:bg-transparent sm:hover:text-slate-700 transition-colors">キャンセル</button>
+                    <button onClick={handleReject} className="w-full sm:w-auto text-sm sm:text-xs font-medium bg-slate-800 text-white py-2 sm:px-3 sm:py-1.5 rounded-lg sm:rounded hover:bg-slate-900 transition-colors">対象外にする</button>
+                  </div>
                 </div>
-              </div>
+              </>
             ) : (
               <button 
                 onClick={() => {
