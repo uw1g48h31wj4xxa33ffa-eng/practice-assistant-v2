@@ -150,11 +150,11 @@ export default function AIEvidencePage() {
             </Link>
             <h1 className="text-2xl font-bold text-slate-800">AI検証・エビデンス</h1>
           </div>
-          <div className="text-sm text-slate-600 mt-1 flex items-center gap-3">
+          <div className="text-sm text-slate-600 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="font-semibold text-slate-800">{caseData.title}</span>
-            <span className="text-slate-300">|</span>
+            <span className="text-slate-300 hidden sm:inline">|</span>
             <span>顧問先: {caseData.clientName}</span>
-            <span className="text-slate-300">|</span>
+            <span className="text-slate-300 hidden sm:inline">|</span>
             <span>担当者: {caseData.assignee}</span>
           </div>
         </div>

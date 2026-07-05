@@ -50,34 +50,34 @@ export default function RuleDesignPage() {
 
       {extracted.length > 0 && (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <span className="text-sm font-bold text-slate-700 block mb-1">前工程からの引き継ぎデータ</span>
               <span className="text-xs text-slate-500">ヒアリング結果 {extracted.length} 件確認完了</span>
             </div>
-            <div className="flex gap-4 text-sm font-medium">
-              <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">確認済 {verifiedCount}件</span>
-              <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">修正済 {modifiedCount}件</span>
-              <span className="text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">却下 {rejectedCount}件</span>
+            <div className="flex flex-wrap gap-2 sm:gap-4 text-sm font-medium">
+              <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 whitespace-nowrap">確認済 {verifiedCount}件</span>
+              <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 whitespace-nowrap">修正済 {modifiedCount}件</span>
+              <span className="text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap">却下 {rejectedCount}件</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-6 pt-4 border-t border-slate-200 text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 pt-4 border-t border-slate-200 text-sm">
             <span className="text-slate-600 font-medium">カテゴリ別（AI送信対象）:</span>
-            <div className="flex gap-4 text-slate-700">
-              <div className="flex items-center gap-1">
+            <div className="flex flex-wrap gap-3 sm:gap-4 text-slate-700">
+              <div className="flex items-center gap-1 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
                 <span>事実関係: <strong>{factCount}</strong></span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                 <span>論点: <strong>{issueCount}</strong></span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-red-500"></span>
                 <span>リスク: <strong>{riskCount}</strong></span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-slate-500"></span>
                 <span>不足情報: <strong>{missingCount}</strong></span>
               </div>

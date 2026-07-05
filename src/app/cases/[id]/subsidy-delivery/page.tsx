@@ -156,7 +156,7 @@ export default function SubsidyDeliveryPage({ params }: { params: Promise<{ id: 
       {/* 案件情報サマリー */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6">
         <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">案件情報サマリー</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
           <div>
             <div className="text-slate-400 mb-1">案件名</div>
             <div className="font-bold text-slate-700">{initialCase.title}</div>
@@ -285,17 +285,17 @@ export default function SubsidyDeliveryPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end mt-2 lg:mt-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end mt-2 lg:mt-0 w-full lg:w-auto">
           <button 
             onClick={handleSaveDraft}
-            className="inline-flex h-12 min-w-[120px] items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition-soft hover:bg-slate-50"
+            className="inline-flex h-12 w-full sm:w-auto sm:min-w-[120px] items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition-soft hover:bg-slate-50"
           >
             一時保存
           </button>
           <button 
             onClick={handleSaveAndNext}
             disabled={!isAllVerified}
-            className="inline-flex h-12 min-w-[240px] items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-soft hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none gap-2 whitespace-nowrap"
+            className="inline-flex h-12 w-full sm:w-auto sm:min-w-[240px] items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-soft hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none gap-2 whitespace-nowrap"
           >
             納品・提出準備を完了する
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
