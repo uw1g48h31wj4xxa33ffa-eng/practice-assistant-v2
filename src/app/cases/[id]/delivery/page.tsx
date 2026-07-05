@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from 'react';
+import React, { useState, use, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
@@ -31,6 +31,19 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
     return mockLaborDeliveryItems;
   });
 
+  const pendingScrollRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingScrollRef.current) {
+      const targetId = pendingScrollRef.current;
+      pendingScrollRef.current = null;
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [items]);
+
   const handleStatusChange = (
     id: string, 
     newVerificationStatus: DeliveryVerificationStatus, 
@@ -38,6 +51,20 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
     newNotes?: string, 
     newCautionNote?: string
   ) => {
+    if (newVerificationStatus === 'verified') {
+      const currentIndex = items.findIndex(item => item.id === id);
+      let nextUnverified = items.slice(currentIndex + 1).find(item => item.verificationStatus === 'unverified');
+      if (!nextUnverified) {
+        nextUnverified = items.slice(0, currentIndex).find(item => item.verificationStatus === 'unverified');
+      }
+      
+      if (nextUnverified) {
+        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      } else {
+        pendingScrollRef.current = 'completion-area';
+      }
+    }
+
     setItems(prev => prev.map(item => {
       if (item.id === id) {
         return {
@@ -205,11 +232,12 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map(item => (
-            <DeliveryVerificationCard 
-              key={item.id} 
-              item={item} 
-              onStatusChange={handleStatusChange} 
-            />
+            <div key={item.id} id={`card-${item.id}`} className="scroll-mt-24">
+              <DeliveryVerificationCard 
+                item={item} 
+                onStatusChange={handleStatusChange} 
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -245,7 +273,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
       </div>
 
       {/* 完了アクション */}
-      <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 mt-8 lg:flex-row lg:items-center lg:justify-between">
+      <div id="completion-area" className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 mt-8 lg:flex-row lg:items-center lg:justify-between scroll-mt-24">
         <div className="space-y-2">
           <div className="text-sm font-semibold text-slate-700">
             確認状況：{verifiedCount} / {items.length} 項目完了

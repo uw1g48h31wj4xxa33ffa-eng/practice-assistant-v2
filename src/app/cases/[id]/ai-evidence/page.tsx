@@ -113,7 +113,35 @@ export default function AIEvidencePage() {
     setNewEvidence({ sourceType: '官公庁', title: '', url: '', summary: '', isVerifiedByHuman: false });
   };
 
+  const pendingScrollRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingScrollRef.current) {
+      const targetId = pendingScrollRef.current;
+      pendingScrollRef.current = null;
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [evidenceItems]);
+
   const toggleEvidenceVerification = (id: string) => {
+    const itemToToggle = evidenceItems.find(item => item.id === id);
+    if (itemToToggle && !itemToToggle.isVerifiedByHuman) {
+      const currentIndex = evidenceItems.findIndex(item => item.id === id);
+      let nextUnverified = evidenceItems.slice(currentIndex + 1).find(item => !item.isVerifiedByHuman);
+      if (!nextUnverified) {
+        nextUnverified = evidenceItems.slice(0, currentIndex).find(item => !item.isVerifiedByHuman);
+      }
+      
+      if (nextUnverified) {
+        pendingScrollRef.current = `evidence-${nextUnverified.id}`;
+      } else {
+        pendingScrollRef.current = 'review-area';
+      }
+    }
+
     setEvidenceItems(prev => prev.map(item => 
       item.id === id ? { ...item, isVerifiedByHuman: !item.isVerifiedByHuman } : item
     ));
@@ -231,7 +259,7 @@ export default function AIEvidencePage() {
               ) : (
                 <div className="space-y-3">
                   {evidenceItems.map(item => (
-                    <div key={item.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative group">
+                    <div key={item.id} id={`evidence-${item.id}`} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative group scroll-mt-24">
                       <button onClick={() => removeEvidence(item.id)} className="absolute top-2 right-2 text-slate-300 hover:text-red-500 hidden group-hover:block">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
@@ -333,7 +361,7 @@ export default function AIEvidencePage() {
       </div>
 
       {/* レビュー＆最終判断 */}
-      <div className="bg-slate-800 rounded-xl shadow-sm overflow-hidden text-white mt-8">
+      <div id="review-area" className="bg-slate-800 rounded-xl shadow-sm overflow-hidden text-white mt-8 scroll-mt-24">
         <div className="px-6 py-4 border-b border-slate-700">
           <h2 className="font-bold text-lg">4. 内容確認・承認</h2>
           <p className="text-xs text-slate-400 mt-1">※AI回答をそのまま納品せず、必ず専門家が内容を吟味して採用可否を判断してください。</p>
