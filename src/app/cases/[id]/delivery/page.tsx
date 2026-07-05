@@ -99,7 +99,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-emerald-800 mb-2">この案件は全工程が完了しています</h2>
+          <h2 className="text-2xl font-bold text-emerald-800 mb-2">この案件は<br className="sm:hidden" />全工程が完了しています</h2>
           <p className="text-emerald-600 mb-8 max-w-lg mx-auto">
             すべての業務工程が完了し、最終確認が完了済みです。
           </p>
@@ -271,9 +271,9 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
           <button 
             onClick={handleSaveAndNext}
             disabled={!isAllVerified}
-            className="inline-flex h-12 w-full sm:w-auto sm:min-w-[240px] items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-soft hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none gap-2 whitespace-nowrap"
+            className="inline-flex h-12 w-full sm:w-auto sm:min-w-[240px] items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-soft hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none gap-2 sm:whitespace-nowrap"
           >
-            納品工程を完了する
+            納品工程を<br className="sm:hidden" />完了する
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>

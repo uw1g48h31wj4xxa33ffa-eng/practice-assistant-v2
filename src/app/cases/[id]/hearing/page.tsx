@@ -130,7 +130,7 @@ export default function HearingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002 2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-slate-800 mb-2">過去データの取り込みとAI抽出</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">過去データの取り込み<br className="sm:hidden" /><span className="hidden sm:inline">と</span>AI抽出</h2>
           <p className="text-slate-500 mb-8 max-w-lg mx-auto">
             ヒアリングのメモや関連資料を読み込み、AIが自動で事実関係、論点、リスクを抽出します。あなたは抽出された結果を「確認」「修正」するだけで作業が完了します。
           </p>
@@ -202,7 +202,7 @@ export default function HearingPage() {
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
             >
-              {getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? '確認結果を承認して公募要項整理へ進む' : '確認結果を承認して規程設計へ進む'}
+              {getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? <>確認結果を承認して<br className="sm:hidden" />公募要項整理へ進む</> : <>確認結果を承認して<br className="sm:hidden" />規程設計へ進む</>}
             </button>
           </div>
         </div>
