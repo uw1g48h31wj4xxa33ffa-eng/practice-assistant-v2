@@ -81,10 +81,10 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
       } ${item.verificationStatus === 'unverified' ? 'border-rose-200 ring-1 ring-rose-100' : 'border-slate-200'}`}
       style={style}
     >
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex flex-col gap-1.5 w-full">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2 mb-3">
+        <div className="flex flex-col gap-1.5 w-full md:w-auto">
+          <div className="flex flex-row items-center justify-between w-full md:w-auto gap-4">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                 {item.category}
               </span>
@@ -92,7 +92,7 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
                 {pConf.label}
               </span>
               <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded border transition-colors duration-300 ${vConf.color}`}>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={vConf.icon} />
                 </svg>
                 {vConf.label}
@@ -100,7 +100,7 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
             </div>
             
             {item.importance === 'high' && item.verificationStatus !== 'rejected' && (
-              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full flex shrink-0 items-center gap-1">
                 重要
               </span>
             )}
@@ -109,7 +109,7 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
             {item.title}
           </h3>
           <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-100 p-2 rounded-lg mt-1 w-fit">
-            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             {item.dueDate}
@@ -198,17 +198,17 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
       </div>
 
       {!isEditing && (
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-100">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button 
               onClick={handleVerify}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 ${
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto ${
                 item.verificationStatus === 'verified' 
                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm hover:shadow'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               {item.verificationStatus === 'verified' ? '確認済' : item.verificationStatus === 'modified' ? '再確認する' : '確認する'}
@@ -222,7 +222,7 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
                   onStatusChange(item.id, 'unverified');
                 }
               }}
-              className={`px-4 py-2 bg-white border text-sm font-bold rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${
+              className={`px-4 py-2 bg-white border text-sm font-bold rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm w-full sm:w-auto text-center ${
                 item.verificationStatus === 'modified' ? 'border-blue-300 text-blue-700 bg-blue-50' : 'border-slate-300 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -230,7 +230,7 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
             </button>
           </div>
 
-          <div className="relative">
+          <div className="relative flex justify-end sm:justify-start">
             {isRejecting ? (
               <div className="absolute bottom-full right-0 mb-2 w-64 bg-white border border-slate-200 shadow-lg rounded-lg p-3 z-10 animate-[fadeIn_0.15s_ease-out]">
                 <label className="block text-xs font-bold text-slate-700 mb-1">対象外とする理由（任意）</label>
