@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
@@ -17,6 +17,15 @@ export default function HearingPage() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [hasExtracted, setHasExtracted] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedInfo[]>([]);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const isManualExtractionRef = useRef(false);
+
+  useEffect(() => {
+    if (hasExtracted && isManualExtractionRef.current && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      isManualExtractionRef.current = false;
+    }
+  }, [hasExtracted]);
 
   useEffect(() => {
     const existingCase = getCaseById(caseId);
@@ -31,6 +40,7 @@ export default function HearingPage() {
 
   const handleStartExtraction = () => {
     setIsExtracting(true);
+    isManualExtractionRef.current = true;
     // Simulate AI extraction delay
     setTimeout(() => {
       setExtractedData([
@@ -153,7 +163,7 @@ export default function HearingPage() {
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div ref={resultsRef} className="space-y-6 scroll-mt-24">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h2 className="text-lg font-bold text-slate-800">AIによる抽出結果</h2>
