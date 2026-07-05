@@ -184,7 +184,7 @@ export default function HearingPage() {
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center mt-8">
             <h3 className="font-bold text-slate-800 mb-2">確認作業は完了しましたか？</h3>
             <p className="text-sm text-slate-500 mb-6 max-w-md">
-              すべての抽出項目を確認（または修正・却下）すると、承認して次の工程（規程設計）へ進むことができます。
+              すべての抽出項目を確認（または修正・却下）すると、承認して次の工程（{getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? '公募要項整理' : '規程設計'}）へ進むことができます。
             </p>
             
             {rejectedCount > 0 && (
@@ -202,7 +202,7 @@ export default function HearingPage() {
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
             >
-              確認結果を承認して規程設計へ進む
+              {getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? '確認結果を承認して公募要項整理へ進む' : '確認結果を承認して規程設計へ進む'}
             </button>
           </div>
         </div>
