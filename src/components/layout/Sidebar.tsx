@@ -16,7 +16,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-slate-800 text-white min-h-screen flex flex-col shrink-0">
+    <aside className="hidden md:flex w-64 bg-slate-800 text-white min-h-screen flex-col shrink-0">
       <div className="p-4 border-b border-slate-700">
         <h1 className="text-xl font-bold leading-tight">Practice Assistant V2</h1>
         <p className="text-xs text-slate-400 mt-1">士業業務アシスタント</p>
