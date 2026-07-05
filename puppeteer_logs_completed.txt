@@ -1,3 +1,0 @@
-
-=== TESTING COMPLETED STATE ===
-CATCH: Navigation timeout of 30000 ms exceeded
