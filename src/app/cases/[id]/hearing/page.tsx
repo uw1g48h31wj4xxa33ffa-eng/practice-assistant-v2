@@ -202,7 +202,7 @@ export default function HearingPage() {
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
             >
-              {getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? <>確認結果を承認して<br className="sm:hidden" />公募要項整理へ進む</> : <>確認結果を承認して<br className="sm:hidden" />規程設計へ進む</>}
+              {getCaseById(caseId)?.templateId === 'subsidy_v1' || getCaseById(caseId)?.caseType === '補助金支援' ? '公募要項整理へ進む' : '規程設計へ進む'}
             </button>
           </div>
         </div>
