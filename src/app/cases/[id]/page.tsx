@@ -105,17 +105,17 @@ export default function CaseDetailPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-soft-enter">
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/cases" className="text-slate-500 hover:text-indigo-600 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3 md:gap-4">
+          <Link href="/cases" className="text-slate-500 hover:text-indigo-600 transition-colors mt-1 sm:mt-0 shrink-0">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </Link>
-          <h1 className="text-2xl font-bold text-slate-800">{initialCase?.title}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-800 break-all">{initialCase?.title}</h1>
         </div>
-        <div className="flex gap-3">
-          <Link href={`/cases/${caseId}/edit`} className="px-4 py-2 border border-slate-300 text-slate-700 bg-white rounded-lg font-medium hover:bg-slate-50 text-sm inline-block transition-soft hover-lift">
+        <div className="flex w-full sm:w-auto">
+          <Link href={`/cases/${caseId}/edit`} className="w-full sm:w-auto px-4 py-2 border border-slate-300 text-slate-700 bg-white rounded-lg font-medium hover:bg-slate-50 text-sm inline-block text-center transition-soft hover-lift">
             案件情報を編集
           </Link>
         </div>
@@ -148,7 +148,7 @@ export default function CaseDetailPage() {
                     step.status === 'completed' ? 'bg-slate-50 border-slate-200' :
                     step.status === 'current' ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 
                     'bg-white border-dashed border-slate-200'
-                  } flex justify-between items-center transition-soft hover-lift`}
+                  } flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 transition-soft hover-lift`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
@@ -159,21 +159,21 @@ export default function CaseDetailPage() {
                       {step.status === 'completed' ? '✓' : step.order}
                     </div>
                     <div>
-                      <h3 className={`font-bold flex items-center gap-2 ${step.status === 'current' ? 'text-indigo-900' : 'text-slate-700'}`}>
+                      <h3 className={`font-bold flex flex-wrap items-center gap-1.5 md:gap-2 ${step.status === 'current' ? 'text-indigo-900' : 'text-slate-700'}`}>
                         {step.title}
-                        {step.status === 'completed' && <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-sm">完了</span>}
-                        {step.status === 'current' && <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-sm">現在の工程</span>}
-                        {step.status === 'upcoming' && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-sm border border-slate-200">未着手</span>}
+                        {step.status === 'completed' && <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-sm whitespace-nowrap">完了</span>}
+                        {step.status === 'current' && <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-sm whitespace-nowrap">現在の工程</span>}
+                        {step.status === 'upcoming' && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-sm border border-slate-200 whitespace-nowrap">未着手</span>}
                       </h3>
-                      <p className="text-sm text-slate-500">{step.shortDescription || step.description}</p>
+                      <p className="text-sm text-slate-500 mt-1">{step.shortDescription || step.description}</p>
                     </div>
                   </div>
                   {step.href ? (
-                    <Link href={step.href} className="px-4 py-2 bg-indigo-600 text-white rounded font-medium text-sm hover:bg-indigo-700 transition-soft hover-lift shadow-sm min-w-[72px] whitespace-nowrap text-center inline-flex items-center justify-center">
+                    <Link href={step.href} className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded font-medium text-sm hover:bg-indigo-700 transition-soft hover-lift shadow-sm min-w-[72px] whitespace-nowrap text-center inline-flex items-center justify-center">
                       開く
                     </Link>
                   ) : (
-                    <button className={`px-4 py-2 rounded-lg text-sm font-medium transition-soft min-w-[72px] whitespace-nowrap text-center inline-flex items-center justify-center ${
+                    <button className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-soft min-w-[72px] whitespace-nowrap text-center inline-flex items-center justify-center ${
                       step.status === 'current' ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover-lift shadow-sm' : 
                       'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
                     }`}>
@@ -188,15 +188,17 @@ export default function CaseDetailPage() {
 
         {/* 右側: 案件詳細・ステータス */}
         <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 transition-soft hover-lift">
-            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">確認状況</h2>
-            <HumanApprovalBadge 
-              status={reviewStatus} 
-              onChange={handleStatusChange} 
-            />
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-6 transition-soft hover-lift flex flex-col items-center md:items-start">
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 md:mb-4 text-center md:text-left w-full">確認状況</h2>
+            <div className="flex justify-center md:justify-start w-full">
+              <HumanApprovalBadge 
+                status={reviewStatus} 
+                onChange={handleStatusChange} 
+              />
+            </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4 transition-soft hover-lift">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-6 space-y-4 md:space-y-5 transition-soft hover-lift">
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">案件情報</h2>
             
             <div>
@@ -217,7 +219,7 @@ export default function CaseDetailPage() {
               <div className="font-medium text-slate-800">{initialCase?.caseType}</div>
             </div>
             
-            <div className="flex justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="text-xs text-slate-500 mb-1">納期</div>
                 <div className="font-medium text-slate-800">{initialCase?.dueDate}</div>
@@ -238,39 +240,39 @@ export default function CaseDetailPage() {
             {initialCase?.memo && (
               <div>
                 <div className="text-xs text-slate-500 mb-1">メモ</div>
-                <div className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <div className="text-sm text-slate-700 bg-slate-50 px-4 py-3 md:p-3 rounded-lg border border-slate-100">
                   {initialCase.memo}
                 </div>
               </div>
             )}
             
-            <div className="pt-2 border-t border-slate-100">
-              <div className="text-xs text-slate-400">作成日: {initialCase?.createdAt}</div>
+            <div className="pt-3 md:pt-4 border-t border-slate-100">
+              <div className="text-xs text-slate-400 text-center md:text-left">作成日: {initialCase?.createdAt}</div>
             </div>
-            
-            {/* 開発・デモ用リセットボタン */}
-            <div className="pt-6 border-t border-slate-100 mt-6">
-              <h3 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                開発・デモ用操作
-              </h3>
-              <div className="flex flex-col gap-2">
-                <button 
-                  onClick={handleMockGenerate}
-                  className="text-xs text-left px-3 py-2 text-indigo-600 bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-100 transition-colors"
-                >
-                  モックデータ再生成（各工程を初期化）
-                </button>
-                <button 
-                  onClick={handleResetData}
-                  className="text-xs text-left px-3 py-2 text-red-600 bg-red-50 border border-red-100 rounded hover:bg-red-100 transition-colors"
-                >
-                  作業データのみリセット
-                </button>
-              </div>
+          </div>
+
+          {/* 開発・デモ用リセットボタン */}
+          <div className="mt-8 pt-4">
+            <h3 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              開発・デモ用操作
+            </h3>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={handleMockGenerate}
+                className="text-xs text-left px-3 py-2 text-indigo-600 bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-100 transition-colors"
+              >
+                モックデータ再生成（各工程を初期化）
+              </button>
+              <button 
+                onClick={handleResetData}
+                className="text-xs text-left px-3 py-2 text-red-600 bg-red-50 border border-red-100 rounded hover:bg-red-100 transition-colors"
+              >
+                作業データのみリセット
+              </button>
             </div>
           </div>
         </div>
