@@ -1,0 +1,47 @@
+
+=== TESTING REGULAR CASE (DEMO) ===
+CONSOLE: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE: [HMR] connected
+Demo shows 2. 規程設計: true
+Demo DOES NOT show 公募要項整理: true
+Steps HTML:
+案件情報を編集
+✓
+1. ヒアリング
+
+現状確認・要望ヒアリングの実施
+
+開く
+2
+2. 規程設計
+
+プロンプト生成とドラフト作成
+
+開く
+3
+3. AI検証・エビデンス
+
+法改正・整合性チェック
+
+開く
+4
+4. 納品
+
+最終確認・納品資料の整理
+
+未着手
+未着手
+レビュー待ち
+担当者確認済
+専門家確認済
+納品済
+2026年法改正対応。リモートワーク規程も合わせて見直し。
+
+=== TESTING SUBSIDY CASE (NEW) ===
+CONSOLE: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE: [HMR] connected
+Detail shows 案件種別: 補助金支援: false
+Detail shows 1. ヒアリング: false
+Detail shows 2. 公募要項整理: false
+
+Has Error: false

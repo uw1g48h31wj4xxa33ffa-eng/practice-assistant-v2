@@ -1,0 +1,3 @@
+
+=== TESTING NEW CASE (Empty validationRecord) ===
+CATCH: net::ERR_ABORTED at http://localhost:3000/cases/case_1782955485351/ai-evidence

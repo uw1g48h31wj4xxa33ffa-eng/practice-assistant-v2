@@ -1,0 +1,13 @@
+CONSOLE: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE: [HMR] connected
+
+=== TESTING NEW CASE ===
+CONSOLE: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE: [HMR] connected
+H1: Practice Assistant V2
+
+=== TESTING DEMO CASE ===
+CONSOLE: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+CONSOLE: [HMR] connected
+H1: Practice Assistant V2
+Summary UI Present: false

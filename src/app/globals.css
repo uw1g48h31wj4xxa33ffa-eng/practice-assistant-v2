@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes softEnter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-soft-enter {
+  animation: softEnter 200ms ease-out forwards;
+}
+
+.transition-soft {
+  transition: all 150ms ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  transition: transform 150ms ease-out;
+}
+
+.status-transition {
+  transition: background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-soft-enter,
+  .transition-soft,
+  .hover-lift,
+  .status-transition {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
