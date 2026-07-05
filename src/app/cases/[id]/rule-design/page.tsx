@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
@@ -15,6 +15,13 @@ export default function RuleDesignPage() {
 
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [selectedTask, setSelectedTask] = useState<AITaskTemplate | null>(null);
+  const guidanceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedTask) {
+      guidanceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedTask?.id]);
 
   useEffect(() => {
     const existingCase = getCaseById(caseId);
@@ -93,7 +100,7 @@ export default function RuleDesignPage() {
         />
         
         {selectedTask && caseData && (
-          <div className="mt-8 pt-8 border-t border-slate-200">
+          <div ref={guidanceRef} className="mt-8 pt-8 border-t border-slate-200 scroll-mt-24">
             <TaskGuidance task={selectedTask} caseData={caseData} />
           </div>
         )}
