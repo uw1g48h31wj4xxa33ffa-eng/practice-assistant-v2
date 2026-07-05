@@ -43,27 +43,27 @@ export default function Dashboard() {
   }, [cases, isLoaded]);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="max-w-5xl mx-auto space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-800">ダッシュボード</h1>
-        <Link href="/cases/new" className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+        <Link href="/cases/new" className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors text-center w-full sm:w-auto">
           ＋ 新規案件作成
         </Link>
       </div>
 
       <Disclaimer />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <div className="md:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h2 className="text-lg font-semibold text-slate-700">進行中の案件（最近の更新）</h2>
+          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 bg-slate-50">
+            <h2 className="text-base md:text-lg font-semibold text-slate-700">進行中の案件（最近の更新）</h2>
             <Link href="/cases" className="text-sm text-indigo-600 hover:underline font-medium">すべて見る →</Link>
           </div>
           <div className="divide-y divide-slate-100">
             {cases.slice(0, 3).map((c) => (
               <div key={c.id} className="p-4 hover:bg-slate-50 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
                       {c.clientName}
                     </span>
@@ -76,7 +76,7 @@ export default function Dashboard() {
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500 font-medium">納期: {c.dueDate}</div>
+                  <div className="text-xs text-slate-500 font-medium whitespace-nowrap">納期: {c.dueDate}</div>
                 </div>
                 <Link href={`/cases/${c.id}`} className="block">
                   <h3 className="font-bold text-slate-800 hover:text-indigo-600 transition-colors text-lg mb-1">{c.title}</h3>

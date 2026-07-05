@@ -15,7 +15,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white border-b border-slate-200 h-16 flex items-center px-4 md:px-6 shrink-0 justify-between relative z-50">
+    <header className="sticky top-0 bg-white border-b border-slate-200 h-16 flex items-center px-4 md:px-6 shrink-0 justify-between z-50">
       <div className="flex items-center gap-3">
         {/* スマホ用メニュー開閉ボタン (md未満のみ表示) */}
         <button 
