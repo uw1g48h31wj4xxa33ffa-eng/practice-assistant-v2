@@ -410,7 +410,7 @@ export default function AIEvidencePage() {
       </div>
 
       {/* 下部アクション：詳細画面へ戻る */}
-      <div className="pt-8 flex justify-end mt-8">
+      <div className="pt-8 flex justify-center sm:justify-end mt-8">
         <Link 
           href={`/cases/${caseId}`}
           className="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-soft hover-lift shadow-sm"
