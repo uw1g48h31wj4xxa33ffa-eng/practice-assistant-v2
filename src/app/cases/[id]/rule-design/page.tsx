@@ -106,7 +106,7 @@ export default function RuleDesignPage() {
         )}
       </div>
       
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-center sm:justify-end pt-4">
         <Link href={`/cases/${caseId}`} className="px-6 py-2 border border-slate-300 text-slate-700 bg-white rounded-lg font-medium hover:bg-slate-50 transition-colors">
           詳細画面へ戻る
         </Link>
