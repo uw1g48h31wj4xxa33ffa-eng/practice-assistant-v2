@@ -94,7 +94,7 @@ export default function WorkflowPlaceholderPage({ params }: { params: Promise<{ 
           >
             {nextStep ? (
               <>
-                完了して次工程へ進む
+                次の工程へ進む
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
