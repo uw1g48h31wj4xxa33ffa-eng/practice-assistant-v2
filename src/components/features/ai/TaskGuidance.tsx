@@ -192,18 +192,18 @@ export default function TaskGuidance({ task, caseData }: TaskGuidanceProps) {
               setIsPromptEdited(true);
             }}
           />
-          <div className="flex justify-end mt-3 gap-3">
+          <div className="flex flex-col sm:flex-row justify-end mt-3 gap-3 sm:gap-4">
             <button 
               onClick={() => {
                 setEditablePrompt(generatedPrompt);
                 setIsPromptEdited(false);
               }}
-              className="px-4 py-2 border border-slate-300 text-slate-700 rounded font-medium text-sm hover:bg-slate-50 transition-colors"
+              className="px-4 sm:px-6 py-3 w-full sm:w-auto border border-slate-300 text-slate-700 rounded font-medium text-sm sm:text-base hover:bg-slate-50 transition-colors whitespace-nowrap text-center"
             >
-              自動生成内容に戻す
+              内容を戻す
             </button>
-            <button className="px-4 py-2 bg-indigo-600 text-white rounded font-medium text-sm hover:bg-indigo-700 transition-colors">
-              プロンプトをコピーしてAIツールを開く
+            <button className="px-4 sm:px-6 py-3 w-full sm:w-auto bg-indigo-600 text-white rounded font-medium text-sm sm:text-base hover:bg-indigo-700 transition-colors whitespace-nowrap text-center">
+              AIツールを開く
             </button>
           </div>
         </div>
