@@ -131,7 +131,7 @@ export default function SubsidyDeliveryPage({ params }: { params: Promise<{ id: 
   if (initialCase.progressStatus === 'completed' && !showCompletedContent) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-soft-enter">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-6 pt-4 md:pt-0">
           <Link href={`/cases/${caseId}`} className="text-slate-500 hover:text-indigo-600 transition-colors">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -182,7 +182,7 @@ export default function SubsidyDeliveryPage({ params }: { params: Promise<{ id: 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-soft-enter flex flex-col md:block">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4 order-1 md:order-none">
+      <div className="flex items-center justify-between mb-4 pt-4 md:pt-0 order-1 md:order-none">
         <div className="flex items-center gap-4">
           <Link href={`/cases/${caseId}`} className="text-slate-500 hover:text-indigo-600 transition-colors">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
