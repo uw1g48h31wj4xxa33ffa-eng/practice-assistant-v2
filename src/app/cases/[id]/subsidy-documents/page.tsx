@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
 import DocumentVerificationCard from '@/components/features/ai/DocumentVerificationCard';
+import CompletionActionArea from '@/components/ui/CompletionActionArea';
 import { SubsidyDocumentItem, VerificationStatus, DocumentPreparationStatus } from '@/types';
 
 const mockDocumentItems: SubsidyDocumentItem[] = [
@@ -250,41 +251,20 @@ export default function SubsidyDocumentsPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* 完了アクション */}
-      <div id="completion-area" className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 mt-8 lg:flex-row lg:items-center lg:justify-between scroll-mt-24 order-5 md:order-none">
-        <div className="space-y-2">
-          <div className="text-sm font-semibold text-slate-700">
-            確認状況：{verifiedCount} / {items.length} 資料完了
-          </div>
-          <div className="text-sm text-slate-500">
-            {!isAllVerified 
-              ? `残り${items.length - verifiedCount}資料の準備状況を確認すると次工程へ進めます`
-              : 'すべての資料の確認が完了しました'
-            }
-          </div>
-          <div className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mt-1">
-            次工程：スケジュール管理
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end mt-2 lg:mt-0 w-full lg:w-auto">
-          <button 
-            onClick={handleSaveDraft}
-            className="inline-flex h-12 w-full sm:w-auto sm:min-w-[120px] items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition-soft hover:bg-slate-50"
-          >
-            一時保存
-          </button>
-          <button 
-            onClick={handleSaveAndNext}
-            disabled={!isAllVerified}
-            className="inline-flex h-12 w-full sm:w-auto sm:min-w-[240px] items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition-soft hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none gap-2 whitespace-nowrap"
-          >
-            次の工程へ進む
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      <CompletionActionArea
+        verifiedCount={verifiedCount}
+        totalCount={items.length}
+        isAllVerified={isAllVerified}
+        progressMessage={!isAllVerified 
+          ? `残り${items.length - verifiedCount}資料の準備状況を確認すると次工程へ進めます`
+          : 'すべての資料の確認が完了しました'
+        }
+        nextStepLabel="次工程：スケジュール管理"
+        primaryLabel="次の工程へ進む"
+        onSaveDraft={handleSaveDraft}
+        onProceed={handleSaveAndNext}
+        itemUnit="資料"
+      />
     </div>
   );
 }
