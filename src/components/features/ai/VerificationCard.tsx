@@ -57,8 +57,8 @@ export default function VerificationCard({ info, onStatusChange, style }: Verifi
 
   return (
     <div 
-      className={`border rounded-xl p-4 transition-all duration-300 ease-out transform ${
-        info.status === 'rejected' ? 'bg-slate-50 opacity-75' : 'bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5'
+      className={`border rounded-xl p-4 transition-all duration-300 ease-out ${
+        info.status === 'rejected' ? 'bg-slate-50 opacity-75' : 'bg-white shadow-sm hover:shadow-md hover:border-slate-300'
       } ${info.status === 'unverified' ? 'border-rose-200 ring-1 ring-rose-100' : 'border-slate-200'}`}
       style={style}
     >
@@ -87,15 +87,15 @@ export default function VerificationCard({ info, onStatusChange, style }: Verifi
         {isEditing ? (
           <div className="animate-[fadeIn_0.2s_ease-out]">
             <textarea 
-              className="w-full text-sm border border-indigo-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" 
+              className="w-full text-base sm:text-sm border border-indigo-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" 
               rows={3} 
               value={editContent} 
               onChange={e => setEditContent(e.target.value)} 
               autoFocus
             />
             <div className="flex justify-end gap-2 mt-2">
-              <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">キャンセル</button>
-              <button onClick={handleSaveEdit} className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">修正を保存</button>
+              <button onClick={() => setIsEditing(false)} className="px-4 py-2 min-h-[44px] sm:min-h-[auto] sm:py-1.5 text-sm sm:text-xs font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">キャンセル</button>
+              <button onClick={handleSaveEdit} className="px-4 py-2 min-h-[44px] sm:min-h-[auto] sm:py-1.5 text-sm sm:text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">修正を保存</button>
             </div>
           </div>
         ) : (
@@ -116,7 +116,7 @@ export default function VerificationCard({ info, onStatusChange, style }: Verifi
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button 
               onClick={handleVerify}
-              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto ${
+              className={`flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2 min-h-[44px] rounded-lg text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto ${
                 info.status === 'verified' 
                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm hover:shadow'
@@ -136,7 +136,7 @@ export default function VerificationCard({ info, onStatusChange, style }: Verifi
                   onStatusChange(info.id, 'unverified', info.content, info.rejectReason);
                 }
               }}
-              className={`px-4 py-2 bg-white border text-sm font-bold rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm w-full sm:w-auto text-center ${
+              className={`px-4 py-3 sm:py-2 min-h-[44px] bg-white border text-sm font-bold rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm w-full sm:w-auto text-center ${
                 info.status === 'modified' ? 'border-blue-300 text-blue-700 bg-blue-50' : 'border-slate-300 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -162,8 +162,8 @@ export default function VerificationCard({ info, onStatusChange, style }: Verifi
                     autoFocus
                   />
                   <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-2">
-                    <button onClick={() => setIsRejecting(false)} className="w-full sm:w-auto text-sm sm:text-xs py-2 sm:px-3 sm:py-1.5 font-medium text-slate-600 border border-slate-300 sm:border-transparent sm:text-slate-500 rounded-lg sm:rounded hover:bg-slate-50 sm:hover:bg-transparent sm:hover:text-slate-700 transition-colors">キャンセル</button>
-                    <button onClick={handleReject} className="w-full sm:w-auto text-sm sm:text-xs font-medium bg-slate-800 text-white py-2 sm:px-3 sm:py-1.5 rounded-lg sm:rounded hover:bg-slate-900 transition-colors">却下を確定</button>
+                    <button onClick={() => setIsRejecting(false)} className="w-full sm:w-auto text-sm sm:text-xs py-2 min-h-[44px] sm:min-h-[auto] sm:px-3 sm:py-1.5 font-medium text-slate-600 border border-slate-300 sm:border-transparent sm:text-slate-500 rounded-lg sm:rounded hover:bg-slate-50 sm:hover:bg-transparent sm:hover:text-slate-700 transition-colors">キャンセル</button>
+                    <button onClick={handleReject} className="w-full sm:w-auto text-sm sm:text-xs font-medium bg-slate-800 text-white py-2 min-h-[44px] sm:min-h-[auto] sm:px-3 sm:py-1.5 rounded-lg sm:rounded hover:bg-slate-900 transition-colors">却下を確定</button>
                   </div>
                 </div>
               </>
@@ -175,7 +175,7 @@ export default function VerificationCard({ info, onStatusChange, style }: Verifi
                     onStatusChange(info.id, 'unverified', info.content, info.rejectReason);
                   }
                 }}
-                className={`text-xs font-medium transition-colors hover:underline ${
+                className={`text-xs font-medium min-h-[44px] sm:min-h-[auto] px-2 sm:px-0 py-2 sm:py-0 transition-colors hover:underline ${
                   info.status === 'rejected' ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-600'
                 }`}
               >

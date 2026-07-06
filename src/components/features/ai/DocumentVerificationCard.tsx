@@ -71,8 +71,8 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
 
   return (
     <div 
-      className={`border rounded-xl p-4 transition-all duration-300 ease-out transform ${
-        item.status === 'rejected' ? 'bg-slate-50 opacity-75' : 'bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5'
+      className={`border rounded-xl p-4 transition-all duration-300 ease-out ${
+        item.status === 'rejected' ? 'bg-slate-50 opacity-75' : 'bg-white shadow-sm hover:shadow-md hover:border-slate-300'
       } ${item.status === 'unverified' ? 'border-rose-200 ring-1 ring-rose-100' : 'border-slate-200'}`}
       style={style}
     >
@@ -121,7 +121,7 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
               <select 
                 value={editPrepStatus} 
                 onChange={(e) => setEditPrepStatus(e.target.value as DocumentPreparationStatus)}
-                className="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+                className="w-full text-base sm:text-sm border border-slate-300 rounded-lg p-2 min-h-[44px] focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
               >
                 <option value="prepared">準備完了</option>
                 <option value="missing">不足</option>
@@ -132,7 +132,7 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">不足・注意点メモ</label>
               <textarea 
-                className="w-full text-sm border border-indigo-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" 
+                className="w-full text-base sm:text-sm border border-indigo-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" 
                 rows={2} 
                 value={editNotes} 
                 onChange={e => setEditNotes(e.target.value)} 
@@ -140,8 +140,8 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
               />
             </div>
             <div className="flex justify-end gap-2 mt-2">
-              <button onClick={() => setIsEditing(false)} className="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">キャンセル</button>
-              <button onClick={handleSaveEdit} className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">修正を保存</button>
+              <button onClick={() => setIsEditing(false)} className="px-4 py-2 min-h-[44px] sm:min-h-[auto] sm:py-1.5 text-sm sm:text-xs font-medium text-slate-600 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">キャンセル</button>
+              <button onClick={handleSaveEdit} className="px-4 py-2 min-h-[44px] sm:min-h-[auto] sm:py-1.5 text-sm sm:text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">修正を保存</button>
             </div>
           </div>
         ) : (
@@ -165,7 +165,7 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button 
               onClick={handleVerify}
-              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto ${
+              className={`flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2 min-h-[44px] rounded-lg text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto ${
                 item.status === 'verified' 
                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm hover:shadow'
@@ -185,7 +185,7 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
                   onStatusChange(item.id, 'unverified');
                 }
               }}
-              className={`px-4 py-2 bg-white border text-sm font-bold rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm w-full sm:w-auto text-center ${
+              className={`px-4 py-3 sm:py-2 min-h-[44px] bg-white border text-sm font-bold rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm w-full sm:w-auto text-center ${
                 item.status === 'modified' ? 'border-blue-300 text-blue-700 bg-blue-50' : 'border-slate-300 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -211,8 +211,8 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
                     autoFocus
                   />
                   <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-2">
-                    <button onClick={() => setIsRejecting(false)} className="w-full sm:w-auto text-sm sm:text-xs py-2 sm:px-3 sm:py-1.5 font-medium text-slate-600 border border-slate-300 sm:border-transparent sm:text-slate-500 rounded-lg sm:rounded hover:bg-slate-50 sm:hover:bg-transparent sm:hover:text-slate-700 transition-colors">キャンセル</button>
-                    <button onClick={handleReject} className="w-full sm:w-auto text-sm sm:text-xs font-medium bg-slate-800 text-white py-2 sm:px-3 sm:py-1.5 rounded-lg sm:rounded hover:bg-slate-900 transition-colors">対象外にする</button>
+                    <button onClick={() => setIsRejecting(false)} className="w-full sm:w-auto text-sm sm:text-xs py-2 min-h-[44px] sm:min-h-[auto] sm:px-3 sm:py-1.5 font-medium text-slate-600 border border-slate-300 sm:border-transparent sm:text-slate-500 rounded-lg sm:rounded hover:bg-slate-50 sm:hover:bg-transparent sm:hover:text-slate-700 transition-colors">キャンセル</button>
+                    <button onClick={handleReject} className="w-full sm:w-auto text-sm sm:text-xs font-medium bg-slate-800 text-white py-2 min-h-[44px] sm:min-h-[auto] sm:px-3 sm:py-1.5 rounded-lg sm:rounded hover:bg-slate-900 transition-colors">対象外にする</button>
                   </div>
                 </div>
               </>
@@ -224,7 +224,7 @@ export default function DocumentVerificationCard({ item, onStatusChange, style }
                     onStatusChange(item.id, 'unverified');
                   }
                 }}
-                className={`text-xs font-medium transition-colors hover:underline ${
+                className={`text-xs font-medium min-h-[44px] sm:min-h-[auto] px-2 sm:px-0 py-2 sm:py-0 transition-colors hover:underline ${
                   item.status === 'rejected' ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
