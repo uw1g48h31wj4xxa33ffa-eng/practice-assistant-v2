@@ -56,22 +56,14 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
     }
   }, [items]);
 
-  const handleStatusChange = (id: string, newStatus: VerificationStatus, newContent?: string, rejectReason?: string) => {
-    if (newStatus === 'verified') {
-      const currentIndex = items.findIndex(item => item.id === id);
-      let nextUnverified = items.slice(currentIndex + 1).find(item => item.status === 'unverified');
-      if (!nextUnverified) {
-        nextUnverified = items.slice(0, currentIndex).find(item => item.status === 'unverified');
-      }
-      
-      if (nextUnverified) {
-        pendingScrollRef.current = `card-${nextUnverified.id}`;
-      } else {
-        pendingScrollRef.current = 'completion-area';
-      }
-    }
+  const isCompletedItem = (item: ExtractedInfo) => {
+    if (item.status === 'verified') return true;
+    if (item.status === 'rejected') return true;
+    return false;
+  };
 
-    setItems(prev => prev.map(item => {
+  const handleStatusChange = (id: string, newStatus: VerificationStatus, newContent?: string, rejectReason?: string) => {
+    const nextItems = items.map(item => {
       if (item.id === id) {
         return {
           ...item,
@@ -81,7 +73,31 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
         };
       }
       return item;
-    }));
+    });
+
+    const currentVerifiedCount = items.filter(isCompletedItem).length;
+    const isAllVerified = items.length > 0 && currentVerifiedCount === items.length;
+
+    const nextVerifiedCount = nextItems.filter(isCompletedItem).length;
+    const nextIsAllVerified = nextItems.length > 0 && nextVerifiedCount === nextItems.length;
+
+    const currentItem = items.find(i => i.id === id);
+    const justVerified = currentItem && currentItem.status !== 'verified' && newStatus === 'verified';
+
+    if (nextIsAllVerified && !isAllVerified) {
+      pendingScrollRef.current = 'completion-area';
+    } else if (justVerified) {
+      const currentIndex = items.findIndex(item => item.id === id);
+      let nextUnverified = items.slice(currentIndex + 1).find(item => item.status === 'unverified');
+      if (!nextUnverified) {
+        nextUnverified = items.slice(0, currentIndex).find(item => item.status === 'unverified');
+      }
+      if (nextUnverified) {
+        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      }
+    }
+
+    setItems(nextItems);
   };
 
   const handleSaveAndNext = () => {
@@ -113,11 +129,7 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
     );
   }
 
-  const isCompletedItem = (item: ExtractedInfo) => {
-    if (item.status === 'verified') return true;
-    if (item.status === 'rejected') return true;
-    return false;
-  };
+
 
   const verifiedCount = items.filter(isCompletedItem).length;
   const isAllVerified = items.length > 0 && verifiedCount === items.length;

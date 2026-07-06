@@ -95,21 +95,7 @@ export default function HearingPage() {
   };
 
   const handleStatusChange = (id: string, newStatus: VerificationStatus, newContent?: string, rejectReason?: string) => {
-    if (newStatus === 'verified') {
-      const currentIndex = extractedData.findIndex(item => item.id === id);
-      let nextUnverified = extractedData.slice(currentIndex + 1).find(item => item.status === 'unverified');
-      if (!nextUnverified) {
-        nextUnverified = extractedData.slice(0, currentIndex).find(item => item.status === 'unverified');
-      }
-      
-      if (nextUnverified) {
-        pendingScrollRef.current = `card-${nextUnverified.id}`;
-      } else {
-        pendingScrollRef.current = 'completion-area';
-      }
-    }
-
-    setExtractedData(prev => prev.map(item => {
+    const nextData = extractedData.map(item => {
       if (item.id === id) {
         return { 
           ...item, 
@@ -119,7 +105,28 @@ export default function HearingPage() {
         };
       }
       return item;
-    }));
+    });
+
+    const currentCanProceed = hasExtracted && extractedData.filter(d => d.status === 'unverified').length === 0;
+    const nextCanProceed = hasExtracted && nextData.filter(d => d.status === 'unverified').length === 0;
+    
+    const currentItem = extractedData.find(i => i.id === id);
+    const justVerified = currentItem && currentItem.status !== 'verified' && newStatus === 'verified';
+
+    if (nextCanProceed && !currentCanProceed) {
+      pendingScrollRef.current = 'completion-area';
+    } else if (justVerified) {
+      const currentIndex = extractedData.findIndex(item => item.id === id);
+      let nextUnverified = extractedData.slice(currentIndex + 1).find(item => item.status === 'unverified');
+      if (!nextUnverified) {
+        nextUnverified = extractedData.slice(0, currentIndex).find(item => item.status === 'unverified');
+      }
+      if (nextUnverified) {
+        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      }
+    }
+
+    setExtractedData(nextData);
   };
 
   const unverifiedCount = extractedData.filter(d => d.status === 'unverified').length;

@@ -45,6 +45,12 @@ export default function SubsidySchedulePage({ params }: { params: Promise<{ id: 
     }
   }, [items]);
 
+  const isCompletedItem = (item: SubsidyScheduleItem) => {
+    if (item.verificationStatus === 'verified' && item.progressStatus === 'done') return true;
+    if (item.verificationStatus === 'rejected') return true;
+    return false;
+  };
+
   const handleStatusChange = (
     id: string, 
     newVerificationStatus: ScheduleVerificationStatus, 
@@ -52,21 +58,7 @@ export default function SubsidySchedulePage({ params }: { params: Promise<{ id: 
     newNotes?: string, 
     newRiskNote?: string
   ) => {
-    if (newVerificationStatus === 'verified') {
-      const currentIndex = items.findIndex(item => item.id === id);
-      let nextUnverified = items.slice(currentIndex + 1).find(item => item.verificationStatus === 'unverified');
-      if (!nextUnverified) {
-        nextUnverified = items.slice(0, currentIndex).find(item => item.verificationStatus === 'unverified');
-      }
-      
-      if (nextUnverified) {
-        pendingScrollRef.current = `card-${nextUnverified.id}`;
-      } else {
-        pendingScrollRef.current = 'completion-area';
-      }
-    }
-
-    setItems(prev => prev.map(item => {
+    const nextItems = items.map(item => {
       if (item.id === id) {
         return {
           ...item,
@@ -77,7 +69,31 @@ export default function SubsidySchedulePage({ params }: { params: Promise<{ id: 
         };
       }
       return item;
-    }));
+    });
+
+    const currentVerifiedCount = items.filter(isCompletedItem).length;
+    const isAllVerified = items.length > 0 && currentVerifiedCount === items.length;
+
+    const nextVerifiedCount = nextItems.filter(isCompletedItem).length;
+    const nextIsAllVerified = nextItems.length > 0 && nextVerifiedCount === nextItems.length;
+
+    const currentItem = items.find(i => i.id === id);
+    const justVerified = currentItem && currentItem.verificationStatus !== 'verified' && newVerificationStatus === 'verified';
+
+    if (nextIsAllVerified && !isAllVerified) {
+      pendingScrollRef.current = 'completion-area';
+    } else if (justVerified) {
+      const currentIndex = items.findIndex(item => item.id === id);
+      let nextUnverified = items.slice(currentIndex + 1).find(item => item.verificationStatus === 'unverified');
+      if (!nextUnverified) {
+        nextUnverified = items.slice(0, currentIndex).find(item => item.verificationStatus === 'unverified');
+      }
+      if (nextUnverified) {
+        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      }
+    }
+
+    setItems(nextItems);
   };
 
   const handleSaveAndNext = () => {
@@ -110,11 +126,7 @@ export default function SubsidySchedulePage({ params }: { params: Promise<{ id: 
   }
 
   // 完了判定: (verified かつ done) または rejected が対象
-  const isCompletedItem = (item: SubsidyScheduleItem) => {
-    if (item.verificationStatus === 'verified' && item.progressStatus === 'done') return true;
-    if (item.verificationStatus === 'rejected') return true;
-    return false;
-  };
+
 
   const verifiedCount = items.filter(isCompletedItem).length;
   const isAllVerified = items.length > 0 && verifiedCount === items.length;

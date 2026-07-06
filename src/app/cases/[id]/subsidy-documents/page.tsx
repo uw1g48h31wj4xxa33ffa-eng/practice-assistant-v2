@@ -44,6 +44,12 @@ export default function SubsidyDocumentsPage({ params }: { params: Promise<{ id:
     }
   }, [items]);
 
+  const isCompletedItem = (item: SubsidyDocumentItem) => {
+    if (item.status === 'verified' && item.preparationStatus === 'prepared') return true;
+    if (item.status === 'rejected') return true;
+    return false;
+  };
+
   const handleStatusChange = (
     id: string, 
     newStatus: VerificationStatus, 
@@ -51,21 +57,7 @@ export default function SubsidyDocumentsPage({ params }: { params: Promise<{ id:
     newNotes?: string, 
     newRejectReason?: string
   ) => {
-    if (newStatus === 'verified') {
-      const currentIndex = items.findIndex(item => item.id === id);
-      let nextUnverified = items.slice(currentIndex + 1).find(item => item.status === 'unverified');
-      if (!nextUnverified) {
-        nextUnverified = items.slice(0, currentIndex).find(item => item.status === 'unverified');
-      }
-      
-      if (nextUnverified) {
-        pendingScrollRef.current = `card-${nextUnverified.id}`;
-      } else {
-        pendingScrollRef.current = 'completion-area';
-      }
-    }
-
-    setItems(prev => prev.map(item => {
+    const nextItems = items.map(item => {
       if (item.id === id) {
         return {
           ...item,
@@ -76,7 +68,31 @@ export default function SubsidyDocumentsPage({ params }: { params: Promise<{ id:
         };
       }
       return item;
-    }));
+    });
+
+    const currentVerifiedCount = items.filter(isCompletedItem).length;
+    const isAllVerified = items.length > 0 && currentVerifiedCount === items.length;
+
+    const nextVerifiedCount = nextItems.filter(isCompletedItem).length;
+    const nextIsAllVerified = nextItems.length > 0 && nextVerifiedCount === nextItems.length;
+
+    const currentItem = items.find(i => i.id === id);
+    const justVerified = currentItem && currentItem.status !== 'verified' && newStatus === 'verified';
+
+    if (nextIsAllVerified && !isAllVerified) {
+      pendingScrollRef.current = 'completion-area';
+    } else if (justVerified) {
+      const currentIndex = items.findIndex(item => item.id === id);
+      let nextUnverified = items.slice(currentIndex + 1).find(item => item.status === 'unverified');
+      if (!nextUnverified) {
+        nextUnverified = items.slice(0, currentIndex).find(item => item.status === 'unverified');
+      }
+      if (nextUnverified) {
+        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      }
+    }
+
+    setItems(nextItems);
   };
 
   const handleSaveAndNext = () => {
@@ -109,11 +125,7 @@ export default function SubsidyDocumentsPage({ params }: { params: Promise<{ id:
   }
 
   // 完了判定: verified または rejected が対象（modifiedやunverifiedは不可）
-  const isCompletedItem = (item: SubsidyDocumentItem) => {
-    if (item.status === 'verified' && item.preparationStatus === 'prepared') return true;
-    if (item.status === 'rejected') return true;
-    return false;
-  };
+
 
   const verifiedCount = items.filter(isCompletedItem).length;
   const isAllVerified = items.length > 0 && verifiedCount === items.length;
