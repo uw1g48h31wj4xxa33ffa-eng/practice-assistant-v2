@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SubsidyScheduleItem, ScheduleVerificationStatus, ScheduleProgressStatus } from '@/types';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 interface ScheduleVerificationCardProps {
   item: SubsidyScheduleItem;
@@ -55,13 +56,6 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
     setIsRejecting(false);
   };
 
-  const verificationConfig = {
-    unverified: { color: 'bg-rose-50 text-rose-700 border-rose-200', label: '未確認', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-    verified: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: '確認済', icon: 'M5 13l4 4L19 7' },
-    modified: { color: 'bg-blue-50 text-blue-700 border-blue-200', label: '修正済・再確認待ち', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-    rejected: { color: 'bg-slate-100 text-slate-500 border-slate-300', label: '対象外', icon: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' },
-  };
-
   const progressConfig = {
     not_started: { color: 'bg-slate-100 text-slate-600', label: '未着手' },
     in_progress: { color: 'bg-indigo-100 text-indigo-700', label: '進行中' },
@@ -71,7 +65,6 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
     not_required: { color: 'bg-slate-100 text-slate-600', label: '対象外' },
   };
 
-  const vConf = verificationConfig[item.verificationStatus];
   const pConf = progressConfig[item.progressStatus];
 
   return (
@@ -91,12 +84,7 @@ export default function ScheduleVerificationCard({ item, onStatusChange, style }
               <span className={`text-xs font-bold px-2 py-0.5 rounded whitespace-nowrap ${pConf.color}`}>
                 {pConf.label}
               </span>
-              <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded border transition-colors duration-300 whitespace-nowrap ${vConf.color}`}>
-                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={vConf.icon} />
-                </svg>
-                {vConf.label}
-              </span>
+              <StatusBadge status={item.verificationStatus} rejectedLabel="対象外" />
             </div>
             
             {item.importance === 'high' && item.verificationStatus !== 'rejected' && (
