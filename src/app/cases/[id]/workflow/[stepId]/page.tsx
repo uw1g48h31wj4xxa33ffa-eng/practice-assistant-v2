@@ -90,7 +90,7 @@ export default function WorkflowPlaceholderPage({ params }: { params: Promise<{ 
           </Link>
           <button 
             onClick={handleComplete}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-soft hover-lift shadow-sm flex items-center gap-2"
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-soft hover-lift shadow-sm flex items-center gap-2 whitespace-nowrap"
           >
             {nextStep ? (
               <>
