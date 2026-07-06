@@ -68,12 +68,12 @@ export default function HumanApprovalBadge({ status, onChange, readOnly = false 
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 p-2 rounded-lg border transition-colors ${config.bgColor} ${config.borderColor}`}>
+    <div className={`inline-flex items-center gap-3 px-4 py-3 sm:py-2.5 rounded-xl border transition-colors ${config.bgColor} ${config.borderColor}`}>
       <div className={config.textColor}>{config.icon}</div>
       <select 
         value={status}
         onChange={(e) => onChange?.(e.target.value as ReviewStatus)}
-        className={`bg-transparent font-medium focus:outline-none cursor-pointer ${config.textColor}`}
+        className={`bg-transparent font-medium text-sm sm:text-base focus:outline-none cursor-pointer pr-2 ${config.textColor}`}
       >
         {Object.entries(statusConfig).map(([key, { label }]) => (
           <option key={key} value={key} className="text-slate-800 bg-white">{label}</option>
