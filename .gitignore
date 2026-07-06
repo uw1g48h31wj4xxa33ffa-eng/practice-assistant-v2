@@ -43,3 +43,5 @@ next-env.d.ts
 # logs
 *.log
 puppeteer_logs*.txt
+
+tests/e2e/temp_*.js
