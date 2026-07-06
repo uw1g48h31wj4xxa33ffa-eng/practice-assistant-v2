@@ -78,18 +78,20 @@ export default function SubsidySchedulePage({ params }: { params: Promise<{ id: 
     const nextIsAllVerified = nextItems.length > 0 && nextVerifiedCount === nextItems.length;
 
     const currentItem = items.find(i => i.id === id);
-    const justVerified = currentItem && currentItem.verificationStatus !== 'verified' && newVerificationStatus === 'verified';
+    const justActioned = currentItem && 
+      (currentItem.verificationStatus !== 'verified' && currentItem.verificationStatus !== 'rejected') && 
+      (newVerificationStatus === 'verified' || newVerificationStatus === 'rejected');
 
     if (nextIsAllVerified && !isAllVerified) {
       pendingScrollRef.current = 'completion-area';
-    } else if (justVerified) {
+    } else if (justActioned) {
       const currentIndex = items.findIndex(item => item.id === id);
-      let nextUnverified = items.slice(currentIndex + 1).find(item => item.verificationStatus === 'unverified');
-      if (!nextUnverified) {
-        nextUnverified = items.slice(0, currentIndex).find(item => item.verificationStatus === 'unverified');
+      let nextUncompleted = nextItems.slice(currentIndex + 1).find(item => !isCompletedItem(item));
+      if (!nextUncompleted) {
+        nextUncompleted = nextItems.slice(0, currentIndex).find(item => !isCompletedItem(item));
       }
-      if (nextUnverified) {
-        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      if (nextUncompleted) {
+        pendingScrollRef.current = `card-${nextUncompleted.id}`;
       }
     }
 

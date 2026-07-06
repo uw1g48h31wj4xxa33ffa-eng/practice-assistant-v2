@@ -111,18 +111,21 @@ export default function HearingPage() {
     const nextCanProceed = hasExtracted && nextData.filter(d => d.status === 'unverified').length === 0;
     
     const currentItem = extractedData.find(i => i.id === id);
-    const justVerified = currentItem && currentItem.status !== 'verified' && newStatus === 'verified';
+    const justActioned = currentItem && 
+      (currentItem.status !== 'verified' && currentItem.status !== 'rejected') && 
+      (newStatus === 'verified' || newStatus === 'rejected');
 
     if (nextCanProceed && !currentCanProceed) {
       pendingScrollRef.current = 'completion-area';
-    } else if (justVerified) {
+    } else if (justActioned) {
       const currentIndex = extractedData.findIndex(item => item.id === id);
-      let nextUnverified = extractedData.slice(currentIndex + 1).find(item => item.status === 'unverified');
-      if (!nextUnverified) {
-        nextUnverified = extractedData.slice(0, currentIndex).find(item => item.status === 'unverified');
+      const isCompleted = (status: string) => status === 'verified' || status === 'rejected';
+      let nextUncompleted = nextData.slice(currentIndex + 1).find(item => !isCompleted(item.status));
+      if (!nextUncompleted) {
+        nextUncompleted = nextData.slice(0, currentIndex).find(item => !isCompleted(item.status));
       }
-      if (nextUnverified) {
-        pendingScrollRef.current = `card-${nextUnverified.id}`;
+      if (nextUncompleted) {
+        pendingScrollRef.current = `card-${nextUncompleted.id}`;
       }
     }
 
@@ -144,7 +147,6 @@ export default function HearingPage() {
       progressStatus: isSubsidy ? 'guideline_review' : 'rule_design'
     });
     
-    // テンプレートに応じた遷移先へ進む
     if (isSubsidy) {
       router.push(`/cases/${caseId}/subsidy-guideline`);
     } else {
