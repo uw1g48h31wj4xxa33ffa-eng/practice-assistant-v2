@@ -20,7 +20,7 @@ export default function Chip({
   const baseClasses = 'font-bold whitespace-nowrap inline-flex items-center justify-center';
   
   const sizeClasses = {
-    xs: 'text-[10px] px-1.5 py-0.5',
+    xs: 'text-xs px-1.5 py-0.5',
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-3 py-1',
   };
@@ -51,6 +51,7 @@ export default function Chip({
       green: 'bg-green-100 text-green-700 border border-green-200', // 全工程完了
     },
     subtle: {
+      // ダッシュボード等の薄い背景色バッジ再現用
       slate: 'bg-slate-100 text-slate-500 border border-transparent', // 案件一覧の顧問先
       indigo: 'bg-indigo-50 text-indigo-600 border border-indigo-100', // ダッシュボードの顧問先
       rose: 'bg-rose-50 text-rose-600 border border-rose-100',

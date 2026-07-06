@@ -128,7 +128,7 @@ export default function CaseDetailPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-800">業務フロー</h2>
             {isCompleted && (
-              <Chip label="全工程完了" color="green" variant="outline" size="md" rounded="full" className="border-green-200" />
+              <Chip label="全工程完了" color="green" variant="outline" size="md" rounded="full" />
             )}
           </div>
           
