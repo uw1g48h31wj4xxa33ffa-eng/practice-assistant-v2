@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
 import TaskSelector from '@/components/features/ai/TaskSelector';
 import TaskGuidance from '@/components/features/ai/TaskGuidance';
@@ -11,7 +11,8 @@ import { AITaskTemplate, Case } from '@/types';
 export default function RuleDesignPage() {
   const params = useParams();
   const caseId = params.id as string;
-  const { getCaseById } = useCases();
+  const router = useRouter();
+  const { getCaseById, updateCase } = useCases();
 
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [selectedTask, setSelectedTask] = useState<AITaskTemplate | null>(null);
@@ -40,6 +41,11 @@ export default function RuleDesignPage() {
   const issueCount = extracted.filter(i => i.category === '課題・論点' && i.status !== 'rejected').length;
   const riskCount = extracted.filter(i => i.category === 'リスク' && i.status !== 'rejected').length;
   const missingCount = extracted.filter(i => i.category === '不足情報' && i.status !== 'rejected').length;
+
+  const handleSaveAndNext = () => {
+    updateCase(caseId, { progressStatus: 'ai_review' });
+    router.push(`/cases/${caseId}/ai-evidence`);
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -106,10 +112,19 @@ export default function RuleDesignPage() {
         )}
       </div>
       
-      <div className="flex justify-center sm:justify-end pt-4">
-        <Link href={`/cases/${caseId}`} className="px-6 py-2 border border-slate-300 text-slate-700 bg-white rounded-lg font-medium hover:bg-slate-50 transition-colors">
-          詳細画面へ戻る
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-slate-200">
+        <Link href={`/cases/${caseId}`} className="px-6 py-3 border border-slate-300 text-slate-700 bg-white rounded-lg font-bold hover:bg-slate-50 transition-colors shadow-sm">
+          案件詳細へ戻る
         </Link>
+        <button
+          onClick={handleSaveAndNext}
+          className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+        >
+          <span>工程を完了する</span>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
       </div>
     </div>
   );

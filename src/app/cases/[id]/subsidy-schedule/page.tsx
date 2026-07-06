@@ -104,10 +104,9 @@ export default function SubsidySchedulePage({ params }: { params: Promise<{ id: 
     // updateCaseでローカルstateのデータを保存しつつ、次工程へ進む
     updateCase(caseId, {
       subsidyScheduleItems: items,
-      progressStatus: 'ai_review'
+      progressStatus: 'delivery_prep'
     });
-    
-    router.push(`/cases/${caseId}`);
+    router.push(`/cases/${caseId}/subsidy-delivery`);
   };
 
   const handleSaveDraft = () => {

@@ -105,8 +105,7 @@ export default function SubsidyDocumentsPage({ params }: { params: Promise<{ id:
       subsidyDocumentItems: items,
       progressStatus: 'schedule_management'
     });
-    
-    router.push(`/cases/${caseId}`);
+    router.push(`/cases/${caseId}/subsidy-schedule`);
   };
 
   const handleSaveDraft = () => {
