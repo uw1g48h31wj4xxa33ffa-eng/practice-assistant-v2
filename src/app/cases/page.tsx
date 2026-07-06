@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import HumanApprovalBadge from '@/components/ui/HumanApprovalBadge';
+import Chip from '@/components/ui/Chip';
 import { useCases } from '@/hooks/useCases';
 
 export default function CasesListPage() {
@@ -68,9 +69,7 @@ export default function CasesListPage() {
                     <Link href={`/cases/${c.id}`} className="font-bold text-indigo-600 hover:underline block mb-1">
                       {c.title}
                     </Link>
-                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded mr-2">
-                      {c.clientName}
-                    </span>
+                    <Chip label={c.clientName} color="slate" variant="subtle" size="xs" className="mr-2 font-normal" />
                     <span className="text-xs text-slate-400">
                       ({c.industry} / {c.employeeCount})
                     </span>

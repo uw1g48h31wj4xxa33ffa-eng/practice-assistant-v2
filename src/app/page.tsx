@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Disclaimer from '@/components/ui/Disclaimer';
 import HumanApprovalBadge from '@/components/ui/HumanApprovalBadge';
+import Chip from '@/components/ui/Chip';
 import { useCases } from '@/hooks/useCases';
 
 export default function Dashboard() {
@@ -64,16 +65,10 @@ export default function Dashboard() {
               <div key={c.id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
-                      {c.clientName}
-                    </span>
-                    <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                      {c.caseType}
-                    </span>
+                    <Chip label={c.clientName} color="indigo" variant="subtle" className="font-medium" />
+                    <Chip label={c.caseType} color="slate" variant="outline" className="font-medium" />
                     {c.priority === 'high' && (
-                      <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100">
-                        優先度: 高
-                      </span>
+                      <Chip label="優先度: 高" color="red" variant="subtle" className="font-medium" />
                     )}
                   </div>
                   <div className="text-xs text-slate-500 font-medium whitespace-nowrap">納期: {c.dueDate}</div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
 import HumanApprovalBadge, { ReviewStatus } from '@/components/ui/HumanApprovalBadge';
+import Chip from '@/components/ui/Chip';
 import { getWorkflowTemplateById, getWorkflowTemplateByCaseType, getDefaultWorkflowTemplate } from '@/config/workflowTemplates';
 
 export default function CaseDetailPage() {
@@ -127,9 +128,7 @@ export default function CaseDetailPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-800">業務フロー</h2>
             {isCompleted && (
-              <span className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold border border-green-200">
-                全工程完了
-              </span>
+              <Chip label="全工程完了" color="green" variant="outline" size="md" rounded="full" className="border-green-200" />
             )}
           </div>
           
@@ -161,9 +160,9 @@ export default function CaseDetailPage() {
                     <div>
                       <h3 className={`font-bold flex flex-wrap items-center gap-1.5 md:gap-2 ${step.status === 'current' ? 'text-indigo-900' : 'text-slate-700'}`}>
                         {step.title}
-                        {step.status === 'completed' && <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-sm whitespace-nowrap">完了</span>}
-                        {step.status === 'current' && <span className="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded-sm whitespace-nowrap">現在の工程</span>}
-                        {step.status === 'upcoming' && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-sm border border-slate-200 whitespace-nowrap">未着手</span>}
+                        {step.status === 'completed' && <Chip label="完了" color="slate" variant="solid" size="xs" />}
+                        {step.status === 'current' && <Chip label="現在の工程" color="indigo" variant="outline" size="xs" />}
+                        {step.status === 'upcoming' && <Chip label="未着手" color="slate" variant="outline" size="xs" />}
                       </h3>
                       <p className="text-sm text-slate-500 mt-1">{step.shortDescription || step.description}</p>
                     </div>
