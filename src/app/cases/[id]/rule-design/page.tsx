@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
 import TaskSelector from '@/components/features/ai/TaskSelector';
 import TaskGuidance from '@/components/features/ai/TaskGuidance';
+import Button, { SECONDARY_BUTTON_CLASS } from '@/components/ui/Button';
 import { AITaskTemplate, Case } from '@/types';
 
 export default function RuleDesignPage() {
@@ -113,18 +114,20 @@ export default function RuleDesignPage() {
       </div>
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-slate-200">
-        <Link href={`/cases/${caseId}`} className="px-6 py-3 border border-slate-300 text-slate-700 bg-white rounded-lg font-bold hover:bg-slate-50 transition-colors shadow-sm">
+        <Link href={`/cases/${caseId}`} className={`${SECONDARY_BUTTON_CLASS} w-full sm:w-auto text-center`}>
           案件詳細へ戻る
         </Link>
-        <button
+        <Button
+          variant="primary"
           onClick={handleSaveAndNext}
-          className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          }
         >
           <span>工程を完了する</span>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );
