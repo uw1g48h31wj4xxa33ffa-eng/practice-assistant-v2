@@ -271,7 +271,7 @@ export default function AIEvidencePage() {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                       <div className="flex gap-2 items-start mb-2">
-                        <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{item.sourceType}</span>
+                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{item.sourceType}</span>
                         <h4 className="font-bold text-sm text-slate-800 pr-6 leading-tight">{item.title}</h4>
                       </div>
                       <p className="text-xs text-slate-600 mb-2">{item.summary}</p>
