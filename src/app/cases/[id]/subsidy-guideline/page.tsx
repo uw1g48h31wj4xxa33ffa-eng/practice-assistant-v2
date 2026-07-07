@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
 import VerificationCard from '@/components/features/ai/VerificationCard';
 import CompletionActionArea from '@/components/ui/CompletionActionArea';
-import { ExtractedInfo, VerificationStatus } from '@/types';
+import SourceInputPanel from '@/components/features/source/SourceInputPanel';
+import { ExtractedInfo, VerificationStatus, SourceDocument } from '@/types';
 
 const mockGuidelineItems: ExtractedInfo[] = [
   { id: 'g1', category: '補助金名', originalContent: 'IT導入補助金2024 通常枠', content: 'IT導入補助金2024 通常枠', sourceReference: '公募要項 p.1', status: 'unverified', aiConfidence: 'high' },
@@ -43,6 +44,22 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
     }
     return mockGuidelineItems;
   });
+
+  const sourceDocuments = initialCase?.sourceDocuments ?? [];
+
+  const handleAddDocument = (doc: SourceDocument) => {
+    if (!initialCase) return;
+    updateCase(caseId, {
+      sourceDocuments: [...sourceDocuments, doc]
+    });
+  };
+
+  const handleRemoveDocument = (docId: string) => {
+    if (!initialCase) return;
+    updateCase(caseId, {
+      sourceDocuments: sourceDocuments.filter(d => d.id !== docId)
+    });
+  };
 
   const pendingScrollRef = useRef<string | null>(null);
 
@@ -171,6 +188,12 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
           </div>
         </div>
       </div>
+
+      <SourceInputPanel 
+        sourceDocuments={sourceDocuments}
+        onAddDocument={handleAddDocument}
+        onRemoveDocument={handleRemoveDocument}
+      />
 
       {/* 公募要項の基本情報 (AI抽出結果) */}
       <div className="space-y-4 order-2 md:order-none">
