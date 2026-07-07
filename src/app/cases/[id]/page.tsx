@@ -225,8 +225,12 @@ export default function CaseDetailPage() {
               </div>
               <div>
                 <div className="text-xs text-slate-500 mb-1">優先度</div>
-                <div className={`font-medium ${initialCase?.priority === 'high' ? 'text-red-600' : initialCase?.priority === 'medium' ? 'text-amber-600' : 'text-slate-600'}`}>
-                  {initialCase?.priority === 'high' ? '高' : initialCase?.priority === 'medium' ? '中' : '低'}
+                <div>
+                  <Chip 
+                    label={initialCase?.priority === 'high' ? '高' : initialCase?.priority === 'medium' ? '中' : '低'}
+                    color={initialCase?.priority === 'high' ? 'red' : initialCase?.priority === 'medium' ? 'amber' : 'slate'}
+                    variant="subtle"
+                  />
                 </div>
               </div>
             </div>
