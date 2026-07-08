@@ -283,8 +283,7 @@ export default function AIEvidencePage() {
                 {evidenceItems.filter(i => i.status === 'needs_revision').map(i => (
                   <li key={i.id} className="text-sm text-red-700 bg-white rounded-lg p-2 border border-red-100 flex items-center justify-between">
                     <span className="truncate mr-2 font-bold">
-                      <span className="sm:hidden">{getMobileTitle(i.title)}</span>
-                      <span className="hidden sm:inline">{i.title}</span>
+                      {getMobileTitle(i.title)}
                     </span>
                     <button 
                       onClick={() => document.getElementById(`evidence-card-${i.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
