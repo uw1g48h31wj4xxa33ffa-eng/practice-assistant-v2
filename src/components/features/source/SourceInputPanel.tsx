@@ -188,15 +188,15 @@ export default function SourceInputPanel({
         ) : (
           <ul className="space-y-3">
             {sourceDocuments.map(doc => (
-              <li key={doc.id} className="bg-white border border-slate-200 rounded-md p-3 flex justify-between items-start">
-                <div>
+              <li key={doc.id} className="bg-white border border-slate-200 rounded-md p-3 flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0 pr-2">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase">{doc.sourceType}</span>
-                    <h4 className="font-bold text-sm text-slate-800">{doc.title}</h4>
+                    <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase shrink-0">{doc.sourceType}</span>
+                    <h4 className="font-bold text-sm text-slate-800 break-words">{doc.title}</h4>
                   </div>
-                  {doc.url && <p className="text-xs text-indigo-600 truncate max-w-md">{doc.url}</p>}
-                  {doc.fileName && <p className="text-xs text-slate-500">ファイル: {doc.fileName}</p>}
-                  {doc.text && <p className="text-xs text-slate-500 truncate max-w-md">{doc.text}</p>}
+                  {doc.url && <p className="text-xs text-indigo-600 break-all">{doc.url}</p>}
+                  {doc.fileName && <p className="text-xs text-slate-500 break-words">ファイル: {doc.fileName}</p>}
+                  {doc.text && <p className="text-xs text-slate-500 break-words line-clamp-3">{doc.text}</p>}
                   <p className="text-[10px] text-slate-400 mt-1">追加日時: {new Date(doc.uploadedAt).toLocaleString()}</p>
                 </div>
                 <button 
@@ -205,7 +205,7 @@ export default function SourceInputPanel({
                       onRemoveDocument(doc.id);
                     }
                   }}
-                  className="text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors p-3 rounded-lg flex items-center justify-center -mr-2"
+                  className="text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg flex items-center justify-center shrink-0 min-h-[44px] min-w-[44px] -mr-1 mt-[-4px]"
                   aria-label="削除"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -88,10 +88,13 @@ export default function SubsidySchedulePage() {
   };
 
   const handleNextStep = () => {
-    // 進行状況の更新はここでは行わず、画面上での移動のみとする方針なら何もしないか、必要なときだけ進める
-    // ご要望により「progressStatusは変更しない」ため、純粋な遷移のみとする。
+    if (currentCase.progressStatus === 'schedule_management') {
+      updateCase(caseId, { progressStatus: 'ai_review' });
+    }
     if (nextStep?.href) {
       router.push(nextStep.href.replace('[id]', caseId));
+    } else {
+      router.push(`/cases/${caseId}/ai-evidence`);
     }
   };
 
@@ -143,20 +146,20 @@ export default function SubsidySchedulePage() {
     if (item.progressStatus === 'not_started') {
       return (
         <>
-          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">進行中</button>
-          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">完了</button>
+          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
+          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
         </>
       );
     } else if (item.progressStatus === 'in_progress') {
       return (
         <>
-          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">完了</button>
-          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">未着手へ</button>
+          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
+          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
         </>
       );
     } else if (item.progressStatus === 'done') {
       return (
-        <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">進行中へ戻す</button>
+        <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中に戻す</button>
       );
     }
     return null;
@@ -428,9 +431,9 @@ export default function SubsidySchedulePage() {
         </div>
         <button
           onClick={handleNextStep}
-          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0"
+          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
         >
-          次工程（AI検証・エビデンス）へ進む
+          次の工程へ進む
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

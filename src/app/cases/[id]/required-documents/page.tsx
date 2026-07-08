@@ -107,6 +107,8 @@ export default function RequiredDocumentsPage() {
     }
     if (nextStep?.href) {
       router.push(nextStep.href.replace('[id]', caseId));
+    } else {
+      router.push(`/cases/${caseId}/subsidy-schedule`);
     }
   };
 
@@ -115,27 +117,27 @@ export default function RequiredDocumentsPage() {
     if (doc.status === 'not_started') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">依頼中</button>
-          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">受領済</button>
+          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
+          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
         </>
       );
     } else if (doc.status === 'requested') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">受領済</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">未着手へ</button>
+          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
         </>
       );
     } else if (doc.status === 'received') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">依頼中へ</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">不要</button>
+          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中に戻す</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
         </>
       );
     } else if (doc.status === 'not_needed') {
       return (
-        <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">未着手へ</button>
+        <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
       );
     }
     return null;
@@ -394,9 +396,9 @@ export default function RequiredDocumentsPage() {
         </div>
         <button
           onClick={handleNextStep}
-          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0"
+          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
         >
-          次工程（{nextStep?.title || 'スケジュール管理'}）へ進む
+          次の工程へ進む
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
