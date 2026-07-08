@@ -175,7 +175,7 @@ export default function AIEvidencePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左側: サマリー＆進捗 */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden sticky top-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
               <h2 className="font-bold text-slate-800 flex items-center gap-2">
                 <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -281,13 +281,13 @@ export default function AIEvidencePage() {
           {totalItems > 0 ? (
             <div className="flex flex-col gap-3">
               {evidenceItems.map(item => (
-                <div key={item.id} id={`evidence-card-${item.id}`} className={`bg-white p-4 rounded-xl border shadow-sm transition-colors ${
+                <div key={item.id} id={`evidence-card-${item.id}`} className={`bg-white p-5 sm:p-6 rounded-xl border shadow-sm transition-colors ${
                   item.status === 'verified' || item.status === 'not_applicable' ? 'border-slate-200 opacity-75' : 
                   item.status === 'needs_revision' ? 'border-red-300 bg-red-50/30' : 'border-slate-200 hover:border-indigo-100'
                 }`}>
-                  <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
+                  <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5 sm:gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-col gap-1 mb-1">
+                      <div className="flex flex-col gap-2 mb-3">
                         <div className="flex flex-wrap items-center gap-1">
                           <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shrink-0">
                             {getCategoryLabel(item.category)}
@@ -310,10 +310,10 @@ export default function AIEvidencePage() {
                           item.status === 'verified' || item.status === 'not_applicable' ? 'text-slate-500' : 'text-slate-800'
                         }`}>{item.title}</h4>
                       </div>
-                      <p className="text-xs text-slate-500 mb-2 leading-relaxed">{item.summary}</p>
+                      <p className="text-[13px] sm:text-xs text-slate-500 mb-2 leading-[1.8] sm:leading-relaxed line-clamp-3 sm:line-clamp-none">{item.summary}</p>
                       
                       {item.sourceReference && (
-                        <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-2">
+                        <div className="flex items-center gap-1 text-[10px] text-slate-400 opacity-75 mt-3">
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                           </svg>
