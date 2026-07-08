@@ -157,6 +157,26 @@ export default function AIEvidencePage() {
     }
   };
 
+  const getMobileTitle = (title: string) => {
+    if (title.includes('必須資料の不足確認')) return '必須資料の不足';
+    if (title.includes('gBizIDプライムアカウントの準備状況')) return 'gBizID準備状況';
+    if (title.includes('見積書・決算書の有効性確認')) return '見積書・決算書の確認';
+    if (title.includes('公募要項の締切とスケジュールの整合性')) return '公募締切と予定確認';
+    if (title.includes('出典・根拠資料の紐付け確認')) return '根拠資料の紐付け';
+    if (title.includes('専門家（認定支援機関等）の事前確認')) return '専門家の事前確認';
+    return title;
+  };
+
+  const getMobileSummary = (summary: string) => {
+    if (summary.includes('必須資料（計')) return '未完了の必須資料を確認します。';
+    if (summary.includes('電子申請に必要なgBizIDプライムアカウント')) return '電子申請に必要なgBizIDを確認します。';
+    if (summary.includes('スケジュール上の「提出期限」')) return '公募締切と予定のずれを確認します。';
+    if (summary.includes('提出予定の決算書')) return '見積書・決算書の内容を確認します。';
+    if (summary.includes('案件に関連する根拠資料')) return '根拠資料の紐付け漏れを確認します。';
+    if (summary.includes('申請にあたり、認定支援機関の確認書')) return '専門家による確認が必要か確認します。';
+    return summary;
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-soft-enter pb-12">
       {/* 案件情報サマリー */}
@@ -308,9 +328,15 @@ export default function AIEvidencePage() {
                         </div>
                         <h4 className={`font-bold block w-full min-w-0 break-words break-all line-clamp-2 leading-snug overflow-hidden text-[15px] sm:text-base ${
                           item.status === 'verified' || item.status === 'not_applicable' ? 'text-slate-500' : 'text-slate-800'
-                        }`}>{item.title}</h4>
+                        }`}>
+                          <span className="sm:hidden">{getMobileTitle(item.title)}</span>
+                          <span className="hidden sm:inline">{item.title}</span>
+                        </h4>
                       </div>
-                      <p className="text-[13px] sm:text-xs text-slate-500 mb-2 leading-[1.8] sm:leading-relaxed line-clamp-3 sm:line-clamp-none">{item.summary}</p>
+                      <p className="text-[13px] sm:text-xs text-slate-500 mb-2 leading-[1.8] sm:leading-relaxed line-clamp-3 sm:line-clamp-none">
+                        <span className="sm:hidden">{getMobileSummary(item.summary)}</span>
+                        <span className="hidden sm:inline">{item.summary}</span>
+                      </p>
                       
                       {item.sourceReference && (
                         <div className="flex items-center gap-1 text-[10px] text-slate-400 opacity-75 mt-3">
