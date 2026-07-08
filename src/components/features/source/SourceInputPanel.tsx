@@ -249,7 +249,7 @@ export default function SourceInputPanel({
                 <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                登録した資料をAIで整理する
+                AIで整理する
               </span>
             )}
           </Button>
