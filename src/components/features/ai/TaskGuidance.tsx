@@ -11,9 +11,9 @@ interface TaskGuidanceProps {
 export default function TaskGuidance({ task, caseData }: TaskGuidanceProps) {
   // generated = AIが自動生成した原文（読み取り専用の参照）
   const [generatedPrompt, setGeneratedPrompt] = useState('');
-  // editable = 画面に表示・人間が編集するテキスト
+  // editable = 画面に表示・担当者が編集するテキスト
   const [editablePrompt, setEditablePrompt] = useState('');
-  // 人間が一度でも手を入れたかのフラグ
+  // 担当者が一度でも手を入れたかのフラグ
   const [isPromptEdited, setIsPromptEdited] = useState(false);
 
   // コンテキストリセットを判定するためのRef

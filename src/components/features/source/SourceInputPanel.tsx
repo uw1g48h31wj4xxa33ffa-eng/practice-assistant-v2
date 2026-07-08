@@ -8,12 +8,20 @@ interface SourceInputPanelProps {
   sourceDocuments: SourceDocument[];
   onAddDocument: (doc: SourceDocument) => void;
   onRemoveDocument: (id: string) => void;
+  onRemoveAllDocuments?: () => void;
+  onAnalyze?: () => void;
+  analyzeStatus?: 'idle' | 'analyzing' | 'completed' | 'error';
+  hasHumanVerifiedItems?: boolean;
 }
 
 export default function SourceInputPanel({
   sourceDocuments,
   onAddDocument,
-  onRemoveDocument
+  onRemoveDocument,
+  onRemoveAllDocuments,
+  onAnalyze,
+  analyzeStatus = 'idle',
+  hasHumanVerifiedItems = false
 }: SourceInputPanelProps) {
   const [inputType, setInputType] = useState<SourceType>('pdf');
   const [title, setTitle] = useState('');
@@ -54,9 +62,6 @@ export default function SourceInputPanel({
     setText('');
   };
 
-  const handleAIAnalyze = () => {
-    alert('AI整理機能は今後実装予定です');
-  };
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-6 order-2 md:order-none">
@@ -160,7 +165,24 @@ export default function SourceInputPanel({
 
       {/* 資料リスト */}
       <div className="p-6 bg-slate-50">
-        <h3 className="text-sm font-bold text-slate-700 mb-4">登録済み資料（{sourceDocuments.length}件）</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+          <h3 className="text-sm font-bold text-slate-700">登録済み資料（{sourceDocuments.length}件）</h3>
+          {sourceDocuments.length > 0 && onRemoveAllDocuments && (
+            <button
+              onClick={() => {
+                if (window.confirm('登録済み資料をすべて削除します。よろしいですか？')) {
+                  onRemoveAllDocuments();
+                }
+              }}
+              className="w-full sm:w-auto text-xs text-slate-500 hover:text-red-600 bg-white hover:bg-red-50 px-4 py-2 rounded-lg border border-slate-200 hover:border-red-200 transition-colors shadow-sm font-medium flex items-center justify-center gap-1 min-h-[44px] sm:min-h-0"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              登録資料をすべて削除
+            </button>
+          )}
+        </div>
         {sourceDocuments.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4">資料はまだ登録されていません</p>
         ) : (
@@ -178,11 +200,15 @@ export default function SourceInputPanel({
                   <p className="text-[10px] text-slate-400 mt-1">追加日時: {new Date(doc.uploadedAt).toLocaleString()}</p>
                 </div>
                 <button 
-                  onClick={() => onRemoveDocument(doc.id)}
-                  className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                  onClick={() => {
+                    if (window.confirm('この資料を削除してもよろしいですか？')) {
+                      onRemoveDocument(doc.id);
+                    }
+                  }}
+                  className="text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors p-3 rounded-lg flex items-center justify-center -mr-2"
                   aria-label="削除"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
@@ -191,17 +217,41 @@ export default function SourceInputPanel({
           </ul>
         )}
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-col items-center gap-2">
+          {hasHumanVerifiedItems ? (
+            <p className="text-sm text-amber-600 font-medium">既存の抽出結果があります。安全のため上書きしません</p>
+          ) : sourceDocuments.length === 0 ? (
+            <p className="text-sm text-slate-500">資料を登録するとAIで整理できます</p>
+          ) : analyzeStatus === 'completed' ? (
+            <p className="text-sm text-green-600 font-medium">AI整理結果を確認してください</p>
+          ) : analyzeStatus === 'analyzing' ? (
+            <p className="text-sm text-indigo-600 font-medium">登録資料を整理しています...</p>
+          ) : (
+            <p className="text-sm text-slate-500">登録済み資料 {sourceDocuments.length}件をAIで整理できます</p>
+          )}
+
           <Button 
-            onClick={handleAIAnalyze} 
-            disabled={sourceDocuments.length === 0}
+            onClick={onAnalyze} 
+            disabled={sourceDocuments.length === 0 || hasHumanVerifiedItems || analyzeStatus === 'analyzing'}
             variant="primary" 
-            className="w-full sm:w-auto shadow-md"
+            className={`w-full sm:w-auto shadow-md min-h-[44px] ${analyzeStatus === 'analyzing' ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            登録した資料をAIで整理する
+            {analyzeStatus === 'analyzing' ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                整理中...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                登録した資料をAIで整理する
+              </span>
+            )}
           </Button>
         </div>
       </div>

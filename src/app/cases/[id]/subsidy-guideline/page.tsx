@@ -8,6 +8,7 @@ import VerificationCard from '@/components/features/ai/VerificationCard';
 import CompletionActionArea from '@/components/ui/CompletionActionArea';
 import SourceInputPanel from '@/components/features/source/SourceInputPanel';
 import { ExtractedInfo, VerificationStatus, SourceDocument } from '@/types';
+import { buildMockExtractedItemsFromSources } from '@/lib/ai/mockSourceAnalyzer';
 
 const mockGuidelineItems: ExtractedInfo[] = [
   { id: 'g1', category: '補助金名', originalContent: 'IT導入補助金2024 通常枠', content: 'IT導入補助金2024 通常枠', sourceReference: '公募要項 p.1', status: 'unverified', aiConfidence: 'high' },
@@ -37,13 +38,18 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
   
   const initialCase = getCaseById(caseId);
 
-  // 案A: 初期表示ではローカルstateにモックデータを持たせる
   const [items, setItems] = useState<ExtractedInfo[]>(() => {
     if (initialCase?.subsidyGuidelineItems && initialCase.subsidyGuidelineItems.length > 0) {
       return initialCase.subsidyGuidelineItems;
     }
     return mockGuidelineItems;
   });
+
+  const [analyzeStatus, setAnalyzeStatus] = useState<'idle' | 'analyzing' | 'completed' | 'error'>('idle');
+
+  const hasHumanVerifiedItems = items.some(item => 
+    item.status === 'verified' || item.status === 'modified' || item.status === 'rejected'
+  );
 
   const sourceDocuments = initialCase?.sourceDocuments ?? [];
 
@@ -59,6 +65,42 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
     updateCase(caseId, {
       sourceDocuments: sourceDocuments.filter(d => d.id !== docId)
     });
+  };
+
+  const handleRemoveAllDocuments = () => {
+    if (!initialCase) return;
+    updateCase(caseId, {
+      sourceDocuments: []
+    });
+  };
+
+  const handleAnalyze = () => {
+    if (sourceDocuments.length === 0 || hasHumanVerifiedItems) return;
+
+    setAnalyzeStatus('analyzing');
+
+    setTimeout(() => {
+      try {
+        const newItems = buildMockExtractedItemsFromSources(sourceDocuments);
+        setItems(newItems);
+        if (initialCase) {
+          updateCase(caseId, { subsidyGuidelineItems: newItems });
+        }
+        setAnalyzeStatus('completed');
+      } catch (error) {
+        setAnalyzeStatus('error');
+      }
+    }, 1500);
+  };
+
+  const handleResetItems = () => {
+    if (window.confirm('AI抽出項目を削除します。確認済み・修正済みの内容も削除されます。よろしいですか？')) {
+      setItems([]);
+      if (initialCase) {
+        updateCase(caseId, { subsidyGuidelineItems: [] });
+      }
+      setAnalyzeStatus('idle');
+    }
   };
 
   const pendingScrollRef = useRef<string | null>(null);
@@ -193,6 +235,10 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
         sourceDocuments={sourceDocuments}
         onAddDocument={handleAddDocument}
         onRemoveDocument={handleRemoveDocument}
+        onRemoveAllDocuments={handleRemoveAllDocuments}
+        onAnalyze={handleAnalyze}
+        analyzeStatus={analyzeStatus}
+        hasHumanVerifiedItems={hasHumanVerifiedItems}
       />
 
       {/* 公募要項の基本情報 (AI抽出結果) */}
@@ -207,12 +253,37 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
             </h2>
             <p className="text-sm text-slate-500 mt-1">公募要項から自動抽出された想定項目です。内容を確認し、修正または却下を行ってください。</p>
           </div>
-          <div className="text-sm font-bold text-slate-500">
-            確認進捗: {verifiedCount} / {items.length}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-3 sm:mt-0">
+            <div className="text-sm font-bold text-slate-500 order-1 sm:order-2 self-start sm:self-auto">
+              確認進捗: {verifiedCount} / {items.length}
+            </div>
+            {items.length > 0 && (
+              <button
+                onClick={handleResetItems}
+                className="order-2 sm:order-1 w-full sm:w-auto min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1 text-sm sm:text-xs text-slate-500 hover:text-red-600 bg-white sm:bg-slate-100 hover:bg-red-50 px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg sm:rounded transition-colors border border-slate-200 hover:border-red-200 shadow-sm sm:shadow-none font-medium"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                抽出結果をリセット
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {items.length === 0 ? (
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center">
+            <svg className="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            {sourceDocuments.length === 0 ? (
+              <p className="text-slate-500 font-medium">まずPDF・URL・テキストのいずれかを登録してください。</p>
+            ) : (
+              <p className="text-slate-500 font-medium">資料を登録して「AIで整理する」を押すと、抽出項目がここに表示されます。</p>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map(info => (
             <div key={info.id} id={`card-${info.id}`} className="scroll-mt-24">
               <VerificationCard 
@@ -221,7 +292,8 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
               />
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 不足情報欄 */}

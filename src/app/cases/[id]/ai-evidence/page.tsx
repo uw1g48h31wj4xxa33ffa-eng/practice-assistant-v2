@@ -232,7 +232,7 @@ export default function AIEvidencePage() {
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                AI回答は事実と異なる「ハルシネーション」を含む可能性があります。必ず一次情報（法令・通達等）の裏付けを右のEvidence欄に登録し、人間が採用可否を判断してください。
+                AI回答は事実と異なる「ハルシネーション」を含む可能性があります。必ず一次情報（法令・通達等）の裏付けを右のEvidence欄に登録し、担当者が採用可否を判断してください。
               </div>
               <textarea
                 value={aiOutput}
@@ -289,7 +289,7 @@ export default function AIEvidencePage() {
                           className="w-4 h-4 text-green-600 rounded focus:ring-green-500" 
                         />
                         <span className={`text-xs font-bold ${item.isVerifiedByHuman ? 'text-green-700' : 'text-slate-500'}`}>
-                          {item.isVerifiedByHuman ? '人間による確認済' : '未確認（確認が必要です）'}
+                          {item.isVerifiedByHuman ? '担当者による確認済' : '未確認（確認が必要です）'}
                         </span>
                       </label>
                     </div>
