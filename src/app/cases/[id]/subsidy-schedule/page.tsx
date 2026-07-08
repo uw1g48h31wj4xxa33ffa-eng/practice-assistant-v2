@@ -165,22 +165,22 @@ export default function SubsidySchedulePage() {
     if (status === 'not_started') {
       return (
         <div className="flex w-full gap-2">
-          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
-          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
+          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200 whitespace-nowrap">進行中</button>
+          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">完了</button>
         </div>
       );
     } else if (status === 'in_progress') {
       return (
         <div className="flex w-full gap-2">
-          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
-          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
+          <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">完了</button>
+          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未着手</button>
         </div>
       );
     } else if (status === 'done') {
       return (
         <div className="flex w-full gap-2">
-          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中に戻す</button>
-          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
+          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200 whitespace-nowrap">進行中</button>
+          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未着手</button>
         </div>
       );
     }
@@ -188,8 +188,8 @@ export default function SubsidySchedulePage() {
     // 未知の値の場合もnot_startedとして扱う
     return (
       <div className="flex w-full gap-2">
-        <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
-        <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
+        <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200 whitespace-nowrap">進行中</button>
+        <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">完了</button>
       </div>
     );
   };
@@ -201,8 +201,8 @@ export default function SubsidySchedulePage() {
     }`}>
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-start gap-2 mb-1">
-            <div className="flex items-center gap-1 shrink-0 mt-0.5">
+          <div className="flex flex-col gap-1 mb-1">
+            <div className="flex flex-wrap items-center gap-1">
               <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shrink-0">
                 {item.dueDate}
               </span>
@@ -219,7 +219,7 @@ export default function SubsidySchedulePage() {
                  (item.progressStatus || 'not_started') === 'in_progress' ? '進行中' : '未着手'}
               </span>
             </div>
-            <h4 className={`font-bold text-base break-words break-all line-clamp-2 min-w-0 flex-1 ${item.progressStatus === 'done' ? 'text-slate-500' : 'text-slate-800'}`}>
+            <h4 className={`font-bold text-base block w-full min-w-0 break-words break-all line-clamp-2 leading-snug ${item.progressStatus === 'done' ? 'text-slate-500' : 'text-slate-800'}`}>
               {item.title}
             </h4>
           </div>

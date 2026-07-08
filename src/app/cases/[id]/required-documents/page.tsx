@@ -136,38 +136,38 @@ export default function RequiredDocumentsPage() {
     if (status === 'not_started') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
-          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
+          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap">依頼中</button>
+          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">受領済</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200 whitespace-nowrap">不要</button>
         </>
       );
     } else if (status === 'requested') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
+          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">受領済</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未着手</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200 whitespace-nowrap">不要</button>
         </>
       );
     } else if (status === 'received') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中に戻す</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
+          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap">依頼中</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未着手</button>
         </>
       );
     } else if (status === 'not_needed') {
       return (
-        <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
+        <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="w-full min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未着手</button>
       );
     }
     
     // 未知の値の場合もnot_startedとして扱う
     return (
       <>
-        <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
-        <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
-        <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
+        <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap">依頼中</button>
+        <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">受領済</button>
+        <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200 whitespace-nowrap">不要</button>
       </>
     );
   };
@@ -311,8 +311,8 @@ export default function RequiredDocumentsPage() {
                 }`}>
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-start gap-2 mb-1">
-                        <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                      <div className="flex flex-col gap-1 mb-1">
+                        <div className="flex flex-wrap items-center gap-1">
                           {doc.requiredType === 'required' ? (
                             <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold shrink-0">必須</span>
                           ) : (
@@ -332,7 +332,7 @@ export default function RequiredDocumentsPage() {
                              (doc.status || 'not_started') === 'not_needed' ? '不要' : '未着手'}
                           </span>
                         </div>
-                        <h4 className={`font-bold text-base break-words break-all line-clamp-2 min-w-0 flex-1 ${
+                        <h4 className={`font-bold text-base block w-full min-w-0 break-words break-all line-clamp-2 leading-snug ${
                           doc.status === 'received' || doc.status === 'not_needed' ? 'text-slate-500' : 'text-slate-800'
                         }`}>{doc.name}</h4>
                       </div>
