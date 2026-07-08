@@ -1,7 +1,7 @@
 import { ReviewStatus } from "@/components/ui/HumanApprovalBadge";
 
 export type Priority = 'high' | 'medium' | 'low';
-export type CaseProgressStatus = 'hearing' | 'rule_design' | 'ai_review' | 'delivery_prep' | 'completed' | 'guideline_review' | 'document_prep' | 'schedule_management';
+export type CaseProgressStatus = 'hearing' | 'rule_design' | 'ai_review' | 'ai_evidence' | 'delivery_prep' | 'completed' | 'guideline_review' | 'document_prep' | 'schedule_management';
 
 export interface SourceDocument {
   id: string;
@@ -40,6 +40,20 @@ export interface Case {
   validationRecord?: AIValidationRecord;
   sourceDocuments?: SourceDocument[];
   requiredDocuments?: RequiredDocument[];
+  evidenceItems?: EvidenceItem[];
+}
+
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  category: "guideline" | "document" | "schedule" | "risk" | "source";
+  status: "unchecked" | "verified" | "needs_revision" | "not_applicable";
+  summary: string;
+  sourceReference?: string;
+  riskLevel?: "high" | "medium" | "low";
+  memo?: string;
+  createdBy: "ai" | "manual";
+  updatedAt: string;
 }
 
 // Mock Data
@@ -309,7 +323,7 @@ export interface ExtractedInfo {
   }[];
 }
 
-export interface EvidenceItem {
+export interface ValidationEvidenceItem {
   id: string;
   sourceType: '官公庁' | '法令' | '通達' | 'Q&A' | '裁判例' | '専門団体' | 'その他';
   title: string;
@@ -322,7 +336,7 @@ export interface EvidenceItem {
 export interface AIValidationRecord {
   promptText: string;
   aiOutput: string;
-  evidenceItems: EvidenceItem[];
+  evidenceItems: ValidationEvidenceItem[];
   staffComment: string;
   expertComment: string;
 }

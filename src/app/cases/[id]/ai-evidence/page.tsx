@@ -1,468 +1,422 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useCases } from '@/hooks/useCases';
-import Button, { SECONDARY_BUTTON_CLASS } from '@/components/ui/Button';
-import { EvidenceItem, AIValidationRecord } from '@/types';
+import { workflowTemplates } from '@/config/workflowTemplates';
+import { EvidenceItem } from '@/types';
+import { buildMockEvidenceItems } from '@/lib/ai/mockEvidenceGenerator';
 
 export default function AIEvidencePage() {
   const params = useParams();
-  const caseId = params.id as string;
   const router = useRouter();
-  const { getCaseById, updateCase, updateCaseStatus } = useCases();
-
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [caseData, setCaseData] = useState<ReturnType<typeof getCaseById>>(undefined);
-
-  // Editable state
-  const [promptText, setPromptText] = useState('');
-  const [aiOutput, setAiOutput] = useState('');
-  const [evidenceItems, setEvidenceItems] = useState<EvidenceItem[]>([]);
-  const [staffComment, setStaffComment] = useState('');
-  const [expertComment, setExpertComment] = useState('');
-  const [currentReviewStatus, setCurrentReviewStatus] = useState<string>('pending_review');
-
-  const [showAddEvidence, setShowAddEvidence] = useState(false);
-  const [newEvidence, setNewEvidence] = useState<Partial<EvidenceItem>>({
-    sourceType: '官公庁',
-    title: '',
-    url: '',
-    summary: '',
-    isVerifiedByHuman: false
-  });
-
-  const prevCaseIdRef = useRef<string | null>(null);
+  const caseId = params.id as string;
+  const { cases, updateCase } = useCases();
+  
+  const [isClient, setIsClient] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    const c = getCaseById(caseId);
-    setCaseData(c);
+    setIsClient(true);
+  }, []);
 
-    // Initial load for this case
-    if (c && prevCaseIdRef.current !== caseId) {
-      prevCaseIdRef.current = caseId;
-      setCurrentReviewStatus(c.reviewStatus);
+  const currentCase = cases.find(c => c.id === caseId);
 
-      // Generate default contents
-      const validItems = c.extractedItems?.filter(i => i.status !== 'rejected') || [];
-      let defaultPrompt = `案件名: ${c.title}\n顧問先: ${c.clientName}\n案件種別: ${c.caseType}\n\n`;
-      if (validItems.length > 0) {
-        defaultPrompt += `【抽出情報】\n`;
-        validItems.forEach(i => {
-          defaultPrompt += `- [${i.category}] ${i.content}\n`;
-        });
-      }
-      defaultPrompt += `\n上記を踏まえ、法的リスクと必要な規程案を提示してください。`;
-      
-      const defaultAiOutput = `（※これは自動生成されたモック回答です）\n\n本件「${c.title}」に関する初期検討結果：\n\n1. 最新の法改正情報の確認が推奨されます。\n2. 就業規則への記載事項について、実態との乖離がないかヒアリング内容と照合してください。\n\n※実際の業務では、ここにAIツールからの出力結果が反映されます。`;
+  if (!isClient) return null;
 
-      if (c.validationRecord) {
-        setPromptText(c.validationRecord.promptText || defaultPrompt);
-        setAiOutput(c.validationRecord.aiOutput || defaultAiOutput);
-        setEvidenceItems(c.validationRecord.evidenceItems);
-        setStaffComment(c.validationRecord.staffComment);
-        setExpertComment(c.validationRecord.expertComment);
-      } else {
-        // Empty state for new cases -> use defaults instead of empty strings
-        setPromptText(defaultPrompt);
-        setAiOutput(defaultAiOutput);
-        setEvidenceItems([]);
-        setStaffComment('');
-        setExpertComment('');
-      }
-    }
-    setIsLoaded(true);
-  }, [caseId, getCaseById]);
-
-  const saveRecord = useCallback(() => {
-    if (!caseId) return;
-    const updatedRecord: AIValidationRecord = {
-      promptText,
-      aiOutput,
-      evidenceItems,
-      staffComment,
-      expertComment
-    };
-    updateCase(caseId, { validationRecord: updatedRecord });
-  }, [caseId, promptText, aiOutput, evidenceItems, staffComment, expertComment, updateCase]);
-
-  // Save automatically when items change
-  useEffect(() => {
-    if (isLoaded && prevCaseIdRef.current === caseId) {
-      const timeout = setTimeout(() => {
-        saveRecord();
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [promptText, aiOutput, evidenceItems, staffComment, expertComment, isLoaded, caseId, saveRecord]);
-
-  const handleAddEvidence = () => {
-    if (!newEvidence.title || !newEvidence.summary) return;
-
-    const item: EvidenceItem = {
-      id: `evi_${Date.now()}`,
-      sourceType: newEvidence.sourceType as any,
-      title: newEvidence.title,
-      url: newEvidence.url || '',
-      checkedAt: new Date().toISOString().split('T')[0],
-      summary: newEvidence.summary,
-      isVerifiedByHuman: newEvidence.isVerifiedByHuman || false
-    };
-
-    setEvidenceItems(prev => [...prev, item]);
-    setShowAddEvidence(false);
-    setNewEvidence({ sourceType: '官公庁', title: '', url: '', summary: '', isVerifiedByHuman: false });
-  };
-
-  const pendingScrollRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (pendingScrollRef.current) {
-      const targetId = pendingScrollRef.current;
-      pendingScrollRef.current = null;
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }, [evidenceItems]);
-
-  const toggleEvidenceVerification = (id: string) => {
-    const itemToToggle = evidenceItems.find(item => item.id === id);
-    if (itemToToggle && !itemToToggle.isVerifiedByHuman) {
-      const currentIndex = evidenceItems.findIndex(item => item.id === id);
-      let nextUnverified = evidenceItems.slice(currentIndex + 1).find(item => !item.isVerifiedByHuman);
-      if (!nextUnverified) {
-        nextUnverified = evidenceItems.slice(0, currentIndex).find(item => !item.isVerifiedByHuman);
-      }
-      
-      if (nextUnverified) {
-        pendingScrollRef.current = `evidence-${nextUnverified.id}`;
-      } else {
-        pendingScrollRef.current = 'review-area';
-      }
-    }
-
-    setEvidenceItems(prev => prev.map(item => 
-      item.id === id ? { ...item, isVerifiedByHuman: !item.isVerifiedByHuman } : item
-    ));
-  };
-
-  const removeEvidence = (id: string) => {
-    setEvidenceItems(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleStatusChange = (status: string) => {
-    // 専門家確認前は納品反映可(delivered)にできない制御
-    if (status === 'delivered' && currentReviewStatus !== 'expert_confirmed') {
-      alert('納品反映可に変更するには、まず専門家確認済にする必要があります。');
-      return;
-    }
-    setCurrentReviewStatus(status);
-    updateCaseStatus(caseId, status as any);
-  };
-
-  const handleSaveAndNext = () => {
-    updateCase(caseId, { progressStatus: 'delivery_prep' });
-    router.push(`/cases/${caseId}/delivery`);
-  };
-
-  if (!isLoaded || !caseData) {
-    return <div className="p-8 text-center text-slate-500">読み込み中...</div>;
+  if (!currentCase) {
+    return (
+      <div className="p-6">
+        <h1 className="text-xl font-bold text-red-600 mb-4">エラー</h1>
+        <p>案件が見つかりません。</p>
+        <Link href="/cases" className="text-indigo-600 hover:underline mt-4 inline-block">一覧へ戻る</Link>
+      </div>
+    );
   }
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12">
-      {/* 案件情報サマリー */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-4 mb-1">
-            <Link href={`/cases/${caseId}`} className="text-slate-500 hover:text-indigo-600 transition-colors">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-800">AI検証・エビデンス</h1>
-          </div>
-          <div className="text-sm text-slate-600 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-semibold text-slate-800">{caseData.title}</span>
-            <span className="text-slate-300 hidden sm:inline">|</span>
-            <span>顧問先: {caseData.clientName}</span>
-            <span className="text-slate-300 hidden sm:inline">|</span>
-            <span>担当者: {caseData.assignee}</span>
-          </div>
+  const template = currentCase.templateId 
+    ? workflowTemplates.find(t => t.id === currentCase.templateId) 
+    : undefined;
+    
+  const currentStepIndex = template?.steps.findIndex(s => s.id === 'ai_evidence') ?? -1;
+  const nextStep = template && currentStepIndex >= 0 && currentStepIndex + 1 < template.steps.length
+    ? template.steps[currentStepIndex + 1]
+    : null;
+
+  const evidenceItems = currentCase.evidenceItems || [];
+
+  const totalItems = evidenceItems.length;
+  const verifiedCount = evidenceItems.filter(i => i.status === 'verified').length;
+  const notApplicableCount = evidenceItems.filter(i => i.status === 'not_applicable').length;
+  const needsRevisionCount = evidenceItems.filter(i => i.status === 'needs_revision').length;
+  const uncheckedCount = evidenceItems.filter(i => i.status === 'unchecked').length;
+
+  const completedCount = verifiedCount + notApplicableCount;
+  const progressPercent = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+  const remainingCount = totalItems - completedCount;
+  const hasIncomplete = (needsRevisionCount > 0 || uncheckedCount > 0);
+
+  const handleGenerate = () => {
+    // 上書き防止チェック
+    if (evidenceItems.length > 0) {
+      const hasModified = evidenceItems.some(i => i.status !== 'unchecked');
+      if (hasModified) {
+        if (!window.confirm('すでに確認済みの検証結果が含まれています。再生成して上書きしてもよろしいですか？')) {
+          return;
+        }
+      }
+    }
+
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      const generated = buildMockEvidenceItems(currentCase);
+      updateCase(caseId, { evidenceItems: generated });
+      setIsAnalyzing(false);
+    }, 1500);
+  };
+
+  const handleStatusChange = (itemId: string, newStatus: EvidenceItem['status']) => {
+    const updated = evidenceItems.map(item => 
+      item.id === itemId ? { ...item, status: newStatus, updatedAt: new Date().toISOString() } : item
+    );
+    updateCase(caseId, { evidenceItems: updated });
+
+    setTimeout(() => {
+      const currentIndex = evidenceItems.findIndex(i => i.id === itemId);
+      if (currentIndex === -1) return;
+
+      const nextIncomplete = updated.slice(currentIndex + 1).find(i => 
+        (i.status || 'unchecked') === 'unchecked' || (i.status || 'unchecked') === 'needs_revision'
+      );
+
+      if (nextIncomplete) {
+        document.getElementById(`evidence-card-${nextIncomplete.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const allCompleted = updated.every(i => (i.status || 'unchecked') === 'verified' || (i.status || 'unchecked') === 'not_applicable');
+        if (allCompleted) {
+          document.getElementById('next-action-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 50);
+  };
+
+  const handleNextStep = () => {
+    if (currentCase.progressStatus === 'ai_evidence') {
+      updateCase(caseId, { progressStatus: 'delivery_prep' });
+    }
+    if (nextStep?.href) {
+      router.push(nextStep.href.replace('[id]', caseId));
+    } else {
+      router.push(`/cases/${caseId}/workflow/delivery_prep`);
+    }
+  };
+
+  const renderContextualButtons = (item: EvidenceItem) => {
+    const status = item.status || 'unchecked';
+    if (status === 'unchecked') {
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'verified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">確認済</button>
+          <button onClick={() => handleStatusChange(item.id, 'needs_revision')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-red-50 text-red-700 border-red-200 whitespace-nowrap">要修正</button>
+          <button onClick={() => handleStatusChange(item.id, 'not_applicable')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200 whitespace-nowrap">対象外</button>
         </div>
-        <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-          <span className="text-xs font-bold text-slate-500">現在のステータス:</span>
-          <span className="text-sm font-bold text-indigo-700">
-            {currentReviewStatus === 'pending_review' ? 'レビュー待ち' :
-             currentReviewStatus === 'assignee_confirmed' ? '担当者確認済' :
-             currentReviewStatus === 'expert_confirmed' ? '専門家確認済' :
-             currentReviewStatus === 'delivered' ? '納品反映可' : currentReviewStatus}
-          </span>
+      );
+    } else if (status === 'verified') {
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'needs_revision')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-red-50 text-red-700 border-red-200 whitespace-nowrap">要修正</button>
+          <button onClick={() => handleStatusChange(item.id, 'unchecked')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未確認</button>
+        </div>
+      );
+    } else if (status === 'needs_revision') {
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'verified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">確認済</button>
+          <button onClick={() => handleStatusChange(item.id, 'unchecked')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未確認</button>
+        </div>
+      );
+    } else {
+      // not_applicable
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'unchecked')} className="w-full min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未確認</button>
+        </div>
+      );
+    }
+  };
+
+  const getCategoryLabel = (cat: string) => {
+    switch(cat) {
+      case 'guideline': return '要項';
+      case 'document': return '資料';
+      case 'schedule': return '予定';
+      case 'risk': return 'リスク';
+      case 'source': return '出典';
+      default: return 'その他';
+    }
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6 animate-soft-enter pb-12">
+      {/* 案件情報サマリー */}
+      <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <Link href={`/cases/${caseId}`} className="text-slate-400 hover:text-indigo-600 transition-colors">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </Link>
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">{currentCase.title}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{currentCase.clientName} | 担当: {currentCase.assignee}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左カラム: AI入力・出力 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 左側: サマリー＆進捗 */}
         <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-              <h2 className="font-bold text-slate-700">1. AI送信内容 (Prompt)</h2>
-            </div>
-            <div className="p-4">
-              <p className="text-xs text-slate-500 mb-2">※規程設計画面で生成されたプロンプト、または手動で入力した内容</p>
-              <textarea
-                value={promptText}
-                onChange={e => setPromptText(e.target.value)}
-                placeholder="AIに送信したプロンプトを貼り付けてください..."
-                className="w-full h-32 p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="bg-amber-50 px-4 py-3 border-b border-amber-200 flex justify-between items-center">
-              <h2 className="font-bold text-amber-900">2. AI回答 (Output)</h2>
-              <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded">要ファクトチェック</span>
-            </div>
-            <div className="p-4">
-              <div className="bg-red-50 text-red-700 text-xs p-3 rounded-lg border border-red-100 mb-4 font-medium flex gap-2">
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden sticky top-6">
+            <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                AI回答は事実と異なる「ハルシネーション」を含む可能性があります。必ず一次情報（法令・通達等）の裏付けを右のEvidence欄に登録し、担当者が採用可否を判断してください。
-              </div>
-              <textarea
-                value={aiOutput}
-                onChange={e => setAiOutput(e.target.value)}
-                placeholder="AIからの出力結果を貼り付けてください..."
-                className="w-full h-64 p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 右カラム: エビデンス・レビュー */}
-        <div className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
-            <div className="bg-indigo-50 px-4 py-3 border-b border-indigo-100 flex justify-between items-center">
-              <h2 className="font-bold text-indigo-900">3. 根拠・出典 (Evidence)</h2>
-              <span className="text-xs bg-white text-indigo-600 px-2 py-1 rounded-full border border-indigo-200 font-bold">
-                {evidenceItems.length}件登録
-              </span>
+                AI検証・エビデンス
+              </h2>
             </div>
             
-            <div className="p-4 flex-1 bg-slate-50">
-              {evidenceItems.length === 0 ? (
-                <div className="text-center py-8 bg-white border border-dashed border-slate-300 rounded-lg">
-                  <svg className="w-8 h-8 text-slate-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p className="text-slate-500 text-sm font-medium">根拠未登録</p>
-                  <p className="text-slate-400 text-xs mt-1">AI回答の裏付けとなる一次情報を登録してください</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {evidenceItems.map(item => (
-                    <div key={item.id} id={`evidence-${item.id}`} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative group scroll-mt-24">
-                      <button onClick={() => removeEvidence(item.id)} className="absolute top-2 right-2 text-slate-300 hover:text-red-500 hidden group-hover:block">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                      <div className="flex gap-2 items-start mb-2">
-                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{item.sourceType}</span>
-                        <h4 className="font-bold text-sm text-slate-800 pr-6 leading-tight">{item.title}</h4>
-                      </div>
-                      <p className="text-xs text-slate-600 mb-2">{item.summary}</p>
-                      {item.url && (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline flex items-center gap-1 mb-3 truncate">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                          {item.url}
-                        </a>
-                      )}
-                      <label className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors">
-                        <input 
-                          type="checkbox" 
-                          checked={item.isVerifiedByHuman}
-                          onChange={() => toggleEvidenceVerification(item.id)}
-                          className="w-4 h-4 text-green-600 rounded focus:ring-green-500" 
-                        />
-                        <span className={`text-xs font-bold ${item.isVerifiedByHuman ? 'text-green-700' : 'text-slate-500'}`}>
-                          {item.isVerifiedByHuman ? '担当者による確認済' : '未確認（確認が必要です）'}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {showAddEvidence ? (
-                <div className="mt-4 bg-white p-4 rounded-lg border border-slate-300 shadow-sm space-y-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-sm text-slate-800">根拠を手動追加</h3>
-                    <button onClick={() => setShowAddEvidence(false)} className="text-xs text-slate-500 hover:text-slate-800">キャンセル</button>
-                  </div>
-                  <select 
-                    value={newEvidence.sourceType}
-                    onChange={e => setNewEvidence({...newEvidence, sourceType: e.target.value as any})}
-                    className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="官公庁">官公庁</option>
-                    <option value="法令">法令</option>
-                    <option value="通達">通達</option>
-                    <option value="Q&A">Q&A</option>
-                    <option value="裁判例">裁判例</option>
-                    <option value="専門団体">専門団体</option>
-                    <option value="その他">その他</option>
-                  </select>
-                  <input 
-                    type="text" 
-                    placeholder="出典名 (例: 厚生労働省 ガイドライン)" 
-                    value={newEvidence.title}
-                    onChange={e => setNewEvidence({...newEvidence, title: e.target.value})}
-                    className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-indigo-500"
-                  />
-                  <input 
-                    type="text" 
-                    placeholder="URL (任意)" 
-                    value={newEvidence.url}
-                    onChange={e => setNewEvidence({...newEvidence, url: e.target.value})}
-                    className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-indigo-500"
-                  />
-                  <textarea 
-                    placeholder="要点・確認内容" 
-                    value={newEvidence.summary}
-                    onChange={e => setNewEvidence({...newEvidence, summary: e.target.value})}
-                    className="w-full p-2 border border-slate-300 rounded text-sm focus:outline-none focus:border-indigo-500 h-20"
-                  />
-                  <label className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={newEvidence.isVerifiedByHuman}
-                      onChange={e => setNewEvidence({...newEvidence, isVerifiedByHuman: e.target.checked})}
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+            <div className="p-5">
+              {/* ドーナツ進捗 */}
+              <div className="flex flex-col items-center justify-center mb-6">
+                <div className="relative w-32 h-32 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-100"
+                      strokeWidth="3"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
-                    <span className="text-xs font-medium text-slate-700">既に内容を確認した</span>
-                  </label>
-                  <button 
-                    onClick={handleAddEvidence}
-                    disabled={!newEvidence.title || !newEvidence.summary}
-                    className="w-full py-2 bg-indigo-600 text-white rounded text-sm font-bold hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
-                  >
-                    追加する
-                  </button>
+                    <path
+                      className="text-indigo-500 transition-all duration-1000 ease-out"
+                      strokeWidth="3"
+                      strokeDasharray={`${progressPercent}, 100`}
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-3xl font-black text-slate-800">{progressPercent}<span className="text-lg text-slate-500 ml-1">%</span></span>
+                    <span className="text-[10px] font-bold text-slate-400">完了</span>
+                  </div>
                 </div>
-              ) : (
-                <button 
-                  onClick={() => setShowAddEvidence(true)}
-                  className="w-full mt-4 py-3 border-2 border-dashed border-slate-300 rounded-lg text-sm font-bold text-slate-500 hover:border-indigo-300 hover:text-indigo-600 hover:bg-white transition-colors flex items-center justify-center gap-2"
+                <div className="flex gap-4 mt-4 text-xs font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <span className="text-slate-600">完了 {completedCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                    <span className="text-slate-600">残り {remainingCount}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-5 border-t border-slate-100">
+                <button
+                  onClick={handleGenerate}
+                  disabled={isAnalyzing}
+                  className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-indigo-200 disabled:opacity-50"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                  手動でEvidenceを追加する
+                  {isAnalyzing ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      AIで検証項目を生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                      AIで検証項目を生成する
+                    </>
+                  )}
                 </button>
-              )}
+              </div>
             </div>
           </div>
+          
+          {/* 要確認項目 */}
+          {needsRevisionCount > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-red-800 flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                要修正項目
+              </h3>
+              <ul className="space-y-2">
+                {evidenceItems.filter(i => i.status === 'needs_revision').map(i => (
+                  <li key={i.id} className="text-sm text-red-700 bg-white rounded-lg p-2 border border-red-100 flex items-center justify-between">
+                    <span className="truncate mr-2 font-bold">{i.title}</span>
+                    <button 
+                      onClick={() => document.getElementById(`evidence-card-${i.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                      className="text-xs text-red-500 hover:text-red-800 shrink-0 border border-red-200 px-2 py-1 rounded bg-red-50"
+                    >
+                      確認
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* 右側: 検証項目一覧 */}
+        <div className="lg:col-span-2 space-y-4">
+          {totalItems > 0 ? (
+            <div className="flex flex-col gap-3">
+              {evidenceItems.map(item => (
+                <div key={item.id} id={`evidence-card-${item.id}`} className={`bg-white p-4 rounded-xl border shadow-sm transition-colors ${
+                  item.status === 'verified' || item.status === 'not_applicable' ? 'border-slate-200 opacity-75' : 
+                  item.status === 'needs_revision' ? 'border-red-300 bg-red-50/30' : 'border-slate-200 hover:border-indigo-100'
+                }`}>
+                  <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col gap-1 mb-1">
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shrink-0">
+                            {getCategoryLabel(item.category)}
+                          </span>
+                          {item.riskLevel === 'high' && (
+                            <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold shrink-0">高リスク</span>
+                          )}
+                          <span className={`sm:hidden px-2 py-0.5 border rounded text-[10px] font-bold shrink-0 ${
+                            item.status === 'verified' ? 'bg-green-50 text-green-700 border-green-200' :
+                            item.status === 'needs_revision' ? 'bg-red-50 text-red-700 border-red-200' :
+                            item.status === 'not_applicable' ? 'bg-slate-100 text-slate-500 border-slate-200' :
+                            'bg-slate-100 text-slate-600 border-slate-300'
+                          }`}>
+                            {item.status === 'verified' ? '確認済' :
+                             item.status === 'needs_revision' ? '要修正' :
+                             item.status === 'not_applicable' ? '対象外' : '未確認'}
+                          </span>
+                        </div>
+                        <h4 className={`font-bold block w-full min-w-0 break-words break-all line-clamp-2 leading-snug overflow-hidden text-[15px] sm:text-base ${
+                          item.status === 'verified' || item.status === 'not_applicable' ? 'text-slate-500' : 'text-slate-800'
+                        }`}>{item.title}</h4>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-2 leading-relaxed">{item.summary}</p>
+                      
+                      {item.sourceReference && (
+                        <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-2">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                          出典・根拠: {item.sourceReference}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="shrink-0 w-full xl:w-auto">
+                      {/* PC用: 横並び */}
+                      <div className="hidden sm:flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'verified')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.status === 'verified' 
+                              ? 'bg-green-50 text-green-700 border-green-200' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          確認済
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'needs_revision')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.status === 'needs_revision' 
+                              ? 'bg-red-50 text-red-700 border-red-200' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          要修正
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'not_applicable')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.status === 'not_applicable' 
+                              ? 'bg-slate-100 text-slate-600 border-slate-300' 
+                              : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          対象外
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'unchecked')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.status === 'unchecked' 
+                              ? 'bg-slate-100 text-slate-700 border-slate-300' 
+                              : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          未確認
+                        </button>
+                      </div>
+
+                      {/* スマホ用: コンテキストに応じた主要操作ボタン */}
+                      <div className="flex sm:hidden items-center gap-2 w-full mt-3">
+                        {renderContextualButtons(item)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center h-full flex flex-col items-center justify-center min-h-[300px]">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">検証項目がありません</h3>
+              <p className="text-sm text-slate-500 max-w-md">
+                左側のパネルから「AIで検証項目を生成する」をクリックして、<br className="hidden sm:block" />
+                これまでに整理した内容の整合性を検証してください。
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* レビュー＆最終判断 */}
-      <div id="review-area" className="bg-slate-800 rounded-xl shadow-sm overflow-hidden text-white mt-8 scroll-mt-24">
-        <div className="px-6 py-4 border-b border-slate-700">
-          <h2 className="font-bold text-lg">4. 内容確認・承認</h2>
-          <p className="text-xs text-slate-400 mt-1">※AI回答をそのまま納品せず、必ず専門家が内容を吟味して採用可否を判断してください。</p>
+      {/* 下部アクション */}
+      <div id="next-action-area" className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+        <div>
+          <h3 className="font-bold text-slate-800 text-sm">検証が完了したら次へ進んでください</h3>
+          {hasIncomplete ? (
+            <p className="text-xs font-bold text-red-600 mt-1 flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              未確認または要修正の項目が残っていますが、進めることは可能です
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">次の工程では納品・提出準備を行います</p>
+          )}
         </div>
-        
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-300 mb-2">担当者コメント (一次確認)</label>
-              <textarea
-                value={staffComment}
-                onChange={e => setStaffComment(e.target.value)}
-                placeholder="担当者からの所感や、専門家へ確認したい点を記入..."
-                className="w-full h-24 p-3 bg-slate-900 border border-slate-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-300 mb-2">専門家コメント (最終確認)</label>
-              <textarea
-                value={expertComment}
-                onChange={e => setExpertComment(e.target.value)}
-                placeholder="社労士等による法的見解や、修正指示を記入..."
-                className="w-full h-24 p-3 bg-slate-900 border border-slate-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-slate-500"
-              />
-            </div>
-          </div>
-
-          <div className="bg-slate-900 p-6 rounded-lg border border-slate-700 flex flex-col justify-center">
-            <h3 className="font-bold text-sm text-slate-400 mb-4 text-center">案件ステータスを更新</h3>
-            <div className="grid grid-cols-1 gap-3">
-              <button 
-                onClick={() => handleStatusChange('pending_review')}
-                className={`py-3 px-4 rounded-lg font-bold text-sm transition-all border ${
-                  currentReviewStatus === 'pending_review' 
-                    ? 'bg-amber-100 text-amber-800 border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.3)]' 
-                    : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700'
-                }`}
-              >
-                未確認 / レビュー待ちに戻す
-              </button>
-              <button 
-                onClick={() => handleStatusChange('assignee_confirmed')}
-                className={`py-3 px-4 rounded-lg font-bold text-sm transition-all border ${
-                  currentReviewStatus === 'assignee_confirmed' 
-                    ? 'bg-blue-100 text-blue-800 border-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
-                    : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700'
-                }`}
-              >
-                担当者確認済
-              </button>
-              <button 
-                onClick={() => handleStatusChange('expert_confirmed')}
-                className={`py-3 px-4 rounded-lg font-bold text-sm transition-all border ${
-                  currentReviewStatus === 'expert_confirmed' 
-                    ? 'bg-green-100 text-green-800 border-green-300 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
-                    : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700'
-                }`}
-              >
-                専門家確認済
-              </button>
-              <button 
-                onClick={() => handleStatusChange('delivered')}
-                className={`py-3 px-4 rounded-lg font-bold text-sm transition-all border ${
-                  currentReviewStatus === 'delivered' 
-                    ? 'bg-white text-slate-800 border-slate-300 shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-                    : 'bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700'
-                }`}
-              >
-                納品反映可
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 下部アクション：詳細画面へ戻る & 工程完了 */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-slate-200">
-        <Link 
-          href={`/cases/${caseId}`}
-          className={`${SECONDARY_BUTTON_CLASS} w-full sm:w-auto text-center`}
+        <button
+          onClick={handleNextStep}
+          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
         >
-          案件詳細へ戻る
-        </Link>
-        <Button
-          variant="primary"
-          onClick={handleSaveAndNext}
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          }
-        >
-          <span>工程を完了する</span>
-        </Button>
+          次の工程へ進む
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   );

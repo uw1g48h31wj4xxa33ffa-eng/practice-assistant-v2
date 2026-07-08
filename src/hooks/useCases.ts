@@ -17,7 +17,7 @@ export function normalizeCase(raw: any): Case {
     employeeCount: raw?.employeeCount || '未確認',
     clientContactPerson: raw?.clientContactPerson || '',
     reviewStatus: ['pending_review', 'assignee_confirmed', 'expert_confirmed', 'delivered'].includes(raw?.reviewStatus) ? raw.reviewStatus : 'pending_review',
-    progressStatus: ['hearing', 'rule_design', 'ai_review', 'delivery_prep', 'completed', 'guideline_review', 'document_prep', 'schedule_management'].includes(raw?.progressStatus) ? raw.progressStatus : 'hearing',
+    progressStatus: ['hearing', 'rule_design', 'ai_review', 'ai_evidence', 'delivery_prep', 'completed', 'guideline_review', 'document_prep', 'schedule_management'].includes(raw?.progressStatus) ? raw.progressStatus : 'hearing',
     memo: raw?.memo || '',
     createdAt: raw?.createdAt || new Date().toISOString().split('T')[0],
     extractedItems: Array.isArray(raw?.extractedItems) ? raw.extractedItems : [],
@@ -33,7 +33,8 @@ export function normalizeCase(raw: any): Case {
       expertComment: raw.validationRecord.expertComment || ''
     } : undefined,
     sourceDocuments: Array.isArray(raw?.sourceDocuments) ? raw.sourceDocuments : [],
-    requiredDocuments: Array.isArray(raw?.requiredDocuments) ? raw.requiredDocuments : []
+    requiredDocuments: Array.isArray(raw?.requiredDocuments) ? raw.requiredDocuments : [],
+    evidenceItems: Array.isArray(raw?.evidenceItems) ? raw.evidenceItems : []
   };
 }
 

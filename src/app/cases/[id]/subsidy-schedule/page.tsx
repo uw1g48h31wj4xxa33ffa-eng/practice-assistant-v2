@@ -107,7 +107,7 @@ export default function SubsidySchedulePage() {
 
   const handleNextStep = () => {
     if (currentCase.progressStatus === 'schedule_management') {
-      updateCase(caseId, { progressStatus: 'ai_review' });
+      updateCase(caseId, { progressStatus: 'ai_evidence' });
     }
     if (nextStep?.href) {
       router.push(nextStep.href.replace('[id]', caseId));
