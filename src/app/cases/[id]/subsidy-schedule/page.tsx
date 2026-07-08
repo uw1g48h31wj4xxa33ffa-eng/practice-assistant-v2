@@ -143,26 +143,34 @@ export default function SubsidySchedulePage() {
 
   const renderContextualButtons = (item: SubsidyScheduleItem) => {
     // スマホ用: 現在の状態に応じた主要操作のみを表示
-    if (item.progressStatus === 'not_started') {
+    const status = item.progressStatus || 'not_started';
+    if (status === 'not_started') {
       return (
         <>
           <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
           <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
         </>
       );
-    } else if (item.progressStatus === 'in_progress') {
+    } else if (status === 'in_progress') {
       return (
         <>
           <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
           <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
         </>
       );
-    } else if (item.progressStatus === 'done') {
+    } else if (status === 'done') {
       return (
         <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中に戻す</button>
       );
     }
-    return null;
+    
+    // 未知の値の場合もnot_startedとして扱う
+    return (
+      <>
+        <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
+        <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
+      </>
+    );
   };
 
   const renderScheduleCard = (item: SubsidyScheduleItem) => (

@@ -114,33 +114,41 @@ export default function RequiredDocumentsPage() {
 
   const renderContextualButtons = (doc: RequiredDocument) => {
     // スマホ用: 現在の状態に応じた主要操作のみを表示
-    if (doc.status === 'not_started') {
+    const status = doc.status || 'not_started';
+    if (status === 'not_started') {
       return (
         <>
           <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
           <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
         </>
       );
-    } else if (doc.status === 'requested') {
+    } else if (status === 'requested') {
       return (
         <>
           <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
           <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
         </>
       );
-    } else if (doc.status === 'received') {
+    } else if (status === 'received') {
       return (
         <>
           <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中に戻す</button>
           <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
         </>
       );
-    } else if (doc.status === 'not_needed') {
+    } else if (status === 'not_needed') {
       return (
         <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
       );
     }
-    return null;
+    
+    // 未知の値の場合もnot_startedとして扱う
+    return (
+      <>
+        <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
+        <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
+      </>
+    );
   };
 
   return (

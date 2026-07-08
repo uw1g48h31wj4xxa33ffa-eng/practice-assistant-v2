@@ -511,7 +511,14 @@ export default function CaseDetailPage() {
             {/* 次に進む工程 */}
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
               <h3 className="text-sm font-bold text-slate-800 mb-4">次に進む工程</h3>
-              {nextStep ? (
+              {initialCase.progressStatus === 'completed' ? (
+                <div className="flex items-center gap-2 text-slate-500 text-sm bg-green-50 p-3 rounded-lg border border-green-100">
+                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-bold text-green-800">すべての工程が完了しました</span>
+                </div>
+              ) : nextStep ? (
                 <div className="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                   <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white text-indigo-600 flex items-center justify-center border border-slate-200 shadow-sm">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -524,11 +531,16 @@ export default function CaseDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-slate-500 text-sm bg-green-50 p-3 rounded-lg border border-green-100">
-                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-bold text-green-800">すべての工程が完了しました</span>
+                <div className="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white text-indigo-600 flex items-center justify-center border border-slate-200 shadow-sm">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-800 text-sm">最終処理</div>
+                    <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">納品と案件の完了手続きを行います。</p>
+                  </div>
                 </div>
               )}
             </div>

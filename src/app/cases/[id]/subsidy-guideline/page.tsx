@@ -170,7 +170,7 @@ export default function SubsidyGuidelinePage({ params }: { params: Promise<{ id:
       subsidyGuidelineItems: items,
       progressStatus: 'document_prep'
     });
-    router.push(`/cases/${caseId}/subsidy-documents`);
+    router.push(`/cases/${caseId}/required-documents`);
   };
 
   const handleSaveDraft = () => {
