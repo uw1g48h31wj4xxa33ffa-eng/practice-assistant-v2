@@ -85,6 +85,24 @@ export default function SubsidySchedulePage() {
       item.id === itemId ? { ...item, progressStatus: newStatus } : item
     );
     updateCase(caseId, { subsidyScheduleItems: updated });
+
+    setTimeout(() => {
+      const currentIndex = scheduleItems.findIndex(i => i.id === itemId);
+      if (currentIndex === -1) return;
+
+      const nextIncomplete = updated.slice(currentIndex + 1).find(i => 
+        (i.progressStatus || 'not_started') !== 'done'
+      );
+
+      if (nextIncomplete) {
+        document.getElementById(`schedule-card-${nextIncomplete.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const allCompleted = updated.every(i => (i.progressStatus || 'not_started') === 'done');
+        if (allCompleted) {
+          document.getElementById('next-action-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 50);
   };
 
   const handleNextStep = () => {
@@ -146,52 +164,66 @@ export default function SubsidySchedulePage() {
     const status = item.progressStatus || 'not_started';
     if (status === 'not_started') {
       return (
-        <>
+        <div className="flex w-full gap-2">
           <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
           <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
-        </>
+        </div>
       );
     } else if (status === 'in_progress') {
       return (
-        <>
+        <div className="flex w-full gap-2">
           <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
           <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
-        </>
+        </div>
       );
     } else if (status === 'done') {
       return (
-        <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中に戻す</button>
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中に戻す</button>
+          <button onClick={() => handleStatusChange(item.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
+        </div>
       );
     }
     
     // 未知の値の場合もnot_startedとして扱う
     return (
-      <>
+      <div className="flex w-full gap-2">
         <button onClick={() => handleStatusChange(item.id, 'in_progress')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-indigo-50 text-indigo-700 border-indigo-200">進行中にする</button>
         <button onClick={() => handleStatusChange(item.id, 'done')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">完了にする</button>
-      </>
+      </div>
     );
   };
 
   const renderScheduleCard = (item: SubsidyScheduleItem) => (
-    <div key={item.id} className={`bg-white p-4 rounded-xl border shadow-sm transition-colors ${
+    <div key={item.id} id={`schedule-card-${item.id}`} className={`bg-white p-4 rounded-xl border shadow-sm transition-colors ${
       item.progressStatus === 'done' ? 'border-slate-200 opacity-75 bg-slate-50' : 
       item.progressStatus === 'in_progress' ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-200 hover:border-indigo-100'
     }`}>
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-              {item.dueDate}
-            </span>
-            {item.importance === 'high' && (
-              <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold">重要</span>
-            )}
-            <h4 className={`font-bold text-base truncate ${item.progressStatus === 'done' ? 'text-slate-500' : 'text-slate-800'}`}>
+          <div className="flex flex-wrap items-start gap-2 mb-1">
+            <div className="flex items-center gap-1 shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded shrink-0">
+                {item.dueDate}
+              </span>
+              {item.importance === 'high' && (
+                <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold shrink-0">重要</span>
+              )}
+              {/* スマホ用現在状態バッジ */}
+              <span className={`sm:hidden px-2 py-0.5 border rounded text-[10px] font-bold shrink-0 ${
+                (item.progressStatus || 'not_started') === 'done' ? 'bg-green-50 text-green-700 border-green-200' :
+                (item.progressStatus || 'not_started') === 'in_progress' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                'bg-slate-100 text-slate-600 border-slate-300'
+              }`}>
+                {(item.progressStatus || 'not_started') === 'done' ? '完了' :
+                 (item.progressStatus || 'not_started') === 'in_progress' ? '進行中' : '未着手'}
+              </span>
+            </div>
+            <h4 className={`font-bold text-base break-words break-all line-clamp-2 min-w-0 flex-1 ${item.progressStatus === 'done' ? 'text-slate-500' : 'text-slate-800'}`}>
               {item.title}
             </h4>
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500 mt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-slate-500 mt-2">
             <span className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -432,7 +464,7 @@ export default function SubsidySchedulePage() {
       </div>
 
       {/* 下部アクション */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+      <div id="next-action-area" className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
         <div>
           <h3 className="font-bold text-slate-800 text-sm">スケジュール管理が完了したら次へ進んでください</h3>
           <p className="text-xs text-slate-500 mt-1">次の工程ではエビデンス等の最終検証を行います</p>

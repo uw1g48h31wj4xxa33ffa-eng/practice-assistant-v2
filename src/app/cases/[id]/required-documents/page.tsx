@@ -99,6 +99,24 @@ export default function RequiredDocumentsPage() {
       d.id === docId ? { ...d, status: newStatus, updatedAt: new Date().toISOString() } : d
     );
     updateCase(caseId, { requiredDocuments: updated });
+
+    setTimeout(() => {
+      const currentIndex = requiredDocuments.findIndex(d => d.id === docId);
+      if (currentIndex === -1) return;
+      
+      const nextIncomplete = updated.slice(currentIndex + 1).find(d => 
+        (d.status || 'not_started') !== 'received' && (d.status || 'not_started') !== 'not_needed'
+      );
+      
+      if (nextIncomplete) {
+        document.getElementById(`doc-card-${nextIncomplete.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const allCompleted = updated.every(d => (d.status || 'not_started') === 'received' || (d.status || 'not_started') === 'not_needed');
+        if (allCompleted) {
+          document.getElementById('next-action-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 50);
   };
 
   const handleNextStep = () => {
@@ -120,6 +138,7 @@ export default function RequiredDocumentsPage() {
         <>
           <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
           <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
         </>
       );
     } else if (status === 'requested') {
@@ -127,13 +146,14 @@ export default function RequiredDocumentsPage() {
         <>
           <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
           <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
         </>
       );
     } else if (status === 'received') {
       return (
         <>
           <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中に戻す</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手に戻す</button>
         </>
       );
     } else if (status === 'not_needed') {
@@ -147,6 +167,7 @@ export default function RequiredDocumentsPage() {
       <>
         <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中にする</button>
         <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済にする</button>
+        <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要にする</button>
       </>
     );
   };
@@ -284,22 +305,34 @@ export default function RequiredDocumentsPage() {
           {totalDocs > 0 ? (
             <div className="flex flex-col gap-3">
               {requiredDocuments.map(doc => (
-                <div key={doc.id} className={`bg-white p-4 rounded-xl border shadow-sm transition-colors ${
+                <div key={doc.id} id={`doc-card-${doc.id}`} className={`bg-white p-4 rounded-xl border shadow-sm transition-colors ${
                   doc.status === 'received' || doc.status === 'not_needed' ? 'border-slate-200 opacity-75' : 
                   doc.status === 'requested' ? 'border-amber-200' : 'border-slate-200 hover:border-indigo-100'
                 }`}>
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {doc.requiredType === 'required' ? (
-                          <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold">必須</span>
-                        ) : (
-                          <span className="px-2 py-0.5 bg-slate-50 text-slate-600 border border-slate-200 rounded text-[10px] font-bold">任意</span>
-                        )}
-                        {doc.priority === 'high' && (
-                          <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[10px] font-bold">優先:高</span>
-                        )}
-                        <h4 className={`font-bold text-base truncate ${
+                      <div className="flex flex-wrap items-start gap-2 mb-1">
+                        <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                          {doc.requiredType === 'required' ? (
+                            <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold shrink-0">必須</span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-slate-50 text-slate-600 border border-slate-200 rounded text-[10px] font-bold shrink-0">任意</span>
+                          )}
+                          {doc.priority === 'high' && (
+                            <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded text-[10px] font-bold shrink-0">優先:高</span>
+                          )}
+                          <span className={`sm:hidden px-2 py-0.5 border rounded text-[10px] font-bold shrink-0 ${
+                            (doc.status || 'not_started') === 'received' ? 'bg-green-50 text-green-700 border-green-200' :
+                            (doc.status || 'not_started') === 'requested' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            (doc.status || 'not_started') === 'not_needed' ? 'bg-slate-100 text-slate-500 border-slate-200' :
+                            'bg-slate-100 text-slate-600 border-slate-300'
+                          }`}>
+                            {(doc.status || 'not_started') === 'received' ? '受領済' :
+                             (doc.status || 'not_started') === 'requested' ? '依頼中' :
+                             (doc.status || 'not_started') === 'not_needed' ? '不要' : '未着手'}
+                          </span>
+                        </div>
+                        <h4 className={`font-bold text-base break-words break-all line-clamp-2 min-w-0 flex-1 ${
                           doc.status === 'received' || doc.status === 'not_needed' ? 'text-slate-500' : 'text-slate-800'
                         }`}>{doc.name}</h4>
                       </div>
@@ -388,7 +421,7 @@ export default function RequiredDocumentsPage() {
       </div>
 
       {/* 下部アクション */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+      <div id="next-action-area" className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
         <div>
           <h3 className="font-bold text-slate-800 text-sm">必要資料の整理が完了したら次へ進んでください</h3>
           {hasUncompletedRequired ? (
