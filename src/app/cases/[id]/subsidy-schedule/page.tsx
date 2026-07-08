@@ -219,7 +219,7 @@ export default function SubsidySchedulePage() {
                  (item.progressStatus || 'not_started') === 'in_progress' ? '進行中' : '未着手'}
               </span>
             </div>
-            <h4 className={`font-bold text-base block w-full min-w-0 break-words break-all line-clamp-2 leading-snug ${item.progressStatus === 'done' ? 'text-slate-500' : 'text-slate-800'}`}>
+            <h4 className={`font-bold block w-full min-w-0 break-words break-all line-clamp-2 leading-snug overflow-hidden text-[15px] sm:text-base ${item.progressStatus === 'done' ? 'text-slate-500' : 'text-slate-800'}`}>
               {item.title}
             </h4>
           </div>

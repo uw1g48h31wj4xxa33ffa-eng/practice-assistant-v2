@@ -332,7 +332,7 @@ export default function RequiredDocumentsPage() {
                              (doc.status || 'not_started') === 'not_needed' ? '不要' : '未着手'}
                           </span>
                         </div>
-                        <h4 className={`font-bold text-base block w-full min-w-0 break-words break-all line-clamp-2 leading-snug ${
+                        <h4 className={`font-bold block w-full min-w-0 break-words break-all line-clamp-2 leading-snug overflow-hidden text-[15px] sm:text-base ${
                           doc.status === 'received' || doc.status === 'not_needed' ? 'text-slate-500' : 'text-slate-800'
                         }`}>{doc.name}</h4>
                       </div>
