@@ -1,331 +1,446 @@
 "use client";
 
-import React, { useState, use, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
-import DeliveryVerificationCard from '@/components/features/ai/DeliveryVerificationCard';
-import CompletionActionArea from '@/components/ui/CompletionActionArea';
-import { SubsidyDeliveryItem, DeliveryVerificationStatus, DeliveryCompletionStatus } from '@/types';
+import { workflowTemplates } from '@/config/workflowTemplates';
+import { SubsidyDeliveryItem } from '@/types';
+import { buildMockDeliveryItems } from '@/lib/ai/mockDeliveryGenerator';
 
-const mockDeliveryItems: SubsidyDeliveryItem[] = [
-  { id: 'dl1', title: '提出先・提出方法の確認', purpose: '正しい窓口へ規定の方法で提出するため', importance: 'high', verificationStatus: 'unverified', completionStatus: 'completed', aiMemo: 'jGrants（電子申請）での提出であることを確認済み' },
-  { id: 'dl2', title: '申請書類の内容確認', purpose: '記載漏れや不整合の防止', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '事業計画書の最終版と入力内容の整合性チェックが必要' },
-  { id: 'dl3', title: '添付資料の不足確認', purpose: '必要書類の添付漏れ防止', importance: 'high', verificationStatus: 'unverified', completionStatus: 'issue_found', aiMemo: '決算書の一部ページが不鮮明なため再取得を依頼中', cautionNote: '添付資料がすべて揃うまでは提出不可' },
-  { id: 'dl4', title: '提出期限の最終確認', purpose: '期限超過による失格防止', importance: 'high', verificationStatus: 'unverified', completionStatus: 'completed', aiMemo: '2024年5月31日 17:00 必着' },
-  { id: 'dl5', title: '顧問先共有用控えの準備', purpose: 'クライアントへの納品物・控えの提供', importance: 'medium', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '提出完了後にPDF化して共有フォルダへ格納' },
-  { id: 'dl6', title: '専門家への完了報告', purpose: 'レビュー協力者への報告', importance: 'low', verificationStatus: 'unverified', completionStatus: 'not_required', aiMemo: '今回は外部専門家のレビューを挟んでいないため不要と判定' }
-];
-
-export default function SubsidyDeliveryPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SubsidyDeliveryPage() {
+  const params = useParams();
   const router = useRouter();
-  const { id: caseId } = use(params);
-  const { getCaseById, updateCase } = useCases();
+  const caseId = params.id as string;
+  const { cases, updateCase } = useCases();
   
-  const initialCase = getCaseById(caseId);
-
-  const [showCompletedContent, setShowCompletedContent] = useState(false);
-
-  // 初期表示ではローカルstateにモックデータを持たせる
-  const [items, setItems] = useState<SubsidyDeliveryItem[]>(() => {
-    if (initialCase?.subsidyDeliveryItems && initialCase.subsidyDeliveryItems.length > 0) {
-      return initialCase.subsidyDeliveryItems;
-    }
-    return mockDeliveryItems;
-  });
-
-  const pendingScrollRef = useRef<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    if (pendingScrollRef.current) {
-      const targetId = pendingScrollRef.current;
-      pendingScrollRef.current = null;
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }, [items]);
+    setIsClient(true);
+  }, []);
 
-  const isCompletedItem = (item: SubsidyDeliveryItem) => {
-    if (item.verificationStatus === 'verified' && item.completionStatus === 'completed') return true;
-    if (item.verificationStatus === 'rejected') return true;
-    return false;
-  };
+  const currentCase = cases.find(c => c.id === caseId);
 
-  const handleStatusChange = (
-    id: string, 
-    newVerificationStatus: DeliveryVerificationStatus, 
-    newCompletionStatus?: DeliveryCompletionStatus, 
-    newNotes?: string, 
-    newCautionNote?: string
-  ) => {
-    const nextItems = items.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          verificationStatus: newVerificationStatus,
-          completionStatus: newCompletionStatus !== undefined ? newCompletionStatus : item.completionStatus,
-          notes: newNotes !== undefined ? newNotes : item.notes,
-          cautionNote: newCautionNote !== undefined ? newCautionNote : item.cautionNote,
-        };
-      }
-      return item;
-    });
+  if (!isClient) return null;
 
-    const currentVerifiedCount = items.filter(isCompletedItem).length;
-    const isAllVerified = items.length > 0 && currentVerifiedCount === items.length;
-
-    const nextVerifiedCount = nextItems.filter(isCompletedItem).length;
-    const nextIsAllVerified = nextItems.length > 0 && nextVerifiedCount === nextItems.length;
-
-    const currentItem = items.find(i => i.id === id);
-    const justActioned = currentItem && 
-      (currentItem.verificationStatus !== 'verified' && currentItem.verificationStatus !== 'rejected') && 
-      (newVerificationStatus === 'verified' || newVerificationStatus === 'rejected');
-
-    if (nextIsAllVerified && !isAllVerified) {
-      pendingScrollRef.current = 'completion-area';
-    } else if (justActioned) {
-      const currentIndex = items.findIndex(item => item.id === id);
-      let nextUncompleted = nextItems.slice(currentIndex + 1).find(item => !isCompletedItem(item));
-      if (!nextUncompleted) {
-        nextUncompleted = nextItems.slice(0, currentIndex).find(item => !isCompletedItem(item));
-      }
-      if (nextUncompleted) {
-        pendingScrollRef.current = `card-${nextUncompleted.id}`;
-      }
-    }
-
-    setItems(nextItems);
-  };
-
-  const handleSaveAndNext = () => {
-    if (!initialCase) return;
-    
-    // updateCaseでローカルstateのデータを保存しつつ、次工程(全工程完了)へ進む
-    updateCase(caseId, {
-      subsidyDeliveryItems: items,
-      progressStatus: 'completed'
-    });
-    // 自動遷移を停止するため削除
-    // router.push(`/cases/${caseId}`);
-  };
-
-  const handleSaveDraft = () => {
-    if (!initialCase) return;
-    updateCase(caseId, {
-      subsidyDeliveryItems: items
-    });
-    alert('確認状況を保存しました。');
-  };
-
-  if (!initialCase) {
+  if (!currentCase) {
     return (
-      <div className="max-w-5xl mx-auto p-8 text-center">
-        <p className="text-slate-500">案件データを読み込み中、または見つかりませんでした...</p>
+      <div className="p-6">
+        <h1 className="text-xl font-bold text-red-600 mb-4">エラー</h1>
+        <p>案件が見つかりません。</p>
         <Link href="/cases" className="text-indigo-600 hover:underline mt-4 inline-block">一覧へ戻る</Link>
       </div>
     );
   }
 
-  if (initialCase.progressStatus === 'completed' && !showCompletedContent) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6 animate-soft-enter">
-        <div className="flex items-center gap-4 mb-6 pt-4 md:pt-0">
-          <Link href={`/cases/${caseId}`} className="text-slate-500 hover:text-indigo-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-800">納品・提出準備</h1>
-        </div>
+  const template = currentCase.templateId 
+    ? workflowTemplates.find(t => t.id === currentCase.templateId) 
+    : undefined;
 
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-12 text-center shadow-sm">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-emerald-800 mb-2">この案件は全工程が完了しています</h2>
-          <p className="text-emerald-600 mb-8 max-w-lg mx-auto">
-            すべての業務工程（ヒアリング〜納品・提出）が完了し、最終確認が完了済みです。
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href={`/cases/${caseId}`}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-indigo-600 px-8 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700 hover:-translate-y-0.5"
-            >
-              案件詳細へ戻る
-            </Link>
-            <button
-              onClick={() => setShowCompletedContent(true)}
-              className="inline-flex h-12 items-center justify-center rounded-xl border border-emerald-300 bg-white px-8 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-50 hover:-translate-y-0.5"
-            >
-              確認内容を閲覧する
-            </button>
-          </div>
-        </div>
-      </div>
+  const deliveryItems = currentCase.subsidyDeliveryItems || [];
+
+  const totalItems = deliveryItems.length;
+  
+  const completedCount = deliveryItems.filter(i => 
+    i.completionStatus === 'completed' || i.completionStatus === 'not_required'
+  ).length;
+
+  const incompleteCount = deliveryItems.filter(i => 
+    i.completionStatus === 'incomplete'
+  ).length;
+
+  const issueFoundCount = deliveryItems.filter(i => 
+    i.completionStatus === 'issue_found'
+  ).length;
+
+  const progressPercent = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+  const remainingCount = totalItems - completedCount;
+  const hasIncomplete = (incompleteCount > 0 || issueFoundCount > 0);
+
+  const handleGenerate = () => {
+    if (deliveryItems.length > 0) {
+      const hasModified = deliveryItems.some(i => i.completionStatus !== 'incomplete');
+      if (hasModified) {
+        if (!window.confirm('すでに確認済みの項目が含まれています。再生成して上書きしてもよろしいですか？')) {
+          return;
+        }
+      }
+    }
+
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      const generated = buildMockDeliveryItems(currentCase);
+      updateCase(caseId, { subsidyDeliveryItems: generated });
+      setIsAnalyzing(false);
+    }, 1500);
+  };
+
+  const handleStatusChange = (itemId: string, newStatus: SubsidyDeliveryItem['completionStatus']) => {
+    const updated = deliveryItems.map(item => 
+      item.id === itemId ? { ...item, completionStatus: newStatus } : item
     );
-  }
+    updateCase(caseId, { subsidyDeliveryItems: updated });
 
-  // 完了判定: (verified かつ completed) または rejected が対象
+    setTimeout(() => {
+      const currentIndex = deliveryItems.findIndex(i => i.id === itemId);
+      if (currentIndex === -1) return;
 
-  const verifiedCount = items.filter(isCompletedItem).length;
-  const isAllVerified = items.length > 0 && verifiedCount === items.length;
+      const nextIncomplete = updated.slice(currentIndex + 1).find(i => 
+        i.completionStatus === 'incomplete' || i.completionStatus === 'issue_found'
+      );
 
-  // 要対応・未完了のアイテムをリストアップ
-  const attentionItems = items.filter(
-    i => i.completionStatus === 'issue_found' || i.completionStatus === 'incomplete'
-  );
+      if (nextIncomplete) {
+        document.getElementById(`delivery-card-${nextIncomplete.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const allCompleted = updated.every(i => i.completionStatus === 'completed' || i.completionStatus === 'not_required');
+        if (allCompleted) {
+          document.getElementById('next-action-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 50);
+  };
+
+  const handleCompleteCase = () => {
+    if (hasIncomplete) {
+      if (!window.confirm('未確認や要修正項目が残っていますが、案件を完了してよろしいですか？')) {
+        return;
+      }
+    }
+    
+    updateCase(caseId, { progressStatus: 'completed' });
+    router.push(`/cases/${caseId}`);
+  };
+
+  const getMobileTitle = (title: string) => {
+    if (title.includes('必須資料の受領確認')) return '必須資料の確認';
+    if (title.includes('期限・提出日の確認')) return '期限・提出日確認';
+    if (title.includes('gBizID等の準備確認')) return 'gBizID等の準備';
+    if (title.includes('提出前の最終確認')) return '最終確認';
+    return title;
+  };
+
+  const getMobilePurpose = (purpose: string) => {
+    if (purpose.includes('提出必須となっているすべての資料が手元に')) return '提出必須資料が手元に揃っているか確認します。';
+    if (purpose.includes('事業計画書や見積書の内容が公募要項の要件に合致')) return '事業計画書・見積書が要件に合致しているか確認します。';
+    if (purpose.includes('電子申請システムへのログイン情報')) return '電子申請のログイン情報が有効か確認します。';
+    if (purpose.includes('指定されたファイル形式・ファイルサイズ要件')) return 'ファイル形式やサイズが要件を満たしているか確認します。';
+    if (purpose.includes('前の工程でAIが整理したエビデンス・根拠がすべて確認済')) return 'AIエビデンスがすべて確認済か確認します。';
+    if (purpose.includes('これまでに洗い出された要修正項目がすべて解消')) return '要修正項目が解消されているか確認します。';
+    if (purpose.includes('すべての準備が整い、顧客への最終報告')) return 'すべての準備を完了し、顧客へ報告します。';
+    return purpose;
+  };
+
+  const renderContextualButtons = (item: SubsidyDeliveryItem) => {
+    const status = item.completionStatus;
+    if (status === 'incomplete') {
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'completed')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">確認済</button>
+          <button onClick={() => handleStatusChange(item.id, 'issue_found')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-red-50 text-red-700 border-red-200 whitespace-nowrap">要修正</button>
+          <button onClick={() => handleStatusChange(item.id, 'not_required')} className="px-3 shrink-0 min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200 whitespace-nowrap">対象外</button>
+        </div>
+      );
+    } else if (status === 'completed') {
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'issue_found')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-red-50 text-red-700 border-red-200 whitespace-nowrap">要修正</button>
+          <button onClick={() => handleStatusChange(item.id, 'incomplete')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未確認</button>
+        </div>
+      );
+    } else if (status === 'issue_found') {
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'completed')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200 whitespace-nowrap">確認済</button>
+          <button onClick={() => handleStatusChange(item.id, 'incomplete')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未確認</button>
+        </div>
+      );
+    } else {
+      // not_required
+      return (
+        <div className="flex w-full gap-2">
+          <button onClick={() => handleStatusChange(item.id, 'incomplete')} className="w-full min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300 whitespace-nowrap">未確認</button>
+        </div>
+      );
+    }
+  };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-soft-enter flex flex-col md:block">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4 pt-4 md:pt-0 order-1 md:order-none">
-        <div className="flex items-center gap-4">
-          <Link href={`/cases/${caseId}`} className="text-slate-500 hover:text-indigo-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </Link>
-          <h1 className="text-2xl font-bold text-slate-800">納品・提出準備</h1>
-        </div>
-      </div>
-
+    <div className="max-w-5xl mx-auto space-y-6 animate-soft-enter pb-12">
       {/* 案件情報サマリー */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-6 order-4 md:order-none">
-        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">案件情報サマリー</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-          <div>
-            <div className="text-slate-400 mb-1">案件名</div>
-            <div className="font-bold text-slate-700">{initialCase.title}</div>
-          </div>
-          <div>
-            <div className="text-slate-400 mb-1">顧問先</div>
-            <div className="font-bold text-slate-700">{initialCase.clientName}</div>
-          </div>
-          <div>
-            <div className="text-slate-400 mb-1">業種・規模</div>
-            <div className="font-bold text-slate-700">{initialCase.industry} / {initialCase.employeeCount}</div>
-          </div>
-          <div>
-            <div className="text-slate-400 mb-1">担当者・納期</div>
-            <div className="font-bold text-slate-700">{initialCase.assignee} ({initialCase.dueDate})</div>
-          </div>
-        </div>
-
-        {/* 前工程情報の引き継ぎ */}
-        {(initialCase.subsidyGuidelineItems || initialCase.subsidyDocumentItems || initialCase.subsidyScheduleItems) && (
-          <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {initialCase.subsidyGuidelineItems && initialCase.subsidyGuidelineItems.length > 0 && (
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 mb-2">公募要項</h3>
-                <div className="text-xs text-slate-600">
-                  <span className="font-semibold text-emerald-600">確認済: {initialCase.subsidyGuidelineItems.filter(i => i.status === 'verified').length}件</span>
-                </div>
-              </div>
-            )}
-            
-            {initialCase.subsidyDocumentItems && initialCase.subsidyDocumentItems.length > 0 && (
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 mb-2">資料準備状況</h3>
-                <div className="text-xs text-slate-600">
-                  <span className="font-semibold text-emerald-600 mr-2">準備完了: {initialCase.subsidyDocumentItems.filter(i => i.preparationStatus === 'prepared' && i.status === 'verified').length}件</span>
-                  <span className="font-semibold text-rose-600">不足: {initialCase.subsidyDocumentItems.filter(i => i.preparationStatus === 'missing').length}件</span>
-                </div>
-              </div>
-            )}
-
-            {initialCase.subsidyScheduleItems && initialCase.subsidyScheduleItems.length > 0 && (
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 mb-2">スケジュール進行</h3>
-                <div className="text-xs text-slate-600">
-                  <span className="font-semibold text-emerald-600 mr-2">完了: {initialCase.subsidyScheduleItems.filter(i => i.progressStatus === 'done' && i.verificationStatus === 'verified').length}件</span>
-                  <span className="font-semibold text-rose-600">遅延: {initialCase.subsidyScheduleItems.filter(i => i.progressStatus === 'delayed').length}件</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 提出・納品前チェックリスト (AI抽出結果) */}
-      <div className="space-y-4 order-2 md:order-none">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-              </svg>
-              提出・納品前チェックリスト（AI整理）
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">AIが前工程の情報を元に最終確認項目を抽出しました。各項目の完了状況を確認してください。</p>
-          </div>
-          <div className="text-sm font-bold text-slate-500">
-            確認進捗: {verifiedCount} / {items.length}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {items.map(item => (
-            <div key={item.id} id={`card-${item.id}`} className="scroll-mt-24">
-              <DeliveryVerificationCard 
-                item={item} 
-                onStatusChange={handleStatusChange} 
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 要対応・注意事項欄 */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mt-8 order-3 md:order-none">
-        <h2 className="text-lg font-bold text-amber-800 flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <Link href={`/cases/${caseId}`} className="text-slate-400 hover:text-indigo-600 transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          要対応・注意事項
-        </h2>
-        {attentionItems.length > 0 ? (
-          <ul className="space-y-2">
-            {attentionItems.map(item => (
-              <li key={item.id} className="flex items-start gap-2 text-amber-900 text-sm">
-                <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="flex flex-col">
-                  <span className="font-bold">{item.title}</span>
-                  <span className="text-amber-700 text-xs mt-0.5">
-                    {item.completionStatus === 'issue_found' ? '要対応事項です。' : '未完了の項目です。'}
-                    {item.cautionNote ? ` ${item.cautionNote}` : ''}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-amber-700">現在、要対応・注意事項はありません。</p>
-        )}
+        </Link>
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">{currentCase.title}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{currentCase.clientName} | 担当: {currentCase.assignee}</p>
+        </div>
       </div>
 
-      {/* 完了アクション */}
-      <CompletionActionArea
-        verifiedCount={verifiedCount}
-        totalCount={items.length}
-        isAllVerified={isAllVerified}
-        progressMessage={!isAllVerified 
-          ? `残り${items.length - verifiedCount}項目の対応状況を確認すると全工程を完了できます`
-          : 'すべての納品・提出準備の確認が完了しました'
-        }
-        nextStepLabel="次工程：全工程完了"
-        nextStepVariant="emerald"
-        primaryLabel="完了する"
-        primaryIcon="check"
-        onSaveDraft={handleSaveDraft}
-        onProceed={handleSaveAndNext}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 左側: サマリー＆進捗 */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2">
+                <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                納品・提出準備
+              </h2>
+            </div>
+            
+            <div className="p-5">
+              {/* ドーナツ進捗 */}
+              <div className="flex flex-col items-center justify-center mb-6">
+                <div className="relative w-32 h-32 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-100"
+                      strokeWidth="3"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-indigo-500 transition-all duration-1000 ease-out"
+                      strokeWidth="3"
+                      strokeDasharray={`${progressPercent}, 100`}
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-3xl font-black text-slate-800">{progressPercent}<span className="text-lg text-slate-500 ml-1">%</span></span>
+                    <span className="text-[10px] font-bold text-slate-400">完了</span>
+                  </div>
+                </div>
+                <div className="flex gap-4 mt-4 text-xs font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <span className="text-slate-600">完了 {completedCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                    <span className="text-slate-600">残り {remainingCount}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-5 border-t border-slate-100">
+                <button
+                  onClick={handleGenerate}
+                  disabled={isAnalyzing}
+                  className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-indigo-200 disabled:opacity-50"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      チェックリストを生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      提出前チェックリストを生成
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* 要確認項目 */}
+          {issueFoundCount > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-red-800 flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                要修正項目
+              </h3>
+              <ul className="space-y-2">
+                {deliveryItems.filter(i => i.completionStatus === 'issue_found').map(i => (
+                  <li key={i.id} className="text-sm text-red-700 bg-white rounded-lg p-2 border border-red-100 flex items-center justify-between">
+                    <span className="truncate mr-2 font-bold">
+                      {getMobileTitle(i.title)}
+                    </span>
+                    <button 
+                      onClick={() => document.getElementById(`delivery-card-${i.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                      className="text-xs text-red-500 hover:text-red-800 shrink-0 border border-red-200 px-2 py-1 rounded bg-red-50"
+                    >
+                      確認
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* 右側: 検証項目一覧 */}
+        <div className="lg:col-span-2 space-y-4">
+          {totalItems > 0 ? (
+            <div className="flex flex-col gap-3">
+              {deliveryItems.map(item => (
+                <div key={item.id} id={`delivery-card-${item.id}`} className={`bg-white p-5 sm:p-6 rounded-xl border shadow-sm transition-colors ${
+                  item.completionStatus === 'completed' || item.completionStatus === 'not_required' ? 'border-slate-200 opacity-75' : 
+                  item.completionStatus === 'issue_found' ? 'border-red-300 bg-red-50/30' : 'border-slate-200 hover:border-indigo-100'
+                }`}>
+                  <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col gap-2 mb-3">
+                        <div className="flex flex-wrap items-center gap-1">
+                          {item.importance === 'high' && (
+                            <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[10px] font-bold shrink-0">高重要度</span>
+                          )}
+                          <span className={`sm:hidden px-2 py-0.5 border rounded text-[10px] font-bold shrink-0 ${
+                            item.completionStatus === 'completed' ? 'bg-green-50 text-green-700 border-green-200' :
+                            item.completionStatus === 'issue_found' ? 'bg-red-50 text-red-700 border-red-200' :
+                            item.completionStatus === 'not_required' ? 'bg-slate-100 text-slate-500 border-slate-200' :
+                            'bg-slate-100 text-slate-600 border-slate-300'
+                          }`}>
+                            {item.completionStatus === 'completed' ? '確認済' :
+                             item.completionStatus === 'issue_found' ? '要修正' :
+                             item.completionStatus === 'not_required' ? '対象外' : '未確認'}
+                          </span>
+                        </div>
+                        <h4 className={`font-bold block w-full min-w-0 break-words break-all line-clamp-2 leading-snug overflow-hidden text-[15px] sm:text-base ${
+                          item.completionStatus === 'completed' || item.completionStatus === 'not_required' ? 'text-slate-500' : 'text-slate-800'
+                        }`}>
+                          <span className="sm:hidden">{getMobileTitle(item.title)}</span>
+                          <span className="hidden sm:inline">{item.title}</span>
+                        </h4>
+                      </div>
+                      <p className="text-[13px] sm:text-xs text-slate-500 mb-2 leading-[1.8] sm:leading-relaxed line-clamp-3 sm:line-clamp-none">
+                        <span className="sm:hidden">{getMobilePurpose(item.purpose)}</span>
+                        <span className="hidden sm:inline">{item.purpose}</span>
+                      </p>
+                      
+                      {item.aiMemo && (
+                        <div className="flex items-start gap-1.5 mt-3 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-[11px] text-slate-600 leading-relaxed">{item.aiMemo}</p>
+                        </div>
+                      )}
+
+                      {item.cautionNote && (
+                        <div className="flex items-start gap-1.5 mt-2 p-3 bg-red-50/50 rounded-lg border border-red-100">
+                          <svg className="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <p className="text-[11px] text-red-700 font-bold leading-relaxed">{item.cautionNote}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="shrink-0 w-full xl:w-auto mt-2 xl:mt-0">
+                      {/* PC用: 横並び */}
+                      <div className="hidden sm:flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'completed')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.completionStatus === 'completed' 
+                              ? 'bg-green-50 text-green-700 border-green-200' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          確認済
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'issue_found')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.completionStatus === 'issue_found' 
+                              ? 'bg-red-50 text-red-700 border-red-200' 
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          要修正
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'not_required')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.completionStatus === 'not_required' 
+                              ? 'bg-slate-100 text-slate-600 border-slate-300' 
+                              : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          対象外
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(item.id, 'incomplete')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                            item.completionStatus === 'incomplete' 
+                              ? 'bg-slate-100 text-slate-700 border-slate-300' 
+                              : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          未確認
+                        </button>
+                      </div>
+
+                      {/* スマホ用: コンテキストに応じた主要操作ボタン */}
+                      <div className="flex sm:hidden items-center gap-2 w-full mt-1">
+                        {renderContextualButtons(item)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center h-full flex flex-col items-center justify-center min-h-[300px]">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">チェックリストがありません</h3>
+              <p className="text-sm text-slate-500 max-w-md">
+                左側のパネルから「提出前チェックリストを生成」をクリックして、<br className="hidden sm:block" />
+                提出に向けた最終確認を実施してください。
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 下部アクション */}
+      <div id="next-action-area" className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+        <div>
+          <h3 className="font-bold text-slate-800 text-sm">すべての準備が完了したら案件を完了します</h3>
+          {hasIncomplete ? (
+            <p className="text-xs font-bold text-red-600 mt-1 flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              未確認または要修正の項目が残っていますが、完了させることは可能です
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">案件一覧へ戻ります</p>
+          )}
+        </div>
+        <button
+          onClick={handleCompleteCase}
+          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          案件を完了する
+        </button>
+      </div>
     </div>
   );
 }
