@@ -39,6 +39,7 @@ export interface Case {
   subsidyDeliveryItems?: SubsidyDeliveryItem[];
   validationRecord?: AIValidationRecord;
   sourceDocuments?: SourceDocument[];
+  requiredDocuments?: RequiredDocument[];
 }
 
 // Mock Data
@@ -230,6 +231,21 @@ export type VerificationStatus = 'unverified' | 'verified' | 'modified' | 'rejec
 
 export type DocumentPreparationStatus = 'prepared' | 'missing' | 'pending' | 'not_required';
 
+export interface RequiredDocument {
+  id: string;
+  name: string;
+  requiredType: "required" | "optional";
+  reason: string;
+  sourceReference: string;
+  status: "not_started" | "requested" | "received" | "not_needed";
+  priority: "high" | "medium" | "low";
+  dueDate: string;
+  assignee: string;
+  memo: string;
+  createdBy: "ai" | "manual";
+  updatedAt: string;
+}
+
 export interface SubsidyDocumentItem {
   id: string;
   documentName: string;
@@ -255,6 +271,7 @@ export interface SubsidyScheduleItem {
   verificationStatus: ScheduleVerificationStatus;
   progressStatus: ScheduleProgressStatus;
   aiMemo: string;
+  assignee?: string;
   riskNote?: string;
   notes?: string;
 }

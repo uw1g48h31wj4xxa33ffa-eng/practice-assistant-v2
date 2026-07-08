@@ -44,7 +44,7 @@ export default function CaseDetailPage() {
       updateCase(caseId, {
         extractedItems: [],
         subsidyGuidelineItems: [],
-        subsidyDocumentItems: [],
+        requiredDocuments: [],
         subsidyScheduleItems: [],
         subsidyDeliveryItems: [],
         validationRecord: undefined,
@@ -63,7 +63,7 @@ export default function CaseDetailPage() {
       updateCase(caseId, {
         extractedItems: undefined,
         subsidyGuidelineItems: undefined,
-        subsidyDocumentItems: undefined,
+        requiredDocuments: undefined,
         subsidyScheduleItems: undefined,
         subsidyDeliveryItems: undefined,
         validationRecord: undefined,
@@ -140,7 +140,7 @@ export default function CaseDetailPage() {
       aiStatus = { label: '未着手', desc: '公募要項の解析を実行できます', color: 'slate' };
     }
   } else if (initialCase.progressStatus === 'document_prep') {
-    if (initialCase.subsidyDocumentItems && initialCase.subsidyDocumentItems.length > 0) {
+    if (initialCase.requiredDocuments && initialCase.requiredDocuments.length > 0) {
       aiStatus = { label: 'AI整理完了', desc: '必要資料リストを整理しました', color: 'indigo' };
     } else {
       aiStatus = { label: '未着手', desc: '必要資料リストを生成できます', color: 'slate' };

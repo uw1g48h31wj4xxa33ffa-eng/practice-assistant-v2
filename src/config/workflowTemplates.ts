@@ -39,7 +39,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     steps: [
       { id: 'hearing', title: '1. ヒアリング', description: '補助金制度に関する情報収集・データ整理', href: '/cases/[id]/hearing', order: 1 },
       { id: 'guideline_review', title: '2. 公募要項整理', shortDescription: '公開情報・申請条件・期限を確認', description: '公開情報や公募要項を読み取り、対象制度、申請条件、対象経費、期限、提出方法などを確認する工程。', href: '/cases/[id]/subsidy-guideline', order: 2 },
-      { id: 'document_prep', title: '3. 必要資料整理', shortDescription: '申請に必要な資料を整理', description: '申請に必要な資料・データを整理する工程。会社情報、事業計画、見積書、決算資料、添付書類などを確認する。', href: '/cases/[id]/subsidy-documents', order: 3 },
+      { id: 'document_prep', title: '3. 必要資料整理', shortDescription: '申請に必要な資料を整理', description: '申請に必要な資料・データを整理する工程。会社情報、事業計画、見積書、決算資料、添付書類などを確認する。', href: '/cases/[id]/required-documents', order: 3 },
       { id: 'schedule_management', title: '4. スケジュール管理', shortDescription: '締切・確認日・提出準備を管理', description: '公募締切、社内確認、資料回収、提出準備などのスケジュールを管理する工程。', href: '/cases/[id]/subsidy-schedule', order: 4 },
       { id: 'ai_review', title: '5. AI検証・エビデンス', description: '社内外関係者との連絡・確認業務', href: '/cases/[id]/ai-evidence', order: 5 },
       { id: 'delivery_prep', title: '6. 納品・提出準備', shortDescription: '提出前の最終確認と共有準備', description: '提出前の最終確認、必要資料の確認、提出先・提出方法・期限の確認、控え資料の整理、関係者への共有準備を行う工程。', href: '/cases/[id]/subsidy-delivery', order: 6 },

@@ -32,7 +32,8 @@ export function normalizeCase(raw: any): Case {
       staffComment: raw.validationRecord.staffComment || '',
       expertComment: raw.validationRecord.expertComment || ''
     } : undefined,
-    sourceDocuments: Array.isArray(raw?.sourceDocuments) ? raw.sourceDocuments : []
+    sourceDocuments: Array.isArray(raw?.sourceDocuments) ? raw.sourceDocuments : [],
+    requiredDocuments: Array.isArray(raw?.requiredDocuments) ? raw.requiredDocuments : []
   };
 }
 
