@@ -77,7 +77,7 @@ export default function NewCasePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">顧問先 <span className="text-red-500">*</span></label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={clientName} onChange={e => setClientName(e.target.value)} required>
+                <select className="w-full pl-2 pr-8 sm:px-4 py-2 text-center sm:text-left border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={clientName} onChange={e => setClientName(e.target.value)} required>
                   <option value="">-- 選択してください --</option>
                   <option value="A社（匿名）">A社（匿名）</option>
                   <option value="B株式会社（匿名）">B株式会社（匿名）</option>
@@ -88,7 +88,7 @@ export default function NewCasePage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">案件種別</label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={caseType} onChange={e => setCaseType(e.target.value)}>
+                <select className="w-full pl-2 pr-8 sm:px-4 py-2 text-center sm:text-left border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={caseType} onChange={e => setCaseType(e.target.value)}>
                   <option value="">-- 選択してください --</option>
                   <option value="就業規則改訂">就業規則改訂</option>
                   <option value="賃金規程">賃金規程</option>
@@ -114,7 +114,7 @@ export default function NewCasePage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">優先度</label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={priority} onChange={e => setPriority(e.target.value as Priority)}>
+                <select className="w-full pl-2 pr-8 sm:px-4 py-2 text-center sm:text-left border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={priority} onChange={e => setPriority(e.target.value as Priority)}>
                   <option value="medium">中</option>
                   <option value="high">高</option>
                   <option value="low">低</option>
@@ -124,7 +124,7 @@ export default function NewCasePage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">担当者</label>
-              <select className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={assignee} onChange={e => setAssignee(e.target.value)}>
+              <select className="w-full pl-2 pr-8 sm:px-4 py-2 text-center sm:text-left border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={assignee} onChange={e => setAssignee(e.target.value)}>
                 <option value="山田太郎">山田太郎</option>
                 <option value="佐藤花子">佐藤花子</option>
               </select>
@@ -133,7 +133,7 @@ export default function NewCasePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">従業員数</label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={employeeCount} onChange={e => setEmployeeCount(e.target.value)}>
+                <select className="w-full pl-2 pr-8 sm:px-4 py-2 text-center sm:text-left border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={employeeCount} onChange={e => setEmployeeCount(e.target.value)}>
                   <option value="1〜9名">1〜9名</option>
                   <option value="10〜29名">10〜29名</option>
                   <option value="30〜49名">30〜49名</option>
@@ -145,7 +145,7 @@ export default function NewCasePage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">業種</label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={industry} onChange={e => setIndustry(e.target.value)}>
+                <select className="w-full pl-2 pr-8 sm:px-4 py-2 text-center sm:text-left border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" value={industry} onChange={e => setIndustry(e.target.value)}>
                   <option value="医療・福祉">医療・福祉</option>
                   <option value="建設業">建設業</option>
                   <option value="製造業">製造業</option>

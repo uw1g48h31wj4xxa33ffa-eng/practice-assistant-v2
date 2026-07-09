@@ -147,36 +147,36 @@ export default function RequiredDocumentsPage() {
     if (status === 'not_started') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中</button>
-          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-2 shrink-0 min-w-[3.5rem] min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要</button>
+          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中</button>
+          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-w-[3.5rem] min-h-[38px] sm:min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要</button>
         </>
       );
     } else if (status === 'requested') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-2 shrink-0 min-w-[3.5rem] min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要</button>
+          <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-w-[3.5rem] min-h-[38px] sm:min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要</button>
         </>
       );
     } else if (status === 'received') {
       return (
         <>
-          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中</button>
-          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
+          <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中</button>
+          <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
         </>
       );
     } else if (status === 'not_needed') {
-        <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="w-full min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
+        <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="w-full min-h-[38px] sm:min-h-[44px] py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
     }
     
     // 未知の値の場合もnot_startedとして扱う
     return (
       <>
-        <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中</button>
-        <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-w-[4.5rem] px-1 min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済</button>
-        <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-2 shrink-0 min-w-[3.5rem] min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要</button>
+        <button onClick={() => handleStatusChange(doc.id, 'requested')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-amber-50 text-amber-700 border-amber-200">依頼中</button>
+        <button onClick={() => handleStatusChange(doc.id, 'received')} className="flex-1 min-w-[4.5rem] px-2 py-1 min-h-[38px] sm:min-h-[44px] rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-green-50 text-green-700 border-green-200">受領済</button>
+        <button onClick={() => handleStatusChange(doc.id, 'not_needed')} className="px-3 shrink-0 min-w-[3.5rem] min-h-[38px] sm:min-h-[44px] rounded-lg text-[10px] font-bold transition-colors border bg-slate-100 text-slate-500 border-slate-200">不要</button>
       </>
     );
   };
