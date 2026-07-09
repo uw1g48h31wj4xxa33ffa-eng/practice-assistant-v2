@@ -41,6 +41,20 @@ export interface Case {
   sourceDocuments?: SourceDocument[];
   requiredDocuments?: RequiredDocument[];
   evidenceItems?: EvidenceItem[];
+  issueItems?: IssueItem[];
+}
+
+export interface IssueItem {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  status: "unchecked" | "verified" | "needs_revision" | "not_applicable";
+  riskLevel: "high" | "medium" | "low";
+  sourceReference: string;
+  memo: string;
+  createdBy: "ai" | "manual";
+  updatedAt: string;
 }
 
 export interface EvidenceItem {

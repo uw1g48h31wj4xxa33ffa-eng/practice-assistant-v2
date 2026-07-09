@@ -34,7 +34,8 @@ export function normalizeCase(raw: any): Case {
     } : undefined,
     sourceDocuments: Array.isArray(raw?.sourceDocuments) ? raw.sourceDocuments : [],
     requiredDocuments: Array.isArray(raw?.requiredDocuments) ? raw.requiredDocuments : [],
-    evidenceItems: Array.isArray(raw?.evidenceItems) ? raw.evidenceItems : []
+    evidenceItems: Array.isArray(raw?.evidenceItems) ? raw.evidenceItems : [],
+    issueItems: Array.isArray(raw?.issueItems) ? raw.issueItems : []
   };
 }
 
