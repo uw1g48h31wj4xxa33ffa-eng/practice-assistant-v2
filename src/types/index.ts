@@ -1,7 +1,7 @@
 import { ReviewStatus } from "@/components/ui/HumanApprovalBadge";
 
 export type Priority = 'high' | 'medium' | 'low';
-export type CaseProgressStatus = 'hearing' | 'rule_design' | 'ai_review' | 'ai_evidence' | 'delivery_prep' | 'completed' | 'guideline_review' | 'document_prep' | 'schedule_management';
+export type CaseProgressStatus = 'hearing' | 'rule_design' | 'ai_review' | 'ai_evidence' | 'delivery_prep' | 'completed' | 'guideline_review' | 'document_prep' | 'schedule_management' | 'issue_analysis' | 'risk_analysis' | 'action_plan';
 
 export interface SourceDocument {
   id: string;

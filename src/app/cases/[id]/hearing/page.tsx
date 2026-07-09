@@ -145,7 +145,7 @@ export default function HearingPage() {
     // 案件データに抽出・確認結果と次のステータスを保存する
     updateCase(caseId, { 
       extractedItems: extractedData,
-      progressStatus: isSubsidy ? 'guideline_review' : (isLaborConsulting ? 'issue_analysis' as any : 'rule_design')
+      progressStatus: isSubsidy ? 'guideline_review' : (isLaborConsulting ? 'issue_analysis' : 'rule_design')
     });
     
     if (isSubsidy) {
