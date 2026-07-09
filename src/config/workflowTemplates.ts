@@ -44,6 +44,22 @@ export const workflowTemplates: WorkflowTemplate[] = [
       { id: 'ai_evidence', title: '5. AI検証・エビデンス', description: '社内外関係者との連絡・確認業務', href: '/cases/[id]/ai-evidence', order: 5 },
       { id: 'delivery_prep', title: '6. 納品・提出準備', shortDescription: '提出前の最終確認と共有準備', description: '提出前の最終確認、必要資料の確認、提出先・提出方法・期限の確認、控え資料の整理、関係者への共有準備を行う工程。', href: '/cases/[id]/subsidy-delivery', order: 6 },
     ]
+  },
+  {
+    id: "labor_consulting_v1",
+    name: "労務相談",
+    description: "労務相談に関する一連のフロー",
+    keywords: ["労務相談", "リスク整理", "対応方針"],
+    applicableCaseTypes: ["労務相談"],
+    steps: [
+      { id: 'hearing', title: '1. ヒアリング', description: '現状確認・要望ヒアリングの実施', href: '/cases/[id]/hearing', order: 1 },
+      { id: 'issue_analysis', title: '2. 論点整理', description: '論点の整理', href: '/cases/[id]/issue-analysis', order: 2 },
+      { id: 'document_prep', title: '3. 関連資料整理', description: '関連資料の整理', href: '/cases/[id]/required-documents', order: 3 },
+      { id: 'risk_analysis', title: '4. リスク整理', description: 'リスクの整理', href: '/cases/[id]/risk-analysis', order: 4 },
+      { id: 'action_plan', title: '5. 対応方針', description: '対応方針の策定', href: '/cases/[id]/action-plan', order: 5 },
+      { id: 'ai_evidence', title: '6. AI検証・エビデンス', description: '法改正・整合性チェック', href: '/cases/[id]/ai-evidence', order: 6 },
+      { id: 'delivery_prep', title: '7. 納品・完了', description: '納品と完了', href: '/cases/[id]/delivery', order: 7 },
+    ]
   }
 ];
 
