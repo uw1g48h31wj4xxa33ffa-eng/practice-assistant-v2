@@ -233,26 +233,33 @@ export default function ActionPlanPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
             </div>
-
-            {totalItems > 0 && highPriorityOpenItems.length > 0 && (
-              <div className="border-t border-slate-100 p-4 bg-rose-50/50">
-                <h3 className="text-xs font-bold text-rose-800 mb-2 flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  優先対応項目 (高)
-                </h3>
-                <ul className="space-y-2">
-                  {highPriorityOpenItems.map(i => (
-                    <li key={`high-${i.id}`} className="text-xs text-slate-700 bg-white p-2 rounded border border-rose-100 flex items-start gap-2">
-                      <span className="mt-0.5">•</span>
-                      <span>{i.title}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
+
+          {totalItems > 0 && highPriorityOpenItems.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-red-800 flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                優先対応項目 (高)
+              </h3>
+              <ul className="space-y-2">
+                {highPriorityOpenItems.map(i => (
+                  <li key={`high-${i.id}`} className="text-sm text-red-700 bg-white rounded-lg p-2 border border-red-100 flex items-center justify-between">
+                    <span className="truncate mr-2 font-bold">
+                      {i.title}
+                    </span>
+                    <button 
+                      onClick={() => document.getElementById(`action-card-${i.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                      className="text-xs text-red-500 hover:text-red-800 shrink-0 border border-red-200 px-2 py-1 rounded bg-red-50 transition-colors"
+                    >
+                      確認
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="lg:col-span-2">
