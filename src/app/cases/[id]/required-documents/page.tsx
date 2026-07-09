@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCases } from '@/hooks/useCases';
 import { workflowTemplates } from '@/config/workflowTemplates';
-import { RequiredDocument } from '@/types';
+import { RequiredDocument, CaseProgressStatus } from '@/types';
 import { buildMockRequiredDocumentsFromGuidelineItems, buildMockLaborConsultingDocuments } from '@/lib/ai/mockRequiredDocumentsGenerator';
 import Chip from '@/components/ui/Chip';
 
@@ -131,14 +131,16 @@ export default function RequiredDocumentsPage() {
   };
 
   const handleNextStep = () => {
+    if (nextStep?.href) {
+      updateCase(caseId, { progressStatus: nextStep.id as CaseProgressStatus });
+      router.push(nextStep.href.replace('[id]', caseId));
+      return;
+    }
+    // Fallback logic
     if (currentCase.progressStatus === 'guideline_review' || currentCase.progressStatus === 'document_prep') {
       updateCase(caseId, { progressStatus: 'schedule_management' });
     }
-    if (nextStep?.href) {
-      router.push(nextStep.href.replace('[id]', caseId));
-    } else {
-      router.push(`/cases/${caseId}/subsidy-schedule`);
-    }
+    router.push(`/cases/${caseId}/subsidy-schedule`);
   };
 
   const renderContextualButtons = (doc: RequiredDocument) => {
