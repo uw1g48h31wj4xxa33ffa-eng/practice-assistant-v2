@@ -39,6 +39,12 @@ export default function ActionPlanPage({ params }: { params: Promise<{ id: strin
   const progressPercent = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
   const hasIncomplete = (needsRevisionCount > 0 || uncheckedCount > 0);
 
+  const highPriorityOpenItems = actionPlanItems.filter(
+    item =>
+      item.priority === 'high' &&
+      (item.status === 'unchecked' || item.status === 'needs_revision')
+  );
+
   const handleNextStep = () => {
     if (hasIncomplete) {
       const confirmMsg = "未確認または要修正の対応方針が残っています。\nこのまま次の工程（AI検証・エビデンス）へ進みますか？";
@@ -228,7 +234,7 @@ export default function ActionPlanPage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
 
-            {totalItems > 0 && actionPlanItems.some(i => i.priority === 'high') && (
+            {totalItems > 0 && highPriorityOpenItems.length > 0 && (
               <div className="border-t border-slate-100 p-4 bg-rose-50/50">
                 <h3 className="text-xs font-bold text-rose-800 mb-2 flex items-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,7 +243,7 @@ export default function ActionPlanPage({ params }: { params: Promise<{ id: strin
                   優先対応項目 (高)
                 </h3>
                 <ul className="space-y-2">
-                  {actionPlanItems.filter(i => i.priority === 'high').map(i => (
+                  {highPriorityOpenItems.map(i => (
                     <li key={`high-${i.id}`} className="text-xs text-slate-700 bg-white p-2 rounded border border-rose-100 flex items-start gap-2">
                       <span className="mt-0.5">•</span>
                       <span>{i.title}</span>
