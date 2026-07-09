@@ -7,6 +7,7 @@ import { useCases } from '@/hooks/useCases';
 import HumanApprovalBadge, { ReviewStatus } from '@/components/ui/HumanApprovalBadge';
 import Chip from '@/components/ui/Chip';
 import { getWorkflowTemplateById, getWorkflowTemplateByCaseType, getDefaultWorkflowTemplate } from '@/config/workflowTemplates';
+import { CaseProgressStatus } from '@/types';
 
 export default function CaseDetailPage() {
   const params = useParams();
@@ -44,14 +45,17 @@ export default function CaseDetailPage() {
       updateCase(caseId, {
         extractedItems: [],
         subsidyGuidelineItems: [],
+        subsidyDocumentItems: [],
         requiredDocuments: [],
         subsidyScheduleItems: [],
         subsidyDeliveryItems: [],
+        sourceDocuments: [],
+        evidenceItems: [],
         issueItems: [],
         riskItems: [],
         actionPlanItems: [],
         validationRecord: undefined,
-        progressStatus: template.steps[0]?.id as any || 'hearing',
+        progressStatus: template.steps[0]?.id as CaseProgressStatus || 'hearing',
         reviewStatus: 'pending_review'
       });
       // Component will re-render with new state
@@ -64,16 +68,19 @@ export default function CaseDetailPage() {
     
     if (window.confirm("【デモ用】\nモックデータを再生成し、各工程の初期状態に戻しますか？\n（現在の作業データは上書きされます。）\n\nよろしいですか？")) {
       updateCase(caseId, {
-        extractedItems: undefined,
-        subsidyGuidelineItems: undefined,
-        requiredDocuments: undefined,
-        subsidyScheduleItems: undefined,
-        subsidyDeliveryItems: undefined,
-        issueItems: undefined,
-        riskItems: undefined,
-        actionPlanItems: undefined,
+        extractedItems: [],
+        subsidyGuidelineItems: [],
+        subsidyDocumentItems: [],
+        requiredDocuments: [],
+        subsidyScheduleItems: [],
+        subsidyDeliveryItems: [],
+        sourceDocuments: [],
+        evidenceItems: [],
+        issueItems: [],
+        riskItems: [],
+        actionPlanItems: [],
         validationRecord: undefined,
-        progressStatus: template.steps[0]?.id as any || 'hearing',
+        progressStatus: template.steps[0]?.id as CaseProgressStatus || 'hearing',
         reviewStatus: 'pending_review'
       });
       alert("モックデータを再生成できる状態にリセットしました。各画面を開くと初期モックデータが表示されます。");
