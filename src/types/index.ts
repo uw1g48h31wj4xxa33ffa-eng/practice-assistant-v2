@@ -43,6 +43,7 @@ export interface Case {
   evidenceItems?: EvidenceItem[];
   issueItems?: IssueItem[];
   riskItems?: RiskItem[];
+  actionPlanItems?: ActionPlanItem[];
 }
 
 export interface IssueItem {
@@ -68,6 +69,22 @@ export interface RiskItem {
   impact: "high" | "medium" | "low";
   status: "unchecked" | "verified" | "needs_revision" | "not_applicable";
   countermeasure: string;
+  sourceReference: string;
+  memo: string;
+  createdBy: "ai" | "manual";
+  updatedAt: string;
+}
+
+export interface ActionPlanItem {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  recommendedAction: string;
+  merit: string;
+  demerit: string;
+  priority: "high" | "medium" | "low";
+  status: "unchecked" | "selected" | "needs_revision" | "not_applicable";
   sourceReference: string;
   memo: string;
   createdBy: "ai" | "manual";

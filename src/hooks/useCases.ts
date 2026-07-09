@@ -23,6 +23,7 @@ export function normalizeCase(raw: any): Case {
     extractedItems: Array.isArray(raw?.extractedItems) ? raw.extractedItems : [],
     subsidyGuidelineItems: Array.isArray(raw?.subsidyGuidelineItems) ? raw.subsidyGuidelineItems : [],
     subsidyDocumentItems: Array.isArray(raw?.subsidyDocumentItems) ? raw.subsidyDocumentItems : [],
+    actionPlanItems: Array.isArray(raw?.actionPlanItems) ? raw.actionPlanItems : [],
     subsidyScheduleItems: Array.isArray(raw?.subsidyScheduleItems) ? raw.subsidyScheduleItems : [],
     subsidyDeliveryItems: Array.isArray(raw?.subsidyDeliveryItems) ? raw.subsidyDeliveryItems : [],
     validationRecord: raw?.validationRecord ? {

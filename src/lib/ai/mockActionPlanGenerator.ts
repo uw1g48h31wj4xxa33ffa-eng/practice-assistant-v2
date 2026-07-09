@@ -1,0 +1,111 @@
+import { ActionPlanItem } from '@/types';
+
+export const generateMockActionPlanItems = async (): Promise<ActionPlanItem[]> => {
+  return [
+    {
+      id: `action_${Date.now()}_1`,
+      title: "就業規則の該当条文を確認する",
+      category: "事実確認",
+      summary: "現在の就業規則における退職金規程および懲戒解雇時の減額規定の有無を確認する。",
+      recommendedAction: "総務担当者に最新の就業規則一式の提出を依頼し、該当条文をレビューする。",
+      merit: "規定の存在有無により、今後の交渉方針が確定する。",
+      demerit: "特になし",
+      priority: "high",
+      status: "unchecked",
+      sourceReference: "ヒアリングメモ",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: `action_${Date.now()}_2`,
+      title: "雇用契約書・労働条件通知書を確認する",
+      category: "事実確認",
+      summary: "対象社員の入社時に交わした雇用契約書および直近の労働条件通知書を確認する。",
+      recommendedAction: "雇用契約書を回収し、就業規則との整合性を確認する。",
+      merit: "個別の合意事項や特約の有無を明確にできる。",
+      demerit: "特になし",
+      priority: "high",
+      status: "unchecked",
+      sourceReference: "ヒアリングメモ",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: `action_${Date.now()}_3`,
+      title: "勤怠記録と賃金台帳を突合する",
+      category: "事実確認",
+      summary: "対象社員の過去2年間の勤怠記録と賃金台帳を照らし合わせ、未払い残業代の有無を確認する。",
+      recommendedAction: "過去2年分のタイムカード・勤怠システムデータと賃金台帳を突き合わせる。",
+      merit: "未払い残業代請求リスクの大きさを定量的に把握できる。",
+      demerit: "データの収集・分析に工数がかかる。",
+      priority: "medium",
+      status: "unchecked",
+      sourceReference: "ヒアリングメモ",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: `action_${Date.now()}_4`,
+      title: "対応履歴を時系列で整理する",
+      category: "事実確認",
+      summary: "対象社員への注意・指導履歴、面談記録、メール等のやり取りを時系列で整理する。",
+      recommendedAction: "現場の直属の上司や人事担当者から、これまでの指導記録を収集して一覧化する。",
+      merit: "懲戒処分の有効性や正当性を立証する証拠となる。",
+      demerit: "関係者へのヒアリングが必要となる場合がある。",
+      priority: "high",
+      status: "unchecked",
+      sourceReference: "ヒアリングメモ",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: `action_${Date.now()}_5`,
+      title: "本人面談を実施する",
+      category: "対応検討",
+      summary: "対象社員に対して、事実関係の確認と今後の処遇についての面談を実施する。",
+      recommendedAction: "第三者（人事担当者等）を同席させた上で、冷静に事実確認の面談を行う。",
+      merit: "本人の認識や主張を直接確認できる。",
+      demerit: "感情的な対立を招くリスクがあるため、慎重な進め方が求められる。",
+      priority: "medium",
+      status: "unchecked",
+      sourceReference: "ヒアリングメモ",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: `action_${Date.now()}_6`,
+      title: "文書化して記録を残す",
+      category: "対応検討",
+      summary: "今後のあらゆるやり取り（面談、通知、指導等）を書面やメール等の形で記録に残す。",
+      recommendedAction: "口頭での指導を避け、メールや指導書などの記録が残る方法に変更する。",
+      merit: "言った言わないの水掛け論を防ぎ、将来の紛争時の証拠となる。",
+      demerit: "日々の業務において一手間増える。",
+      priority: "high",
+      status: "unchecked",
+      sourceReference: "AI提案",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: `action_${Date.now()}_7`,
+      title: "弁護士等専門家へ確認・連携する",
+      category: "対応検討",
+      summary: "紛争化の可能性が高い場合、初期段階から労働問題に強い弁護士に相談する。",
+      recommendedAction: "現状の整理が終わった段階で、提携弁護士に法律相談を行う。",
+      merit: "法的に安全で確実な対応方針を決定できる。",
+      demerit: "外部専門家への相談費用が発生する。",
+      priority: "low",
+      status: "unchecked",
+      sourceReference: "AI提案",
+      memo: "",
+      createdBy: "ai",
+      updatedAt: new Date().toISOString()
+    }
+  ];
+};
