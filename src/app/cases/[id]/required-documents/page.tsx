@@ -170,7 +170,9 @@ export default function RequiredDocumentsPage() {
         </>
       );
     } else if (status === 'not_needed') {
+      return (
         <button onClick={() => handleStatusChange(doc.id, 'not_started')} className="w-full min-h-[38px] sm:min-h-[44px] py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-colors border bg-slate-100 text-slate-600 border-slate-300">未着手</button>
+      );
     }
     
     // 未知の値の場合もnot_startedとして扱う
