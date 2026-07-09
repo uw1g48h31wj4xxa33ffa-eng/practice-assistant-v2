@@ -48,7 +48,8 @@ export default function CaseDetailPage() {
         subsidyScheduleItems: [],
         subsidyDeliveryItems: [],
         issueItems: [],
-        ...({ riskItems: [], actionPlanItems: [] } as any),
+        riskItems: [],
+        actionPlanItems: [],
         validationRecord: undefined,
         progressStatus: template.steps[0]?.id as any || 'hearing',
         reviewStatus: 'pending_review'
@@ -69,7 +70,8 @@ export default function CaseDetailPage() {
         subsidyScheduleItems: undefined,
         subsidyDeliveryItems: undefined,
         issueItems: undefined,
-        ...({ riskItems: undefined, actionPlanItems: undefined } as any),
+        riskItems: undefined,
+        actionPlanItems: undefined,
         validationRecord: undefined,
         progressStatus: template.steps[0]?.id as any || 'hearing',
         reviewStatus: 'pending_review'
@@ -152,13 +154,13 @@ export default function CaseDetailPage() {
         aiStatus = { label: '未着手', desc: '関連資料リストをAI生成できます', color: 'slate' };
       }
     } else if (initialCase.progressStatus === 'risk_analysis') {
-      if ((initialCase as any).riskItems && (initialCase as any).riskItems.length > 0) {
+      if (initialCase.riskItems && initialCase.riskItems.length > 0) {
         aiStatus = { label: 'AI整理完了', desc: '労務リスクを抽出しました', color: 'indigo' };
       } else {
         aiStatus = { label: '未着手', desc: '労務リスクのAI整理を実行できます', color: 'slate' };
       }
     } else if (initialCase.progressStatus === 'action_plan') {
-      if ((initialCase as any).actionPlanItems && (initialCase as any).actionPlanItems.length > 0) {
+      if (initialCase.actionPlanItems && initialCase.actionPlanItems.length > 0) {
         aiStatus = { label: 'AI整理完了', desc: '対応方針を策定しました', color: 'indigo' };
       } else {
         aiStatus = { label: '未着手', desc: '対応方針のAI策定を実行できます', color: 'slate' };
