@@ -40,13 +40,15 @@ export default function CaseDetailPage() {
   const handleResetData = () => {
     if (!initialCase || !template) return;
     
-    if (window.confirm("【警告】\nこの案件の作業データをリセットしますか？\n（公募要項、必要資料、スケジュール等の進行データはすべて消去されますが、案件の基本情報は残ります。）\n\nよろしいですか？")) {
+    if (window.confirm("【警告】\nこの案件の作業データをリセットしますか？\n（関連資料、スケジュール、論点等の進行データはすべて消去されますが、案件の基本情報は残ります。）\n\nよろしいですか？")) {
       updateCase(caseId, {
         extractedItems: [],
         subsidyGuidelineItems: [],
         requiredDocuments: [],
         subsidyScheduleItems: [],
         subsidyDeliveryItems: [],
+        issueItems: [],
+        ...({ riskItems: [], actionPlanItems: [] } as any),
         validationRecord: undefined,
         progressStatus: template.steps[0]?.id as any || 'hearing',
         reviewStatus: 'pending_review'
@@ -66,6 +68,8 @@ export default function CaseDetailPage() {
         requiredDocuments: undefined,
         subsidyScheduleItems: undefined,
         subsidyDeliveryItems: undefined,
+        issueItems: undefined,
+        ...({ riskItems: undefined, actionPlanItems: undefined } as any),
         validationRecord: undefined,
         progressStatus: template.steps[0]?.id as any || 'hearing',
         reviewStatus: 'pending_review'
@@ -103,7 +107,7 @@ export default function CaseDetailPage() {
     );
   }
 
-  const isSubsidyTemplate = template?.id === 'subsidy_v1';
+  const isSubsidyTemplate = template?.id === 'subsidy_v1' || template?.id === 'labor_consulting_v1';
 
   let completedCount = 0;
   let currentCount = 0;
@@ -133,24 +137,60 @@ export default function CaseDetailPage() {
   }
 
   let aiStatus = { label: '待機中', desc: 'AI処理可能な工程ではありません', color: 'slate' };
-  if (initialCase.progressStatus === 'guideline_review') {
-    if (initialCase.subsidyGuidelineItems && initialCase.subsidyGuidelineItems.length > 0) {
-      aiStatus = { label: 'AI抽出完了', desc: '公募要項から情報を抽出しました', color: 'indigo' };
+  
+  if (template?.id === 'labor_consulting_v1') {
+    if (initialCase.progressStatus === 'issue_analysis') {
+      if (initialCase.issueItems && initialCase.issueItems.length > 0) {
+        aiStatus = { label: 'AI整理完了', desc: '論点候補を抽出しました', color: 'indigo' };
+      } else {
+        aiStatus = { label: '未着手', desc: '論点のAI整理を実行できます', color: 'slate' };
+      }
+    } else if (initialCase.progressStatus === 'document_prep') {
+      if (initialCase.requiredDocuments && initialCase.requiredDocuments.length > 0) {
+        aiStatus = { label: 'AI整理完了', desc: '関連資料リストを整理しました', color: 'indigo' };
+      } else {
+        aiStatus = { label: '未着手', desc: '関連資料リストをAI生成できます', color: 'slate' };
+      }
+    } else if (initialCase.progressStatus === 'risk_analysis') {
+      if ((initialCase as any).riskItems && (initialCase as any).riskItems.length > 0) {
+        aiStatus = { label: 'AI整理完了', desc: '労務リスクを抽出しました', color: 'indigo' };
+      } else {
+        aiStatus = { label: '未着手', desc: '労務リスクのAI整理を実行できます', color: 'slate' };
+      }
+    } else if (initialCase.progressStatus === 'action_plan') {
+      if ((initialCase as any).actionPlanItems && (initialCase as any).actionPlanItems.length > 0) {
+        aiStatus = { label: 'AI整理完了', desc: '対応方針を策定しました', color: 'indigo' };
+      } else {
+        aiStatus = { label: '未着手', desc: '対応方針のAI策定を実行できます', color: 'slate' };
+      }
+    } else if (initialCase.progressStatus === 'ai_evidence') {
+      aiStatus = { label: '検証待ち', desc: 'AIによる検証・エビデンス確認が可能です', color: 'indigo' };
+    } else if (initialCase.progressStatus === 'completed') {
+      aiStatus = { label: '処理完了', desc: 'すべてのAI処理が完了しました', color: 'green' };
     } else {
-      aiStatus = { label: '未着手', desc: '公募要項の解析を実行できます', color: 'slate' };
+      aiStatus = { label: '待機中', desc: '次のAIタスクを待機しています', color: 'slate' };
     }
-  } else if (initialCase.progressStatus === 'document_prep') {
-    if (initialCase.requiredDocuments && initialCase.requiredDocuments.length > 0) {
-      aiStatus = { label: 'AI整理完了', desc: '必要資料リストを整理しました', color: 'indigo' };
-    } else {
-      aiStatus = { label: '未着手', desc: '必要資料リストを生成できます', color: 'slate' };
-    }
-  } else if (initialCase.progressStatus === 'completed') {
-    aiStatus = { label: '処理完了', desc: 'すべてのAI処理が完了しました', color: 'green' };
-  } else if (initialCase.progressStatus === 'ai_review') {
-    aiStatus = { label: '検証待ち', desc: 'AIによる検証・エビデンス確認が可能です', color: 'indigo' };
   } else {
-    aiStatus = { label: '待機中', desc: '次のAIタスクを待機しています', color: 'slate' };
+    // 補助金・規程用の既存ロジック
+    if (initialCase.progressStatus === 'guideline_review') {
+      if (initialCase.subsidyGuidelineItems && initialCase.subsidyGuidelineItems.length > 0) {
+        aiStatus = { label: 'AI抽出完了', desc: '公募要項から情報を抽出しました', color: 'indigo' };
+      } else {
+        aiStatus = { label: '未着手', desc: '公募要項の解析を実行できます', color: 'slate' };
+      }
+    } else if (initialCase.progressStatus === 'document_prep') {
+      if (initialCase.requiredDocuments && initialCase.requiredDocuments.length > 0) {
+        aiStatus = { label: 'AI整理完了', desc: '必要資料リストを整理しました', color: 'indigo' };
+      } else {
+        aiStatus = { label: '未着手', desc: '必要資料リストを生成できます', color: 'slate' };
+      }
+    } else if (initialCase.progressStatus === 'completed') {
+      aiStatus = { label: '処理完了', desc: 'すべてのAI処理が完了しました', color: 'green' };
+    } else if (initialCase.progressStatus === 'ai_review' || initialCase.progressStatus === 'ai_evidence') {
+      aiStatus = { label: '検証待ち', desc: 'AIによる検証・エビデンス確認が可能です', color: 'indigo' };
+    } else {
+      aiStatus = { label: '待機中', desc: '次のAIタスクを待機しています', color: 'slate' };
+    }
   }
 
   const nextStep = template && currentIndex >= 0 && currentIndex + 1 < template.steps.length 

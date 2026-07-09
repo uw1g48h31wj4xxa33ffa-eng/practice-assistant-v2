@@ -22,7 +22,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     name: "規程設計・労務系",
     description: "就業規則などの規程作成・改訂や一般的な労務相談に対応する標準的な業務フロー",
     keywords: ["就業規則", "賃金規程", "育児介護休業", "労務相談", "規程設計", "改訂"],
-    applicableCaseTypes: ["就業規則改訂", "賃金規程", "育児介護休業規程", "労務相談", "税務相談", "その他"],
+    applicableCaseTypes: ["就業規則改訂", "賃金規程", "育児介護休業規程", "税務相談", "その他"],
     steps: [
       { id: 'hearing', title: '1. ヒアリング', description: '現状確認・要望ヒアリングの実施', href: '/cases/[id]/hearing', order: 1 },
       { id: 'rule_design', title: '2. 規程設計', description: 'プロンプト生成とドラフト作成', href: '/cases/[id]/rule-design', order: 2 },
