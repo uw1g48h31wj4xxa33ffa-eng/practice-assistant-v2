@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useCases } from '@/hooks/useCases';
 import { workflowTemplates } from '@/config/workflowTemplates';
 import { RequiredDocument } from '@/types';
-import { buildMockRequiredDocumentsFromGuidelineItems } from '@/lib/ai/mockRequiredDocumentsGenerator';
+import { buildMockRequiredDocumentsFromGuidelineItems, buildMockLaborConsultingDocuments } from '@/lib/ai/mockRequiredDocumentsGenerator';
 import Chip from '@/components/ui/Chip';
 
 export default function RequiredDocumentsPage() {
@@ -44,6 +44,8 @@ export default function RequiredDocumentsPage() {
   const nextStep = template && currentStepIndex >= 0 && currentStepIndex + 1 < template.steps.length
     ? template.steps[currentStepIndex + 1]
     : null;
+
+  const isLaborConsulting = currentCase.templateId === 'labor_consulting_v1' || (!currentCase.templateId && currentCase.caseType === '労務相談');
 
   const requiredDocuments = currentCase.requiredDocuments || [];
 
@@ -88,7 +90,12 @@ export default function RequiredDocumentsPage() {
     
     // Simulate AI processing
     setTimeout(() => {
-      const generated = buildMockRequiredDocumentsFromGuidelineItems(currentCase.subsidyGuidelineItems || []);
+      let generated;
+      if (isLaborConsulting) {
+        generated = buildMockLaborConsultingDocuments();
+      } else {
+        generated = buildMockRequiredDocumentsFromGuidelineItems(currentCase.subsidyGuidelineItems || []);
+      }
       updateCase(caseId, { requiredDocuments: generated });
       setIsAnalyzing(false);
     }, 1500);
@@ -190,7 +197,7 @@ export default function RequiredDocumentsPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-800">必要資料整理</h2>
+          <h2 className="text-lg font-bold text-slate-800">{isLaborConsulting ? '関連資料整理' : '必要資料整理'}</h2>
           <p className="text-sm text-slate-500 mt-1">AIが抽出した要件をもとに、必要な資料を整理・管理します。</p>
         </div>
       </div>
@@ -269,7 +276,7 @@ export default function RequiredDocumentsPage() {
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                       </svg>
-                      AIで必要資料を整理
+                      AIで{isLaborConsulting ? '関連資料' : '必要資料'}を整理
                     </>
                   )}
                 </button>
@@ -412,7 +419,7 @@ export default function RequiredDocumentsPage() {
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-2">資料リストが未作成です</h3>
               <p className="text-sm text-slate-500 max-w-md">
-                「AIで必要資料を整理」ボタンをクリックして、<br className="hidden sm:block" />
+                「AIで{isLaborConsulting ? '関連資料' : '必要資料'}を整理」ボタンをクリックして、<br className="hidden sm:block" />
                 要項に基づいた資料リストを自動生成してください。
               </p>
             </div>
@@ -423,7 +430,7 @@ export default function RequiredDocumentsPage() {
       {/* 下部アクション */}
       <div id="next-action-area" className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
         <div>
-          <h3 className="font-bold text-slate-800 text-sm">必要資料の整理が完了したら次へ進んでください</h3>
+          <h3 className="font-bold text-slate-800 text-sm">{isLaborConsulting ? '関連資料' : '必要資料'}の整理が完了したら次へ進んでください</h3>
           {hasUncompletedRequired ? (
             <p className="text-xs font-bold text-amber-600 mt-1 flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

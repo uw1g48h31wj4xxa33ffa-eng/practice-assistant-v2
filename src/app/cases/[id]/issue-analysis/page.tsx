@@ -66,6 +66,31 @@ export default function IssueAnalysisPage({ params }: { params: Promise<{ id: st
       item.id === itemId ? { ...item, status: newStatus } : item
     );
     updateCase(caseId, { issueItems: newItems });
+
+    // Auto-scroll to next item
+    const isCompleted = (status: string | undefined) => status === 'verified' || status === 'not_applicable';
+    if (isCompleted(newStatus) || newStatus === 'needs_revision') {
+      const currentIndex = issueItems.findIndex(i => i.id === itemId);
+      let nextTarget = newItems.slice(currentIndex + 1).find(item => !isCompleted(item.status));
+      if (!nextTarget) {
+        nextTarget = newItems.slice(0, currentIndex).find(item => !isCompleted(item.status));
+      }
+
+      setTimeout(() => {
+        if (nextTarget) {
+          const element = document.getElementById(`issue-card-${nextTarget.id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          // All complete
+          const element = document.getElementById('issue-completion-area');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      }, 100);
+    }
   };
 
   const renderContextualButtons = (item: IssueItem) => {
@@ -239,6 +264,7 @@ export default function IssueAnalysisPage({ params }: { params: Promise<{ id: st
               {issueItems.map(item => (
                 <div 
                   key={item.id} 
+                  id={`issue-card-${item.id}`}
                   className={`bg-white border rounded-xl p-5 shadow-sm transition-all ${
                     item.status === 'verified' ? 'border-green-200 bg-green-50/30' :
                     item.status === 'needs_revision' ? 'border-red-200 bg-red-50/30' :
@@ -300,7 +326,7 @@ export default function IssueAnalysisPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-slate-200">
+      <div id="issue-completion-area" className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 mt-8 border-t border-slate-200">
         <Link href={`/cases/${caseId}`} className="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all w-full sm:w-auto text-center">
           案件詳細へ戻る
         </Link>

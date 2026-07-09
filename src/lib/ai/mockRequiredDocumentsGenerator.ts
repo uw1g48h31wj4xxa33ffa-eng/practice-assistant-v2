@@ -111,3 +111,80 @@ export function buildMockRequiredDocumentsFromGuidelineItems(
 
   return documents;
 }
+
+export function buildMockLaborConsultingDocuments(): RequiredDocument[] {
+  const now = new Date().toISOString();
+
+  return [
+    {
+      id: `doc_${Date.now()}_1`,
+      name: '就業規則',
+      requiredType: 'required',
+      reason: '現行ルールの確認と法的リスクの評価に必要なため',
+      sourceReference: 'ヒアリング内容: 規程全般のチェック',
+      status: 'not_started',
+      priority: 'high',
+      dueDate: '',
+      assignee: '未定',
+      memo: '',
+      createdBy: 'ai',
+      updatedAt: now,
+    },
+    {
+      id: `doc_${Date.now()}_2`,
+      name: '雇用契約書（雛形）',
+      requiredType: 'required',
+      reason: '就業規則と実務の整合性を確認するため',
+      sourceReference: 'ヒアリング内容: 契約関係の整理',
+      status: 'not_started',
+      priority: 'high',
+      dueDate: '',
+      assignee: '未定',
+      memo: '',
+      createdBy: 'ai',
+      updatedAt: now,
+    },
+    {
+      id: `doc_${Date.now()}_3`,
+      name: '賃金台帳・タイムカード',
+      requiredType: 'optional',
+      reason: '残業代計算や勤怠管理の実態把握に用いるため',
+      sourceReference: 'ヒアリング内容: 勤怠トラブルの有無',
+      status: 'not_started',
+      priority: 'medium',
+      dueDate: '',
+      assignee: '未定',
+      memo: '過去3ヶ月分が必要',
+      createdBy: 'ai',
+      updatedAt: now,
+    },
+    {
+      id: `doc_${Date.now()}_4`,
+      name: '36協定',
+      requiredType: 'optional',
+      reason: '労働時間管理の適法性を担保するため',
+      sourceReference: 'ヒアリング内容: 労働時間の見直し',
+      status: 'not_started',
+      priority: 'low',
+      dueDate: '',
+      assignee: '未定',
+      memo: '',
+      createdBy: 'ai',
+      updatedAt: now,
+    },
+    {
+      id: `doc_${Date.now()}_5`,
+      name: '休職・退職関連資料',
+      requiredType: 'optional',
+      reason: '問題社員対応やメンタルヘルス事案の経緯確認のため',
+      sourceReference: 'ヒアリング内容: 個別トラブル相談',
+      status: 'not_started',
+      priority: 'medium',
+      dueDate: '',
+      assignee: '未定',
+      memo: '診断書や面談メモ等',
+      createdBy: 'ai',
+      updatedAt: now,
+    }
+  ];
+}
