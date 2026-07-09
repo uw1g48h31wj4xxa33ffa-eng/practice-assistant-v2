@@ -81,7 +81,11 @@ export default function RequiredDocumentsPage() {
   );
 
   const handleGenerate = () => {
-    if (hasExistingProgress) {
+    if (isLaborConsulting && totalDocs > 0) {
+      if (!window.confirm('現在の関連資料リストを労務相談用に再生成します。既存の資料状態は初期化されます。よろしいですか？')) {
+        return;
+      }
+    } else if (hasExistingProgress) {
       if (!window.confirm('作業済みの状態がすべてリセットされます。本当に再生成しますか？')) {
         return;
       }
@@ -303,6 +307,23 @@ export default function RequiredDocumentsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {totalDocs > 0 && isLaborConsulting && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+              <button
+                onClick={handleGenerate}
+                disabled={isAnalyzing}
+                className="w-full py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-bold rounded-lg shadow-sm hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-700 rounded-full animate-spin"></div>
+                    リスト生成中...
+                  </>
+                ) : '労務資料リストを再生成'}
+              </button>
             </div>
           )}
         </div>
