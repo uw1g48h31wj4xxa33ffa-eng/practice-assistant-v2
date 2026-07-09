@@ -140,15 +140,18 @@ export default function HearingPage() {
     // 現在の案件情報を取得して分岐
     const existingCase = getCaseById(caseId);
     const isSubsidy = existingCase?.templateId === 'subsidy_v1' || existingCase?.caseType === '補助金支援';
+    const isLaborConsulting = existingCase?.templateId === 'labor_consulting_v1';
 
     // 案件データに抽出・確認結果と次のステータスを保存する
     updateCase(caseId, { 
       extractedItems: extractedData,
-      progressStatus: isSubsidy ? 'guideline_review' : 'rule_design'
+      progressStatus: isSubsidy ? 'guideline_review' : (isLaborConsulting ? 'issue_analysis' as any : 'rule_design')
     });
     
     if (isSubsidy) {
       router.push(`/cases/${caseId}/subsidy-guideline`);
+    } else if (isLaborConsulting) {
+      router.push(`/cases/${caseId}/issue-analysis`);
     } else {
       router.push(`/cases/${caseId}/rule-design`);
     }
