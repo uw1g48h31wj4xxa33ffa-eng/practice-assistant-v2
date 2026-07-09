@@ -60,6 +60,7 @@ export default function CaseDetailPage() {
       });
       // Component will re-render with new state
       alert("作業データをリセットしました。");
+      window.location.reload();
     }
   };
 
@@ -84,6 +85,7 @@ export default function CaseDetailPage() {
         reviewStatus: 'pending_review'
       });
       alert("モックデータを再生成できる状態にリセットしました。各画面を開くと初期モックデータが表示されます。");
+      window.location.reload();
     }
   };
 
