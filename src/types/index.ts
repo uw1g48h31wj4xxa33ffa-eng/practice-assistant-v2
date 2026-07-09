@@ -42,6 +42,7 @@ export interface Case {
   requiredDocuments?: RequiredDocument[];
   evidenceItems?: EvidenceItem[];
   issueItems?: IssueItem[];
+  riskItems?: RiskItem[];
 }
 
 export interface IssueItem {
@@ -51,6 +52,22 @@ export interface IssueItem {
   summary: string;
   status: "unchecked" | "verified" | "needs_revision" | "not_applicable";
   riskLevel: "high" | "medium" | "low";
+  sourceReference: string;
+  memo: string;
+  createdBy: "ai" | "manual";
+  updatedAt: string;
+}
+
+export interface RiskItem {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  riskLevel: "high" | "medium" | "low";
+  likelihood: "high" | "medium" | "low";
+  impact: "high" | "medium" | "low";
+  status: "unchecked" | "verified" | "needs_revision" | "not_applicable";
+  countermeasure: string;
   sourceReference: string;
   memo: string;
   createdBy: "ai" | "manual";
