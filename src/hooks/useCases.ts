@@ -48,25 +48,36 @@ export function useCases() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load from localStorage on mount
-    const stored = localStorage.getItem('practice_assistant_v2_cases');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Case[];
-        const normalizedStored = parsed.map(normalizeCase);
-        // localStorageの案件IDをSetで管理し、重複するmockCasesを除外する
-        // localStorageの更新済みデータが優先される
-        const storedIds = new Set(normalizedStored.map(c => c.id));
-        const uniqueMocks = mockCases.filter(c => !storedIds.has(c.id));
-        setCases([...normalizedStored, ...uniqueMocks]);
-      } catch (e) {
-        console.error("Failed to parse cases from localStorage", e);
+    const loadCases = () => {
+      const stored = localStorage.getItem('practice_assistant_v2_cases');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Case[];
+          const normalizedStored = parsed.map(normalizeCase);
+          // localStorageの案件IDをSetで管理し、重複するmockCasesを除外する
+          // localStorageの更新済みデータが優先される
+          const storedIds = new Set(normalizedStored.map(c => c.id));
+          const uniqueMocks = mockCases.filter(c => !storedIds.has(c.id));
+          setCases([...normalizedStored, ...uniqueMocks]);
+        } catch (e) {
+          console.error("Failed to parse cases from localStorage", e);
+          setCases(mockCases);
+        }
+      } else {
         setCases(mockCases);
       }
-    } else {
-      setCases(mockCases);
-    }
+    };
+
+    // Load from localStorage on mount
+    loadCases();
     setIsLoaded(true);
+
+    const handleCasesUpdated = () => loadCases();
+    window.addEventListener('practice_assistant_cases_updated', handleCasesUpdated);
+
+    return () => {
+      window.removeEventListener('practice_assistant_cases_updated', handleCasesUpdated);
+    };
   }, []);
 
   const addCase = useCallback((newCase: Case) => {
@@ -86,6 +97,7 @@ export function useCases() {
     
     // Update local state
     setCases(prev => [normalizedNew, ...prev]);
+    window.dispatchEvent(new Event('practice_assistant_cases_updated'));
   }, []);
 
   const getCaseById = useCallback((id: string): Case | undefined => {
@@ -120,6 +132,7 @@ export function useCases() {
     }
 
     setCases(prev => prev.map(c => c.id === id ? normalizeCase({ ...c, reviewStatus: newReviewStatus }) : c));
+    window.dispatchEvent(new Event('practice_assistant_cases_updated'));
   }, []);
 
   const updateCase = useCallback((id: string, updatedCaseData: Partial<Case>) => {
@@ -146,6 +159,7 @@ export function useCases() {
     }
 
     setCases(prev => prev.map(c => c.id === id ? normalizeCase({ ...c, ...updatedCaseData }) : c));
+    window.dispatchEvent(new Event('practice_assistant_cases_updated'));
   }, []);
 
   return { cases, isLoaded, addCase, getCaseById, updateCaseStatus, updateCase };
