@@ -47,6 +47,10 @@ export default function NewCasePage() {
       extractedItems: [],
     };
 
+    if (caseType === '労務相談') {
+      newCase.templateId = 'labor_consulting_v1';
+    }
+
     addCase(newCase);
     router.push(`/cases/${newCaseId}`);
   };

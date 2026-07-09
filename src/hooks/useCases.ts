@@ -12,7 +12,7 @@ export function normalizeCase(raw: any): Case {
     dueDate: raw?.dueDate || '',
     priority: ['high', 'medium', 'low'].includes(raw?.priority) ? raw.priority : 'medium',
     assignee: raw?.assignee || '未定',
-    templateId: raw?.templateId,
+    templateId: (raw?.caseType === '労務相談' && (!raw?.templateId || raw?.templateId === 'labor_rules_v1')) ? 'labor_consulting_v1' : raw?.templateId,
     industry: raw?.industry || '未確認',
     employeeCount: raw?.employeeCount || '未確認',
     clientContactPerson: raw?.clientContactPerson || '',

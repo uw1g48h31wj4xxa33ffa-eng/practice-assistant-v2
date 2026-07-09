@@ -140,7 +140,7 @@ export default function HearingPage() {
     // 現在の案件情報を取得して分岐
     const existingCase = getCaseById(caseId);
     const isSubsidy = existingCase?.templateId === 'subsidy_v1' || existingCase?.caseType === '補助金支援';
-    const isLaborConsulting = existingCase?.templateId === 'labor_consulting_v1';
+    const isLaborConsulting = existingCase?.templateId === 'labor_consulting_v1' || (!existingCase?.templateId && existingCase?.caseType === '労務相談');
 
     // 案件データに抽出・確認結果と次のステータスを保存する
     updateCase(caseId, { 
