@@ -38,6 +38,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCompletionFeedback, setShowCompletionFeedback] = useState(false);
   const completionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const generationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [items, setItems] = useState<SubsidyDeliveryItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -46,6 +47,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     return () => {
       if (completionTimerRef.current) clearTimeout(completionTimerRef.current);
+      if (generationTimerRef.current) clearTimeout(generationTimerRef.current);
     };
   }, []);
 
@@ -62,6 +64,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
     setIsProcessing(false);
     setShowCompletionFeedback(false);
     if (completionTimerRef.current) clearTimeout(completionTimerRef.current);
+    if (generationTimerRef.current) clearTimeout(generationTimerRef.current);
   }, [caseId]);
 
   useEffect(() => {
@@ -195,6 +198,8 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
   };
 
   const handleLaborGenerate = () => {
+    if (isGenerating) return;
+
     if (items.length > 0) {
       const hasModified = items.some(i => i.completionStatus !== 'incomplete');
       if (hasModified) {
@@ -205,12 +210,12 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
     }
 
     setIsGenerating(true);
-    try {
+    generationTimerRef.current = setTimeout(() => {
       const generatedItems = mockLaborConsultingItems.map(item => ({ ...item }));
       setItems(generatedItems);
-    } finally {
       setIsGenerating(false);
-    }
+      generationTimerRef.current = null;
+    }, 1500);
   };
 
   const handleSaveAndNext = () => {
@@ -375,10 +380,22 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
                     disabled={isGenerating}
                     className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-indigo-200 disabled:opacity-50"
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    {items.length > 0 ? '提出前リストを再生成' : '提出前リストを生成'}
+                    {isGenerating ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        {items.length > 0 ? '提出前リストを再生成' : '提出前リストを生成'}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -503,12 +520,24 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
                 <button
                   onClick={handleLaborGenerate}
                   disabled={isGenerating}
-                  className="py-2.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 mx-auto"
+                  className="py-2.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 mx-auto disabled:opacity-50"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  提出前リストを生成
+                  {isGenerating ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      提出前リストを生成
+                    </>
+                  )}
                 </button>
               </div>
             )}
