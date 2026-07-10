@@ -41,6 +41,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
 
   const [items, setItems] = useState<SubsidyDeliveryItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -56,12 +57,17 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
   // caseIdが変わったら再初期化
   useEffect(() => {
     setIsInitialized(false);
+    setItems([]);
+    setIsGenerating(false);
+    setIsProcessing(false);
+    setShowCompletionFeedback(false);
+    if (completionTimerRef.current) clearTimeout(completionTimerRef.current);
   }, [caseId]);
 
   useEffect(() => {
     if (initialCase && !isInitialized) {
       if (isLaborConsulting) {
-        setItems(mockLaborConsultingItems);
+        setItems([]);
       } else {
         if (initialCase.subsidyDeliveryItems && initialCase.subsidyDeliveryItems.length > 0) {
           setItems(initialCase.subsidyDeliveryItems);
@@ -181,11 +187,30 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
         document.getElementById(targetScrollId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
         const allCompleted = nextItems.every(i => i.completionStatus === 'completed' || i.completionStatus === 'not_required');
-        if (allCompleted) {
+        if (allCompleted && nextItems.length > 0) {
           document.getElementById('labor-next-action-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
     }, 50);
+  };
+
+  const handleLaborGenerate = () => {
+    if (items.length > 0) {
+      const hasModified = items.some(i => i.completionStatus !== 'incomplete');
+      if (hasModified) {
+        if (!window.confirm('すでに確認済みの項目が含まれています。再生成して上書きしてもよろしいですか？')) {
+          return;
+        }
+      }
+    }
+
+    setIsGenerating(true);
+    try {
+      const generatedItems = mockLaborConsultingItems.map(item => ({ ...item }));
+      setItems(generatedItems);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSaveAndNext = () => {
@@ -343,6 +368,19 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
                     <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-200"></div><span className="text-slate-600">残り {remainingCount}</span></div>
                   </div>
                 </div>
+                
+                <div className="pt-5 border-t border-slate-100">
+                  <button
+                    onClick={handleLaborGenerate}
+                    disabled={isGenerating}
+                    className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-indigo-200 disabled:opacity-50"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    {items.length > 0 ? '提出前リストを再生成' : '提出前リストを生成'}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -374,81 +412,106 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex flex-col gap-3">
-              {items.map(item => {
-                const isCompleted = item.completionStatus === 'completed';
-                const isNotRequired = item.completionStatus === 'not_required';
-                const isIssue = item.completionStatus === 'issue_found';
-                const isIncomplete = item.completionStatus === 'incomplete';
-                
-                return (
-                  <div key={item.id} id={`labor-card-${item.id}`} className={`bg-white p-5 sm:p-6 rounded-xl border shadow-sm transition-colors ${
-                    isCompleted ? 'border-emerald-300 bg-emerald-50/30' :
-                    isNotRequired ? 'border-slate-200 bg-slate-50 opacity-75' :
-                    isIssue ? 'border-red-300 bg-red-50/30' : 
-                    'border-slate-200 hover:border-indigo-100'
-                  }`}>
-                    <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5 sm:gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col gap-2 mb-3">
-                          <div className="flex flex-wrap items-center gap-1">
-                            <span className={`px-2 py-0.5 border rounded text-[10px] font-bold shrink-0 ${
-                              isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              isIssue ? 'bg-red-50 text-red-700 border-red-200' :
-                              isNotRequired ? 'bg-slate-100 text-slate-500 border-slate-200' :
-                              'bg-amber-50 text-amber-700 border-amber-200'
+            {items.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {items.map(item => {
+                  const isCompleted = item.completionStatus === 'completed';
+                  const isNotRequired = item.completionStatus === 'not_required';
+                  const isIssue = item.completionStatus === 'issue_found';
+                  const isIncomplete = item.completionStatus === 'incomplete';
+                  
+                  return (
+                    <div key={item.id} id={`labor-card-${item.id}`} className={`bg-white p-5 sm:p-6 rounded-xl border shadow-sm transition-colors ${
+                      isCompleted ? 'border-emerald-300 bg-emerald-50/30' :
+                      isNotRequired ? 'border-slate-200 bg-slate-50 opacity-75' :
+                      isIssue ? 'border-red-300 bg-red-50/30' : 
+                      'border-slate-200 hover:border-indigo-100'
+                    }`}>
+                      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col gap-2 mb-3">
+                            <div className="flex flex-wrap items-center gap-1">
+                              <span className={`px-2 py-0.5 border rounded text-[10px] font-bold shrink-0 ${
+                                isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                isIssue ? 'bg-red-50 text-red-700 border-red-200' :
+                                isNotRequired ? 'bg-slate-100 text-slate-500 border-slate-200' :
+                                'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}>
+                                {isCompleted ? '確認済' :
+                                 isIssue ? '要修正' :
+                                 isNotRequired ? '対象外' : '未確認'}
+                              </span>
+                            </div>
+                            <h4 className={`font-bold block w-full min-w-0 break-words break-all leading-snug overflow-hidden text-[15px] sm:text-base ${
+                              isCompleted || isNotRequired ? 'text-slate-500' : 'text-slate-800'
                             }`}>
-                              {isCompleted ? '確認済' :
-                               isIssue ? '要修正' :
-                               isNotRequired ? '対象外' : '未確認'}
-                            </span>
+                              {item.title}
+                            </h4>
                           </div>
-                          <h4 className={`font-bold block w-full min-w-0 break-words break-all leading-snug overflow-hidden text-[15px] sm:text-base ${
-                            isCompleted || isNotRequired ? 'text-slate-500' : 'text-slate-800'
-                          }`}>
-                            {item.title}
-                          </h4>
+                          <p className="text-[13px] sm:text-xs text-slate-500 mb-2 leading-[1.8] sm:leading-relaxed">
+                            {item.purpose}
+                          </p>
                         </div>
-                        <p className="text-[13px] sm:text-xs text-slate-500 mb-2 leading-[1.8] sm:leading-relaxed">
-                          {item.purpose}
-                        </p>
-                      </div>
-                      
-                      <div className="shrink-0 w-full xl:w-auto">
-                        <div className="hidden sm:flex flex-wrap items-center gap-2">
-                          {isIncomplete || isIssue || isNotRequired ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'completed', 'verified')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">確認済にする</button>
-                          ) : null}
-                          {isIncomplete || isCompleted || isNotRequired ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'issue_found', 'unverified')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">要修正にする</button>
-                          ) : null}
-                          {isIncomplete || isIssue ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'not_required', 'rejected')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">対象外にする</button>
-                          ) : null}
-                          {isCompleted || isIssue || isNotRequired ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'incomplete', 'unverified')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">未確認に戻す</button>
-                          ) : null}
-                        </div>
-                        <div className="flex sm:hidden items-center gap-2 w-full mt-3">
-                          {isIncomplete || isIssue || isNotRequired ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'completed', 'verified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">確認済</button>
-                          ) : null}
-                          {isIncomplete || isCompleted || isNotRequired ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'issue_found', 'unverified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">要修正</button>
-                          ) : null}
-                          {isIncomplete || isIssue ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'not_required', 'rejected')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">対象外</button>
-                          ) : null}
-                          {isCompleted || isIssue || isNotRequired ? (
-                            <button onClick={() => handleLaborItemStatusChange(item.id, 'incomplete', 'unverified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">未確認</button>
-                          ) : null}
+                        
+                        <div className="shrink-0 w-full xl:w-auto">
+                          <div className="hidden sm:flex flex-wrap items-center gap-2">
+                            {isIncomplete || isIssue || isNotRequired ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'completed', 'verified')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">確認済にする</button>
+                            ) : null}
+                            {isIncomplete || isCompleted || isNotRequired ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'issue_found', 'unverified')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">要修正にする</button>
+                            ) : null}
+                            {isIncomplete || isIssue ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'not_required', 'rejected')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">対象外にする</button>
+                            ) : null}
+                            {isCompleted || isIssue || isNotRequired ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'incomplete', 'unverified')} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">未確認に戻す</button>
+                            ) : null}
+                          </div>
+                          <div className="flex sm:hidden items-center gap-2 w-full mt-3">
+                            {isIncomplete || isIssue || isNotRequired ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'completed', 'verified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">確認済</button>
+                            ) : null}
+                            {isIncomplete || isCompleted || isNotRequired ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'issue_found', 'unverified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">要修正</button>
+                            ) : null}
+                            {isIncomplete || isIssue ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'not_required', 'rejected')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">対象外</button>
+                            ) : null}
+                            {isCompleted || isIssue || isNotRequired ? (
+                              <button onClick={() => handleLaborItemStatusChange(item.id, 'incomplete', 'unverified')} className="flex-1 min-h-[44px] rounded-lg text-xs font-bold transition-colors border bg-white text-slate-600 border-slate-200 hover:bg-slate-50 whitespace-nowrap">未確認</button>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center h-full flex flex-col items-center justify-center min-h-[300px]">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">提出前リストがありません</h3>
+                <p className="text-sm text-slate-500 max-w-md mb-6">
+                  これまでに整理した内容をもとに、<br className="hidden sm:block" />
+                  納品・完了前の確認項目を生成してください。
+                </p>
+                <button
+                  onClick={handleLaborGenerate}
+                  disabled={isGenerating}
+                  className="py-2.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 mx-auto"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  提出前リストを生成
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -461,9 +524,15 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
                 前工程に未確認・要修正の項目が {priorUnfinishedCount} 件残っています
               </p>
             )}
-            <p className="text-xs text-slate-500 mt-1">
-              納品確認：未完了 {remainingCount} 件
-            </p>
+            {items.length === 0 ? (
+              <p className="text-xs text-amber-600 mt-1 font-bold">
+                まずは提出前リストを生成してください
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500 mt-1">
+                納品確認：未完了 {remainingCount} 件
+              </p>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Link
@@ -474,7 +543,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
             </Link>
             <button
               onClick={handleSaveAndNext}
-              disabled={isProcessing || showCompletionFeedback}
+              disabled={items.length === 0 || isProcessing || showCompletionFeedback}
               className={`flex-1 sm:flex-none px-6 py-2.5 font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px] disabled:opacity-50 ${
                 showCompletionFeedback 
                   ? 'bg-emerald-600 text-white border-emerald-600' 
