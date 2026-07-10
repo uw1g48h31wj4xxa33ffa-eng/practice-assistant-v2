@@ -36,9 +36,17 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
 
   const [showCompletedContent, setShowCompletedContent] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showCompletionFeedback, setShowCompletionFeedback] = useState(false);
+  const completionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [items, setItems] = useState<SubsidyDeliveryItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (completionTimerRef.current) clearTimeout(completionTimerRef.current);
+    };
+  }, []);
 
   const resolvedTemplate = initialCase?.templateId 
     ? workflowTemplates.find(t => t.id === initialCase.templateId)
@@ -201,7 +209,10 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
       }
       setIsProcessing(true);
       updateCase(caseId, { progressStatus: 'completed' });
-      router.push(`/cases/${caseId}`);
+      setShowCompletionFeedback(true);
+      completionTimerRef.current = setTimeout(() => {
+        router.push(`/cases/${caseId}`);
+      }, 900);
     } else {
       setIsProcessing(true);
       updateCase(caseId, {
@@ -229,7 +240,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  if (initialCase.progressStatus === 'completed' && !showCompletedContent) {
+  if (initialCase.progressStatus === 'completed' && !showCompletedContent && !(isLaborConsulting && showCompletionFeedback)) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-soft-enter">
         <div className="flex items-center gap-4 mb-6 pt-4 md:pt-0">
@@ -341,19 +352,19 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   要確認項目
                 </h3>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {laborAttentionItems.map(i => (
-                    <li key={i.id} className={`text-sm rounded-lg p-2 border flex items-center justify-between ${
+                    <li key={i.id} className={`text-sm rounded-lg p-3 border flex flex-col sm:flex-row items-stretch sm:items-start gap-3 ${
                       i.completionStatus === 'issue_found' ? 'text-red-700 bg-white border-red-100' : 'text-amber-700 bg-white border-amber-100'
                     }`}>
-                      <span className="truncate mr-2 font-bold">{i.title}</span>
+                      <span className="min-w-0 flex-1 break-words leading-relaxed font-bold">{i.title}</span>
                       <button 
                         onClick={() => document.getElementById(`labor-card-${i.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                        className={`text-xs shrink-0 border px-2 py-1 rounded ${
-                          i.completionStatus === 'issue_found' ? 'text-red-500 hover:text-red-800 border-red-200 bg-red-50' : 'text-amber-600 hover:text-amber-800 border-amber-200 bg-amber-50'
+                        className={`text-xs shrink-0 w-full sm:w-auto border px-4 py-2 sm:px-3 sm:py-1.5 rounded font-bold transition-colors ${
+                          i.completionStatus === 'issue_found' ? 'text-red-600 hover:text-red-800 hover:bg-red-100 border-red-200 bg-red-50' : 'text-amber-700 hover:text-amber-900 hover:bg-amber-100 border-amber-200 bg-amber-50'
                         }`}
                       >
-                        確認
+                        確認する
                       </button>
                     </li>
                   ))}
@@ -463,10 +474,14 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
             </Link>
             <button
               onClick={handleSaveAndNext}
-              disabled={isProcessing}
-              className="flex-1 sm:flex-none px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px] disabled:opacity-50"
+              disabled={isProcessing || showCompletionFeedback}
+              className={`flex-1 sm:flex-none px-6 py-2.5 font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0 min-h-[44px] disabled:opacity-50 ${
+                showCompletionFeedback 
+                  ? 'bg-emerald-600 text-white border-emerald-600' 
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
             >
-              {isProcessing ? '処理中...' : '案件を完了する'}
+              {showCompletionFeedback ? '完了しました' : isProcessing ? '処理中...' : '案件を完了する'}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
