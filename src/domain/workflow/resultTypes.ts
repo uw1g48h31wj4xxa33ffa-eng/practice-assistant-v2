@@ -7,18 +7,20 @@ export interface ProfileResolutionInput {
   caseType?: string;
 }
 
-export interface ProfileResolutionResult {
-  profileId: ProfileId | null;
-  status: 'resolved' | 'unresolved';
-}
+export type ProfileResolutionResult =
+  | {
+      status: 'resolved';
+      profileId: ProfileId;
+      source: 'profile_id' | 'template_id' | 'case_type_mapping';
+    }
+  | {
+      status: 'unresolved';
+      profileId: null;
+      reason: 'missing_mapping' | 'unknown_profile' | 'unknown_template' | 'invalid_case_type' | 'reserved_profile';
+    };
 
 export interface TemplateResolutionResult {
   templateId: TemplateId | null;
-  status: 'resolved' | 'unresolved';
-}
-
-export interface StepResolutionResult {
-  stepId: StepId | null;
   status: 'resolved' | 'unresolved';
 }
 
@@ -39,20 +41,14 @@ export interface MigrationResult<T> {
   errors: MigrationError[];
 }
 
-export interface ValidationError {
-  path: string;
-  message: string;
-}
-
-export interface ValidationWarning {
+export interface ValidationIssue {
   path: string;
   message: string;
 }
 
 export interface ValidationResult {
   isValid: boolean;
-  errors: ValidationError[];
-  warnings: ValidationWarning[];
+  issues: ValidationIssue[];
 }
 
 export interface GeneratorResolutionResult {

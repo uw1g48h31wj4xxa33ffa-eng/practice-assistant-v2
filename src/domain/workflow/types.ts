@@ -1,12 +1,24 @@
-export type ProfileId = string;
-export type TemplateId = string;
+export type ProfileId =
+  | 'subsidy'
+  | 'labor_consulting'
+  | 'labor_rules'
+  | 'tax_consulting'
+  | 'generic';
+
+export type TemplateId =
+  | 'subsidy_v1'
+  | 'labor_consulting_v1'
+  | 'labor_rules_v1'
+  | 'tax_consulting_v1'
+  | 'generic_v1';
+
 export type CaseTypeId = string;
 export type StepId = string;
 export type SchemaVersion = string;
 
 export type RegistrationStatus = 'registered' | 'reserved';
 export type FeatureStatus = 'enabled' | 'disabled';
-export type RegistryStatus = 'registered' | 'unavailable' | 'disabled' | 'incompatible';
+export type RegistryStatus = 'resolved' | 'not_registered' | 'disabled' | 'incompatible';
 
 export type StatusModel = {
   verification: 'unchecked' | 'verified' | 'needs_revision' | 'not_applicable';
@@ -17,7 +29,7 @@ export interface WorkflowProfile {
   id: ProfileId;
   name: string;
   registrationStatus: RegistrationStatus;
-  templateId: TemplateId;
+  workflowTemplateId: TemplateId;
 }
 
 export interface WorkflowTemplate {

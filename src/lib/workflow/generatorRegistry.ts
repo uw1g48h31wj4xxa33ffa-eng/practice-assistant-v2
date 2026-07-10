@@ -3,15 +3,14 @@ import { GeneratorResolutionResult } from '../../domain/workflow/resultTypes';
 import { RegistryStatus } from '../../domain/workflow/types';
 
 export class GeneratorRegistry {
-  private registeredKeys: Set<GeneratorKey> = new Set();
+  private registeredKeys: Map<GeneratorKey, RegistryStatus> = new Map();
   
-  // Real registration and adapter implementations are deferred to Phase 0B.
-  // Phase 0A only defines the type-safe contract without importing actual generators.
+  public register(key: GeneratorKey, status: RegistryStatus): void {
+    this.registeredKeys.set(key, status);
+  }
 
   public resolveStatus(key: GeneratorKey): GeneratorResolutionResult {
-    // In Phase 0A, we don't consider any generators as 'registered' yet,
-    // to strictly adhere to the disconnected constraint.
-    const status: RegistryStatus = 'unavailable'; 
+    const status = this.registeredKeys.get(key) ?? 'not_registered'; 
 
     return {
       key,
