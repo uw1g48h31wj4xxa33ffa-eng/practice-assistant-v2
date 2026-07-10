@@ -4,6 +4,7 @@ import React, { useState, use, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCases } from '@/hooks/useCases';
+import { workflowTemplates, getWorkflowTemplateByCaseType } from '@/config/workflowTemplates';
 import DeliveryVerificationCard from '@/components/features/ai/DeliveryVerificationCard';
 import CompletionActionArea from '@/components/ui/CompletionActionArea';
 import { SubsidyDeliveryItem, DeliveryVerificationStatus, DeliveryCompletionStatus } from '@/types';
@@ -15,6 +16,17 @@ const mockLaborDeliveryItems: SubsidyDeliveryItem[] = [
   { id: 'ld4', title: '届出用書類の準備', purpose: '労基署などへの届出用フォーマット作成', importance: 'medium', verificationStatus: 'unverified', completionStatus: 'not_required', aiMemo: '今回は規程ドラフトの納品までのため、届出書類作成は対象外です' }
 ];
 
+const mockLaborConsultingItems: SubsidyDeliveryItem[] = [
+  { id: 'lc1', title: '相談内容・事実関係の最終確認', purpose: 'ヒアリング内容と整理した論点に認識差がないか', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc2', title: '労務リスクの確認', purpose: '未確認または要修正のリスク項目が残っていないか', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc3', title: '対応方針の確認', purpose: '採用した対応方針と相談内容が整合しているか', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc4', title: '関連資料・証拠の確認', purpose: '就業規則、雇用契約書、勤怠資料、相談記録等が整理されているか', importance: 'medium', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc5', title: 'AI検証・エビデンスの確認', purpose: '要修正または未確認の検証項目が残っていないか', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc6', title: '相談記録・対応履歴の確認', purpose: '後から経緯を確認できる状態になっているか', importance: 'medium', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc7', title: '専門家による最終判断事項の確認', purpose: '法的判断や個別判断が必要な事項を明確にしているか', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+  { id: 'lc8', title: '納品・共有内容の確認', purpose: '相談結果、対応方針、注意事項、次の対応が整理されているか', importance: 'high', verificationStatus: 'unverified', completionStatus: 'incomplete', aiMemo: '' },
+];
+
 export default function LaborDeliveryPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id: caseId } = use(params);
@@ -24,13 +36,33 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
 
   const [showCompletedContent, setShowCompletedContent] = useState(false);
 
-  // 初期表示ではローカルstateにモックデータを持たせる
-  const [items, setItems] = useState<SubsidyDeliveryItem[]>(() => {
-    if (initialCase?.subsidyDeliveryItems && initialCase.subsidyDeliveryItems.length > 0) {
-      return initialCase.subsidyDeliveryItems;
+  const [items, setItems] = useState<SubsidyDeliveryItem[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const resolvedTemplate = initialCase?.templateId 
+    ? workflowTemplates.find(t => t.id === initialCase.templateId)
+    : initialCase ? getWorkflowTemplateByCaseType(initialCase.caseType) : undefined;
+  const isLaborConsulting = resolvedTemplate?.id === "labor_consulting_v1";
+
+  // caseIdが変わったら再初期化
+  useEffect(() => {
+    setIsInitialized(false);
+  }, [caseId]);
+
+  useEffect(() => {
+    if (initialCase && !isInitialized) {
+      if (isLaborConsulting) {
+        setItems(mockLaborConsultingItems);
+      } else {
+        if (initialCase.subsidyDeliveryItems && initialCase.subsidyDeliveryItems.length > 0) {
+          setItems(initialCase.subsidyDeliveryItems);
+        } else {
+          setItems(mockLaborDeliveryItems);
+        }
+      }
+      setIsInitialized(true);
     }
-    return mockLaborDeliveryItems;
-  });
+  }, [initialCase, isLaborConsulting, isInitialized]);
 
   const pendingScrollRef = useRef<string | null>(null);
 
@@ -101,13 +133,29 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
   const handleSaveAndNext = () => {
     if (!initialCase) return;
     
-    // updateCaseでローカルstateのデータを保存しつつ、次工程(全工程完了)へ進む
-    updateCase(caseId, {
-      subsidyDeliveryItems: items,
-      progressStatus: 'completed'
-    });
-    // 自動遷移を停止するため削除
-    // router.push(`/cases/${caseId}`);
+    if (isLaborConsulting) {
+      const hasUnfinishedIssue = initialCase.issueItems?.some(i => i.status === 'unchecked' || i.status === 'needs_revision');
+      const hasUnfinishedRisk = initialCase.riskItems?.some(i => i.status === 'unchecked' || i.status === 'needs_revision');
+      const hasUnfinishedAction = initialCase.actionPlanItems?.some(i => i.status === 'unchecked' || i.status === 'needs_revision');
+      const hasUnfinishedDoc = initialCase.requiredDocuments?.some(i => i.status === 'not_started' || i.status === 'requested');
+      const hasUnfinishedEvidence = initialCase.evidenceItems?.some(i => i.status === 'unchecked' || i.status === 'needs_revision');
+      
+      const hasUnfinishedDelivery = items.some(i => i.completionStatus === 'incomplete' || i.completionStatus === 'issue_found');
+      
+      const hasUnfinished = hasUnfinishedIssue || hasUnfinishedRisk || hasUnfinishedAction || hasUnfinishedDoc || hasUnfinishedEvidence || hasUnfinishedDelivery;
+      
+      if (hasUnfinished) {
+        if (!window.confirm('未確認または要修正の項目が残っています。このまま案件を完了にしますか？')) {
+          return;
+        }
+      }
+      updateCase(caseId, { progressStatus: 'completed' });
+    } else {
+      updateCase(caseId, {
+        subsidyDeliveryItems: items,
+        progressStatus: 'completed'
+      });
+    }
   };
 
   const handleSaveDraft = () => {
@@ -298,7 +346,7 @@ export default function LaborDeliveryPage({ params }: { params: Promise<{ id: st
         nextStepVariant="emerald"
         primaryLabel="完了する"
         primaryIcon="check"
-        onSaveDraft={handleSaveDraft}
+        onSaveDraft={isLaborConsulting ? () => alert('この画面の確認状態は一時的です。') : handleSaveDraft}
         onProceed={handleSaveAndNext}
       />
     </div>
