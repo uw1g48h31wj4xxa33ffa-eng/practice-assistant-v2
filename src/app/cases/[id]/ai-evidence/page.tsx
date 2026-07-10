@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCases } from '@/hooks/useCases';
-import { workflowTemplates } from '@/config/workflowTemplates';
+import { workflowTemplates, getWorkflowTemplateByCaseType } from '@/config/workflowTemplates';
 import { EvidenceItem } from '@/types';
 import { buildMockEvidenceItems } from '@/lib/ai/mockEvidenceGenerator';
 import { buildLaborEvidenceItems } from '@/lib/ai/mockLaborEvidenceGenerator';
@@ -39,8 +39,10 @@ export default function AIEvidencePage() {
 
   const template = currentCase.templateId 
     ? workflowTemplates.find(t => t.id === currentCase.templateId) 
-    : undefined;
+    : getWorkflowTemplateByCaseType(currentCase.caseType);
     
+  const resolvedTemplateId = template?.id;
+
   const currentStepIndex = template?.steps.findIndex(s => s.id === 'ai_evidence') ?? -1;
   const nextStep = template && currentStepIndex >= 0 && currentStepIndex + 1 < template.steps.length
     ? template.steps[currentStepIndex + 1]
@@ -60,7 +62,7 @@ export default function AIEvidencePage() {
   const hasIncomplete = (needsRevisionCount > 0 || uncheckedCount > 0);
 
   const handleGenerate = () => {
-    const templateId = currentCase.templateId;
+    const templateId = resolvedTemplateId;
     
     // 未知のテンプレートの場合、アラートを表示して生成を中断
     if (templateId !== "labor_consulting_v1" && templateId !== "labor_rules_v1" && templateId !== "subsidy_v1") {
