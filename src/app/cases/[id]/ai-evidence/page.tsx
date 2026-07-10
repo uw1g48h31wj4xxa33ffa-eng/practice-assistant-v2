@@ -7,6 +7,8 @@ import { useCases } from '@/hooks/useCases';
 import { workflowTemplates } from '@/config/workflowTemplates';
 import { EvidenceItem } from '@/types';
 import { buildMockEvidenceItems } from '@/lib/ai/mockEvidenceGenerator';
+import { buildLaborEvidenceItems } from '@/lib/ai/mockLaborEvidenceGenerator';
+import { buildRulesEvidenceItems } from '@/lib/ai/mockRulesEvidenceGenerator';
 
 export default function AIEvidencePage() {
   const params = useParams();
@@ -58,10 +60,45 @@ export default function AIEvidencePage() {
   const hasIncomplete = (needsRevisionCount > 0 || uncheckedCount > 0);
 
   const handleGenerate = () => {
+    const templateId = currentCase.templateId;
+    
+    // 未知のテンプレートの場合、アラートを表示して生成を中断
+    if (templateId !== "labor_consulting_v1" && templateId !== "labor_rules_v1" && templateId !== "subsidy_v1") {
+      alert("このテンプレートはAI検証に対応していません。");
+      return;
+    }
+
+    // 不一致の検知
+    let hasMismatch = false;
+    if (evidenceItems.length > 0) {
+      const texts = evidenceItems.map(i => (i.title + " " + i.summary)).join(" ");
+      
+      const hasSubsidyWords = texts.includes('公募要項') || texts.includes('gBizID') || texts.includes('補助対象経費') || texts.includes('事業計画書') || texts.includes('申請締切') || texts.includes('認定支援機関');
+      const hasLaborWords = texts.includes('事実関係と論点') || texts.includes('労務リスクと対応方針');
+      const hasRulesWords = texts.includes('現行規程と改訂案') || texts.includes('法令上の必須記載事項');
+
+      if (templateId === 'subsidy_v1' && (hasLaborWords || hasRulesWords)) {
+        hasMismatch = true;
+      } else if (templateId === 'labor_consulting_v1' && (hasSubsidyWords || hasRulesWords)) {
+        hasMismatch = true;
+      } else if (templateId === 'labor_rules_v1' && (hasSubsidyWords || hasLaborWords)) {
+        hasMismatch = true;
+      }
+    }
+
     // 上書き防止チェック
     if (evidenceItems.length > 0) {
       const hasModified = evidenceItems.some(i => i.status !== 'unchecked');
-      if (hasModified) {
+      
+      if (hasMismatch) {
+        let msg = 'この案件の種類と異なる検証データが保存されています。\n現在のテンプレートに合わせて再生成しますか？';
+        if (hasModified) {
+          msg = 'この案件の種類と異なる検証データが保存されています。すでに確認済みの項目が含まれていますが、現在のテンプレートに合わせて再生成し、上書きしてもよろしいですか？';
+        }
+        if (!window.confirm(msg)) {
+          return;
+        }
+      } else if (hasModified) {
         if (!window.confirm('すでに確認済みの検証結果が含まれています。再生成して上書きしてもよろしいですか？')) {
           return;
         }
@@ -70,7 +107,15 @@ export default function AIEvidencePage() {
 
     setIsAnalyzing(true);
     setTimeout(() => {
-      const generated = buildMockEvidenceItems(currentCase);
+      let generated: EvidenceItem[] = [];
+      if (templateId === "labor_consulting_v1") {
+        generated = buildLaborEvidenceItems(currentCase);
+      } else if (templateId === "labor_rules_v1") {
+        generated = buildRulesEvidenceItems(currentCase);
+      } else {
+        generated = buildMockEvidenceItems(currentCase);
+      }
+      
       updateCase(caseId, { evidenceItems: generated });
       setIsAnalyzing(false);
     }, 1500);
@@ -158,22 +203,60 @@ export default function AIEvidencePage() {
   };
 
   const getMobileTitle = (title: string) => {
+    // 補助金
     if (title.includes('必須資料の不足確認')) return '必須資料の不足';
     if (title.includes('gBizIDプライムアカウントの準備状況')) return 'gBizID準備状況';
     if (title.includes('見積書・決算書の有効性確認')) return '見積書・決算書の確認';
     if (title.includes('公募要項の締切とスケジュールの整合性')) return '公募締切と予定確認';
     if (title.includes('出典・根拠資料の紐付け確認')) return '根拠資料の紐付け';
     if (title.includes('専門家（認定支援機関等）の事前確認')) return '専門家の事前確認';
+    
+    // 労務相談
+    if (title.includes('事実関係と論点の整合確認')) return '事実・論点の確認';
+    if (title.includes('関連資料の不足確認')) return '関連資料の確認';
+    if (title.includes('労務リスクと対応方針の整合確認')) return 'リスク・方針の整合';
+    if (title.includes('就業規則・雇用契約書との不整合確認')) return '規程・契約の不整合';
+    if (title.includes('記録・証拠資料の不足確認')) return '証拠資料の確認';
+    if (title.includes('専門家確認が必要な事項')) return '専門家確認事項';
+
+    // 就業規則
+    if (title.includes('現行規程と改訂案の整合確認')) return '規程と改訂案の整合';
+    if (title.includes('法令上の必須記載事項の確認')) return '法定記載事項の確認';
+    if (title.includes('就業規則と賃金規程の整合確認')) return '規程間の整合確認';
+    if (title.includes('雇用契約書・労働条件通知書との整合確認')) return '契約書との整合確認';
+    if (title.includes('条文間の矛盾・重複確認')) return '条文矛盾・重複確認';
+    if (title.includes('施行日・経過措置の確認')) return '施行日・経過措置';
+    if (title.includes('専門家最終確認が必要な事項')) return '専門家最終確認';
+
     return title;
   };
 
   const getMobileSummary = (summary: string) => {
+    // 補助金
     if (summary.includes('必須資料（計')) return '未完了の必須資料を確認します。';
     if (summary.includes('電子申請に必要なgBizIDプライムアカウント')) return '電子申請に必要なgBizIDを確認します。';
     if (summary.includes('スケジュール上の「提出期限」')) return '公募締切と予定のずれを確認します。';
     if (summary.includes('提出予定の決算書')) return '見積書・決算書の内容を確認します。';
     if (summary.includes('案件に関連する根拠資料')) return '根拠資料の紐付け漏れを確認します。';
     if (summary.includes('申請にあたり、認定支援機関の確認書')) return '専門家による確認が必要か確認します。';
+
+    // 労務相談
+    if (summary.includes('洗い出された論点（計')) return '事実関係に矛盾や飛躍がないか確認します。';
+    if (summary.includes('必要資料（計')) return '未完了の必要資料を確認します。';
+    if (summary.includes('特定された労務リスク（')) return '対応方針が妥当で逸脱がないか確認します。';
+    if (summary.includes('実際の運用に乖離がないか')) return '就業規則や雇用契約書と運用の乖離を確認します。';
+    if (summary.includes('客観的な記録や証拠資料（現在')) return '証拠資料が十分に揃っているか確認します。';
+    if (summary.includes('高度な法的判断事項が含まれていないか')) return '法的判断の専門家確認が必要か確認します。';
+
+    // 就業規則
+    if (summary.includes('抽出された課題（計')) return '課題が改訂案に反映されているか確認します。';
+    if (summary.includes('絶対的必要記載事項および')) return '法定記載事項の漏れがないか確認します。';
+    if (summary.includes('育児介護休業規程など、別規程との間')) return '別規程との間に矛盾や重複がないか確認します。';
+    if (summary.includes('今後発行する雇用契約書・労働条件通知書')) return '雇用契約書と規程の不整合が生じないか確認します。';
+    if (summary.includes('用語の不統一、矛盾・重複規定')) return '条文間の矛盾や重複がないか確認します。';
+    if (summary.includes('改訂後の規程の施行日が適切か')) return '施行日と経過措置が十分か確認します。';
+    if (summary.includes('労働基準監督署への届出にあたり')) return '最終的な法的確認が必要か確認します。';
+
     return summary;
   };
 
