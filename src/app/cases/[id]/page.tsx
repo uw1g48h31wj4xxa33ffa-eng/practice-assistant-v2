@@ -500,6 +500,16 @@ export default function CaseDetailPage() {
 
           {/* 右側: 進捗・AI・次工程 */}
           <div className="space-y-6">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-6 transition-soft hover-lift flex flex-col items-center md:items-start">
+              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 md:mb-4 text-center md:text-left w-full">確認状況</h2>
+              <div className="flex justify-center md:justify-start w-full">
+                <HumanApprovalBadge 
+                  status={reviewStatus} 
+                  onChange={handleStatusChange} 
+                />
+              </div>
+            </div>
+
             {/* 全体進捗 ドーナツグラフ */}
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col items-center">
               <h3 className="text-sm font-bold text-slate-800 mb-6 self-start">全体進捗</h3>
