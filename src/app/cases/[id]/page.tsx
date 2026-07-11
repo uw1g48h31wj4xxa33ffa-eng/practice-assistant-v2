@@ -9,6 +9,15 @@ import Chip from '@/components/ui/Chip';
 import { getWorkflowTemplateById, getWorkflowTemplateByCaseType, getDefaultWorkflowTemplate } from '@/config/workflowTemplates';
 import { CaseProgressStatus } from '@/types';
 
+// Phase 0AのProfile解決へ接続するまでの暫定判定
+// 税務相談・その他の誤適用防止
+const MODERN_LABOR_RULE_CASE_TYPES = new Set<string>([
+  '就業規則改訂',
+  '賃金規程',
+  '育児介護休業規程',
+  '規程改訂',
+]);
+
 export default function CaseDetailPage() {
   const params = useParams();
   const caseId = params.id as string;
@@ -118,7 +127,14 @@ export default function CaseDetailPage() {
     );
   }
 
-  const isSubsidyTemplate = template?.id === 'subsidy_v1' || template?.id === 'labor_consulting_v1';
+  const isModernLaborRulesCase =
+    template?.id === 'labor_rules_v1' &&
+    MODERN_LABOR_RULE_CASE_TYPES.has(initialCase.caseType);
+
+  const usesModernWorkflowLayout =
+    template?.id === 'subsidy_v1' ||
+    template?.id === 'labor_consulting_v1' ||
+    isModernLaborRulesCase;
 
   let completedCount = 0;
   let currentCount = 0;
@@ -637,5 +653,5 @@ export default function CaseDetailPage() {
     );
   };
 
-  return isSubsidyTemplate ? renderSubsidyLayout() : renderLegacyLayout();
+  return usesModernWorkflowLayout ? renderSubsidyLayout() : renderLegacyLayout();
 }
