@@ -96,9 +96,7 @@ export default function NewCasePage() {
                   <option value="労務相談">労務相談</option>
                   <option value="税務相談">税務相談</option>
                   <option value="その他">その他</option>
-                  <optgroup label="補助金関連">
-                    <option value="補助金支援">補助金支援</option>
-                  </optgroup>
+                  <option value="補助金支援">補助金支援</option>
                 </select>
               </div>
             </div>
