@@ -7,6 +7,262 @@ import { useCases } from '@/hooks/useCases';
 import { ExtractedInfo, VerificationStatus } from '@/types';
 import VerificationCard from '@/components/features/ai/VerificationCard';
 
+const getMockHearingItems = (caseType: string): ExtractedInfo[] => {
+  switch (caseType) {
+    case '補助金支援':
+      return [
+        {
+          id: 'subsidy-hearing-1',
+          category: '事実関係',
+          content: '申請目的および実施予定事業の内容を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'subsidy-hearing-2',
+          category: '事実関係',
+          content: '希望する補助制度または対象分野を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'subsidy-hearing-3',
+          category: '事実関係',
+          content: '事業者の基本情報（業種、設立年など）を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'subsidy-hearing-4',
+          category: '課題・論点',
+          content: '対象経費および予定支出の概算を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'subsidy-hearing-5',
+          category: '事実関係',
+          content: '事業の実施時期および申請希望時期を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+      ];
+    case '就業規則改訂':
+      return [
+        {
+          id: 'employment-rules-hearing-1',
+          category: '事実関係',
+          content: '就業規則改訂の目的・背景を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'employment-rules-hearing-2',
+          category: '事実関係',
+          content: '現行就業規則の有無、および最終改訂時期を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'employment-rules-hearing-3',
+          category: '課題・論点',
+          content: '改訂対象となる具体的な条文・制度を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'employment-rules-hearing-4',
+          category: '事実関係',
+          content: '法改正対応、または社内制度変更のどちらが主目的か確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'employment-rules-hearing-5',
+          category: '事実関係',
+          content: '改訂が適用される対象従業員・対象事業場を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+      ];
+    case '賃金規程':
+      return [
+        {
+          id: 'wage-rules-hearing-1',
+          category: '事実関係',
+          content: '現行賃金規程の有無を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'wage-rules-hearing-2',
+          category: '事実関係',
+          content: '現行の賃金体系および基本給の構成を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'wage-rules-hearing-3',
+          category: '課題・論点',
+          content: '各種手当の種類とそれぞれの支給条件を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'wage-rules-hearing-4',
+          category: '事実関係',
+          content: '賃金の締切日および支払日を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'wage-rules-hearing-5',
+          category: '課題・論点',
+          content: '割増賃金および時間外労働の現行の取扱いを確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+      ];
+    case '育児介護休業規程':
+      return [
+        {
+          id: 'childcare-care-rules-hearing-1',
+          category: '事実関係',
+          content: '現行規程の有無および最終改訂時期を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'childcare-care-rules-hearing-2',
+          category: '事実関係',
+          content: '規程が適用される対象従業員と適用範囲を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'childcare-care-rules-hearing-3',
+          category: '課題・論点',
+          content: '育児休業および介護休業の社内での申出手続を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'childcare-care-rules-hearing-4',
+          category: '課題・論点',
+          content: '休業可能期間および復職時の取扱いについて確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'childcare-care-rules-hearing-5',
+          category: '事実関係',
+          content: '短時間勤務制度や所定外労働制限の利用実績・運用状況を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+      ];
+    case '規程改訂':
+      return [
+        {
+          id: 'general-rules-hearing-1',
+          category: '事実関係',
+          content: '今回改訂の対象となる具体的な規程名を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'general-rules-hearing-2',
+          category: '事実関係',
+          content: '改訂を行う主な目的および背景を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'general-rules-hearing-3',
+          category: '課題・論点',
+          content: '改訂が必要となる対象条項および影響範囲を確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'general-rules-hearing-4',
+          category: '事実関係',
+          content: '関連する他規程や社内制度との紐付けがあるか確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'general-rules-hearing-5',
+          category: '課題・論点',
+          content: '現行の運用実態と、現在の規程文言との間に差があるか確認します。',
+          sourceReference: 'AI抽出（ヒアリングメモ）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+      ];
+    default:
+      // 労務相談・税務相談・その他・未知案件用の既存モック維持
+      return [
+        {
+          id: 'ext_1',
+          category: '事実関係',
+          content: '従業員Aからリモートワークの交通費支給について質問があった。現行規程では「実費支給」となっているが、出社日数が月5日未満の場合は定期券代を支給していない。',
+          sourceReference: '2026/07/01 社長ヒアリングメモ',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'ext_2',
+          category: '課題・論点',
+          content: '現行の就業規則において、出社日数に応じた通勤手当の明確な支給基準が定められておらず、従業員間で不公平感が生じているリスクがある。',
+          sourceReference: '2026/07/01 社長ヒアリングメモ',
+          status: 'unverified',
+          aiConfidence: 'high',
+        },
+        {
+          id: 'ext_3',
+          category: '不足情報',
+          content: '従業員Aの現在の契約形態（正社員か契約社員か）が不明です。',
+          sourceReference: '2026/07/01 社長ヒアリングメモ',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        },
+        {
+          id: 'ext_4',
+          category: 'リスク',
+          content: '労働基準法第89条に基づき、通勤手当に関する事項は就業規則の絶対的必要記載事項であるため、現状の運用ルールと規程の乖離は法的なリスクとなる。',
+          sourceReference: 'AI推論（厚労省ガイドライン）',
+          status: 'unverified',
+          aiConfidence: 'medium',
+        }
+      ];
+  }
+};
+
 export default function HearingPage() {
   const params = useParams();
   const router = useRouter();
@@ -74,40 +330,9 @@ export default function HearingPage() {
     // Simulate AI extraction delay
     extractionTimerRef.current = setTimeout(() => {
       extractionTimerRef.current = null;
-      const nextItems: ExtractedInfo[] = [
-        {
-          id: 'ext_1',
-          category: '事実関係',
-          content: '従業員Aからリモートワークの交通費支給について質問があった。現行規程では「実費支給」となっているが、出社日数が月5日未満の場合は定期券代を支給していない。',
-          sourceReference: '2026/07/01 社長ヒアリングメモ',
-          status: 'unverified',
-          aiConfidence: 'high',
-        },
-        {
-          id: 'ext_2',
-          category: '課題・論点',
-          content: '現行の就業規則において、出社日数に応じた通勤手当の明確な支給基準が定められておらず、従業員間で不公平感が生じているリスクがある。',
-          sourceReference: '2026/07/01 社長ヒアリングメモ',
-          status: 'unverified',
-          aiConfidence: 'high',
-        },
-        {
-          id: 'ext_3',
-          category: '不足情報',
-          content: '従業員Aの現在の契約形態（正社員か契約社員か）が不明です。',
-          sourceReference: '2026/07/01 社長ヒアリングメモ',
-          status: 'unverified',
-          aiConfidence: 'medium',
-        },
-        {
-          id: 'ext_4',
-          category: 'リスク',
-          content: '労働基準法第89条に基づき、通勤手当に関する事項は就業規則の絶対的必要記載事項であるため、現状の運用ルールと規程の乖離は法的なリスクとなる。',
-          sourceReference: 'AI推論（厚労省ガイドライン）',
-          status: 'unverified',
-          aiConfidence: 'medium',
-        }
-      ];
+      const existingCase = getCaseById(caseId);
+      const nextItems = getMockHearingItems(existingCase?.caseType || '').map(item => ({ ...item }));
+      
       setExtractedData(nextItems.map(item => ({ ...item })));
       setIsExtracting(false);
       setHasExtracted(true);
