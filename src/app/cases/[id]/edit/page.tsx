@@ -7,6 +7,18 @@ import { useCases } from '@/hooks/useCases';
 import { Priority } from '@/types';
 import { ReviewStatus } from '@/components/ui/HumanApprovalBadge';
 
+const LEGACY_SUBSIDY_CASE_TYPES = new Set<string>([
+  '補助金制度調査',
+  '公募要項・要網整理',
+  '公募要項・要綱整理',
+  '補助金申請準備',
+  '補助金進捗管理',
+]);
+
+const normalizeSubsidyCaseTypeForForm = (caseType: string): string => {
+  return LEGACY_SUBSIDY_CASE_TYPES.has(caseType) ? '補助金支援' : caseType;
+};
+
 export default function EditCasePage() {
   const router = useRouter();
   const params = useParams();
@@ -34,7 +46,7 @@ export default function EditCasePage() {
     if (existingCase) {
       setTitle(existingCase.title);
       setClientName(existingCase.clientName);
-      setCaseType(existingCase.caseType);
+      setCaseType(normalizeSubsidyCaseTypeForForm(existingCase.caseType));
       setDueDate(existingCase.dueDate);
       setPriority(existingCase.priority);
       setAssignee(existingCase.assignee);
@@ -137,10 +149,6 @@ export default function EditCasePage() {
                   <option value="その他">その他</option>
                   <optgroup label="補助金関連">
                     <option value="補助金支援">補助金支援</option>
-                    <option value="補助金制度調査">補助金制度調査</option>
-                    <option value="公募要項・要網整理">公募要項・要網整理</option>
-                    <option value="補助金申請準備">補助金申請準備</option>
-                    <option value="補助金進捗管理">補助金進捗管理</option>
                   </optgroup>
                 </select>
               </div>
