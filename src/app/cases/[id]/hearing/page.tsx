@@ -20,6 +20,7 @@ export default function HearingPage() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const isManualExtractionRef = useRef(false);
   const pendingScrollRef = useRef<string | null>(null);
+  const extractionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (hasExtracted && isManualExtractionRef.current && resultsRef.current) {
@@ -40,22 +41,40 @@ export default function HearingPage() {
   }, [extractedData]);
 
   useEffect(() => {
+    if (extractionTimerRef.current) {
+      clearTimeout(extractionTimerRef.current);
+      extractionTimerRef.current = null;
+    }
+    setIsExtracting(false);
+
     const existingCase = getCaseById(caseId);
     if (existingCase) {
       setCaseTitle(existingCase.title);
       if (existingCase.extractedItems && existingCase.extractedItems.length > 0) {
-        setExtractedData(existingCase.extractedItems);
+        setExtractedData(existingCase.extractedItems.map(item => ({ ...item })));
         setHasExtracted(true);
+      } else {
+        setExtractedData([]);
+        setHasExtracted(false);
       }
     }
+
+    return () => {
+      if (extractionTimerRef.current) {
+        clearTimeout(extractionTimerRef.current);
+        extractionTimerRef.current = null;
+      }
+    };
   }, [caseId, getCaseById]);
 
   const handleStartExtraction = () => {
+    if (isExtracting) return;
     setIsExtracting(true);
     isManualExtractionRef.current = true;
     // Simulate AI extraction delay
-    setTimeout(() => {
-      setExtractedData([
+    extractionTimerRef.current = setTimeout(() => {
+      extractionTimerRef.current = null;
+      const nextItems: ExtractedInfo[] = [
         {
           id: 'ext_1',
           category: '事実関係',
@@ -88,9 +107,14 @@ export default function HearingPage() {
           status: 'unverified',
           aiConfidence: 'medium',
         }
-      ]);
+      ];
+      setExtractedData(nextItems.map(item => ({ ...item })));
       setIsExtracting(false);
       setHasExtracted(true);
+
+      updateCase(caseId, {
+        extractedItems: nextItems.map(item => ({ ...item }))
+      });
     }, 2000);
   };
 
@@ -130,6 +154,9 @@ export default function HearingPage() {
     }
 
     setExtractedData(nextData);
+    updateCase(caseId, {
+      extractedItems: nextData
+    });
   };
 
   const unverifiedCount = extractedData.filter(d => d.status === 'unverified').length;
