@@ -211,3 +211,107 @@ test('C. 電話番号検証ロジック', async (t) => {
     }, /Value contains symbols/);
   });
 });
+
+test('D. 担当者検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getDummyCell() {
+    return parser.parseFromString(`<w:tc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p></w:p></w:tc>`, 'text/xml').documentElement;
+  }
+  
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_contact_name');
+  const config = { ...baseConfig, status: 'confirmed' };
+  
+  await t.test('正常系: 日本語氏名', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '山田太郎', { ...config, value: '山田太郎' });
+    });
+  });
+  
+  await t.test('正常系: 半角スペースあり', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '山田 太郎', { ...config, value: '山田 太郎' });
+    });
+  });
+  
+  await t.test('正常系: 全角スペースあり', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '山田　太郎', { ...config, value: '山田　太郎' });
+    });
+  });
+  
+  await t.test('正常系: カタカナ氏名', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, 'ヤマダタロウ', { ...config, value: 'ヤマダタロウ' });
+    });
+  });
+
+  await t.test('正常系: 英字氏名', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, 'John Smith', { ...config, value: 'John Smith' });
+    });
+  });
+
+  await t.test('正常系: 中黒を含む氏名', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, 'ジョン・スミス', { ...config, value: 'ジョン・スミス' });
+    });
+  });
+
+  await t.test('異常系: 空文字', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '', { ...config, value: '' });
+    }, /Value is empty/);
+  });
+  
+  await t.test('異常系: 未confirmed', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '山田 太郎', { ...config, status: 'draft', value: '山田 太郎' });
+    }, /Status is not 'confirmed'/);
+  });
+  
+  await t.test('異常系: 31文字以上', () => {
+    const tc = getDummyCell();
+    const longName = 'あ'.repeat(31);
+    assert.throws(() => {
+      WordFiller.fillField(tc, longName, { ...config, value: longName });
+    }, /Value exceeds max length of 30/);
+  });
+  
+  await t.test('異常系: 改行含有', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '山田\n太郎', { ...config, value: '山田\n太郎' });
+    }, /Value contains newline or tab/);
+  });
+  
+  await t.test('異常系: タブ含有', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '山田\t太郎', { ...config, value: '山田\t太郎' });
+    }, /Value contains newline or tab/);
+  });
+  
+  await t.test('異常系: 制御文字', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '山田\x00太郎', { ...config, value: '山田\x00太郎' });
+    }, /Value contains control characters/);
+  });
+
+  await t.test('異常系: XMLタグ風文字列', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '<script>alert(1)</script>', { ...config, value: '<script>alert(1)</script>' });
+    }, /Value contains HTML\/XML tags/);
+  });
+});

@@ -101,6 +101,33 @@ export class OutputVerifier {
          if (digitCount !== 10 && digitCount !== 11) {
             throw new Error(`Phone number digits count is ${digitCount}, expected 10 or 11!`);
          }
+      } else if (key === 'contact') {
+         const contactField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_contact_name');
+         const targetCell = FieldLocator.locateAdjacentCell(docDom, contactField.labelText);
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) {
+           throw new Error(`Contact cell does not contain the contact value!`);
+         }
+
+         // Check it's not in owner, address, phone, or proxy cells
+         const ownerField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_owner_name');
+         const ownerCell = FieldLocator.locateAdjacentCell(docDom, ownerField.labelText);
+         if (FieldLocator.getCellText(ownerCell).includes(value)) throw new Error('Contact value found in owner cell!');
+
+         const addrField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_address');
+         const addrCell = FieldLocator.locateNextRowContinuationCell(docDom, addrField.labelText);
+         if (FieldLocator.getCellText(addrCell).includes(value)) throw new Error('Contact value found in address cell!');
+
+         const phoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
+         const phoneCell = FieldLocator.locateAdjacentCell(docDom, phoneField.labelText);
+         if (FieldLocator.getCellText(phoneCell).includes(value)) throw new Error('Contact value found in phone cell!');
+
+         // Check proxy cell (代理人の氏名)
+         const proxyMatches = FieldLocator.findCellByExactText(docDom, '代理人の氏名');
+         if (proxyMatches.length > 0) {
+           const proxyCell = proxyMatches[0].cells[proxyMatches[0].cellIndex + 1];
+           if (proxyCell && FieldLocator.getCellText(proxyCell).includes(value)) throw new Error('Contact value found in proxy cell!');
+         }
       }
     }
 

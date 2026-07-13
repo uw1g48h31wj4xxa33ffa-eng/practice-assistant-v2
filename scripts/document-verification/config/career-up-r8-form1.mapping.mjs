@@ -47,5 +47,19 @@ export const careerUpR8Form1Mapping = {
         rejectEmpty: true
       }
     },
+    {
+      fieldId: 'business_contact_name',
+      labelText: '④事業所の担当者',
+      locator: {
+        type: 'adjacent-cell',
+        matchMode: 'exact-cell-text'
+      },
+      validation: {
+        required: true,
+        maxLength: 30,
+        rejectEmpty: true,
+        rejectInvalidChars: true
+      }
+    },
   ],
 };

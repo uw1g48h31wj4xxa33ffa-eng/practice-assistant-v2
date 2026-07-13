@@ -19,6 +19,14 @@ export class WordFiller {
       if (val.allowedDigits && !val.allowedDigits.includes(digitCount)) {
         throw new Error(`Invalid digit count: ${digitCount}`);
       }
+      if (val.maxLength && value.length > val.maxLength) {
+        throw new Error(`Value exceeds max length of ${val.maxLength}`);
+      }
+      if (val.rejectInvalidChars) {
+        if (/[\n\r\t]/.test(value)) throw new Error('Value contains newline or tab');
+        if (/[\x00-\x1F\x7F]/.test(value)) throw new Error('Value contains control characters');
+        if (/<[^>]+>/.test(value)) throw new Error('Value contains HTML/XML tags');
+      }
     }
 
     const ps = tcNode.getElementsByTagName('w:p');

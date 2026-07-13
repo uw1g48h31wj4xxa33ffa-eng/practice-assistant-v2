@@ -49,6 +49,13 @@ async function verify(scenario, outputsMap) {
     inputsToFill.phone = outputsMap.phone;
   }
 
+  if (outputsMap.contact) {
+    const contactField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_contact_name');
+    const targetCell = FieldLocator.locateAdjacentCell(documentDom, contactField.labelText);
+    WordFiller.fillField(targetCell, outputsMap.contact, { ...contactField, status: 'confirmed' });
+    inputsToFill.contact = outputsMap.contact;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
@@ -69,8 +76,8 @@ async function run() {
   }
   
   try {
-    await verify('phone', { phone: '03-1234-5678' });
-    await verify('owner_address_phone', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678' });
+    await verify('contact', { contact: '山田 太郎' });
+    await verify('owner_address_phone_contact', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎' });
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);
