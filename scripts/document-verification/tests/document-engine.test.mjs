@@ -129,3 +129,85 @@ test('B. 実原本結合テスト', async (t) => {
     }, /must be different/);
   });
 });
+
+test('C. 電話番号検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getDummyCell() {
+    return parser.parseFromString(`<w:tc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>(   )</w:t></w:r></w:p></w:tc>`, 'text/xml').documentElement;
+  }
+  
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
+  const config = { ...baseConfig, status: 'confirmed' };
+  
+  await t.test('正常系: 固定電話・ハイフンあり', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '03-1234-5678', { ...config, value: '03-1234-5678' });
+    });
+  });
+  
+  await t.test('正常系: 固定電話・ハイフンなし', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '0312345678', { ...config, value: '0312345678' });
+    });
+  });
+  
+  await t.test('正常系: 携帯電話・ハイフンあり', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '090-1234-5678', { ...config, value: '090-1234-5678' });
+    });
+  });
+  
+  await t.test('正常系: 携帯電話・ハイフンなし', () => {
+    const tc = getDummyCell();
+    assert.doesNotThrow(() => {
+      WordFiller.fillField(tc, '09012345678', { ...config, value: '09012345678' });
+    });
+  });
+  
+  await t.test('異常系: 空文字', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '', { ...config, value: '' });
+    }, /Value is empty|Value for field.*is empty/);
+  });
+  
+  await t.test('異常系: 未confirmed', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '03-1234-5678', { ...config, status: 'draft', value: '03-1234-5678' });
+    }, /Status is not 'confirmed'/);
+  });
+  
+  await t.test('異常系: 9桁以下', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '03-123-5678', { ...config, value: '03-123-5678' });
+    }, /Invalid digit count: 9/);
+  });
+  
+  await t.test('異常系: 12桁以上', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '03-1234-567890', { ...config, value: '03-1234-567890' });
+    }, /Invalid digit count: 12/);
+  });
+  
+  await t.test('異常系: 英字混入', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '03-1234-abcd', { ...config, value: '03-1234-abcd' });
+    }, /Value contains letters/);
+  });
+  
+  await t.test('異常系: 記号混入', () => {
+    const tc = getDummyCell();
+    assert.throws(() => {
+      WordFiller.fillField(tc, '03-1234+5678', { ...config, value: '03-1234+5678' });
+    }, /Value contains symbols/);
+  });
+});

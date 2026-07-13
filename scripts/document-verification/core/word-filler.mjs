@@ -3,8 +3,22 @@ export class WordFiller {
     if (fieldConfig.status !== 'confirmed') {
       throw new Error(`Cannot fill value. Status is not 'confirmed'`);
     }
-    if (fieldConfig.validation?.maxLength && value.length > fieldConfig.validation.maxLength) {
-      throw new Error(`Value exceeds max length`);
+
+    if (fieldConfig.validation) {
+      const val = fieldConfig.validation;
+      if (val.rejectEmpty && (!value || value.trim() === '')) {
+        throw new Error(`Value is empty`);
+      }
+      if (val.rejectLetters && /[a-zA-Z]/.test(value)) {
+        throw new Error(`Value contains letters`);
+      }
+      if (val.rejectSymbols && /[^\d\-]/.test(value)) {
+        throw new Error(`Value contains symbols`);
+      }
+      const digitCount = (value.match(/\d/g) || []).length;
+      if (val.allowedDigits && !val.allowedDigits.includes(digitCount)) {
+        throw new Error(`Invalid digit count: ${digitCount}`);
+      }
     }
 
     const ps = tcNode.getElementsByTagName('w:p');
@@ -14,43 +28,32 @@ export class WordFiller {
     const doc = tcNode.ownerDocument;
     const runs = targetP.getElementsByTagName('w:r');
     
-    let targetRun = null;
-    for (let i = 0; i < runs.length; i++) {
-      const texts = runs[i].getElementsByTagName('w:t');
-      if (texts.length === 0) {
-        // Empty run found
-        targetRun = runs[i];
-        break;
-      }
+    let rPrClone = null;
+    if (runs.length > 0) {
+      const rPrs = runs[0].getElementsByTagName('w:rPr');
+      if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
     }
-    
-    if (targetRun) {
-      const newText = doc.createElement('w:t');
-      newText.setAttribute('xml:space', 'preserve');
-      newText.textContent = value;
-      targetRun.appendChild(newText);
-    } else {
-      let rPrClone = null;
-      if (runs.length > 0) {
-        const rPrs = runs[0].getElementsByTagName('w:rPr');
+    if (!rPrClone) {
+      const pPrs = targetP.getElementsByTagName('w:pPr');
+      if (pPrs.length > 0) {
+        const rPrs = pPrs[0].getElementsByTagName('w:rPr');
         if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
       }
-      if (!rPrClone) {
-        const pPrs = targetP.getElementsByTagName('w:pPr');
-        if (pPrs.length > 0) {
-          const rPrs = pPrs[0].getElementsByTagName('w:rPr');
-          if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
-        }
-      }
-      
-      const newRun = doc.createElement('w:r');
-      if (rPrClone) newRun.appendChild(rPrClone);
-      
-      const newText = doc.createElement('w:t');
-      newText.setAttribute('xml:space', 'preserve');
-      newText.textContent = value;
-      newRun.appendChild(newText);
-      targetP.appendChild(newRun);
     }
+
+    // Remove all existing runs to cleanly replace text (e.g. removing placeholders like "(   )")
+    const runsArray = Array.from(runs);
+    for (const run of runsArray) {
+      targetP.removeChild(run);
+    }
+    
+    const newRun = doc.createElement('w:r');
+    if (rPrClone) newRun.appendChild(rPrClone);
+    
+    const newText = doc.createElement('w:t');
+    newText.setAttribute('xml:space', 'preserve');
+    newText.textContent = value;
+    newRun.appendChild(newText);
+    targetP.appendChild(newRun);
   }
 }

@@ -31,5 +31,21 @@ export const careerUpR8Form1Mapping = {
         maxLength: 100,
       },
     },
+    {
+      fieldId: 'business_phone_number',
+      labelText: '③電話番号',
+      locator: {
+        type: 'adjacent-cell',
+        matchMode: 'exact-cell-text'
+      },
+      validation: {
+        required: true,
+        allowedDigits: [10, 11],
+        allowHyphen: true,
+        rejectLetters: true,
+        rejectSymbols: true,
+        rejectEmpty: true
+      }
+    },
   ],
 };

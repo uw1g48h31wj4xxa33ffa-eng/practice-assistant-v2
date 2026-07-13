@@ -88,6 +88,19 @@ export class OutputVerifier {
          if (!cellText.includes(value)) {
            throw new Error(`Owner cell does not contain the owner value!`);
          }
+      } else if (key === 'phone') {
+         const phoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
+         const targetCell = FieldLocator.locateAdjacentCell(docDom, phoneField.labelText);
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) {
+           throw new Error(`Phone cell does not contain the phone value!`);
+         }
+         
+         // Verify digits count
+         const digitCount = (value.match(/\d/g) || []).length;
+         if (digitCount !== 10 && digitCount !== 11) {
+            throw new Error(`Phone number digits count is ${digitCount}, expected 10 or 11!`);
+         }
       }
     }
 

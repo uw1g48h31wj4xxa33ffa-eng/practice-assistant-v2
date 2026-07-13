@@ -13,7 +13,7 @@ const outputDir = process.env.OUTPUT_DIR || '/Users/to/Documents/practice-assist
 
 async function verify(scenario, outputsMap) {
   console.log(`\n=== Running scenario: ${scenario} ===`);
-  const outputPath = path.join(outputDir, `001688046_final_${scenario}.docx`);
+  const outputPath = path.join(outputDir, `001688046_${scenario}_test.docx`);
 
   VersionGuard.verifyPaths(inputPath, outputPath);
 
@@ -42,6 +42,13 @@ async function verify(scenario, outputsMap) {
     inputsToFill.address = outputsMap.address;
   }
 
+  if (outputsMap.phone) {
+    const phoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
+    const targetCell = FieldLocator.locateAdjacentCell(documentDom, phoneField.labelText);
+    WordFiller.fillField(targetCell, outputsMap.phone, { ...phoneField, status: 'confirmed' });
+    inputsToFill.phone = outputsMap.phone;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
@@ -62,9 +69,8 @@ async function run() {
   }
   
   try {
-    await verify('owner', { owner: '株式会社テスト' });
-    await verify('address', { address: '東京都千代田区テスト1-2-3' });
-    await verify('owner_address', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3' });
+    await verify('phone', { phone: '03-1234-5678' });
+    await verify('owner_address_phone', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678' });
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);
