@@ -38,7 +38,7 @@ export class OutputVerifier {
     for (const [key, value] of Object.entries(inputs)) {
       if (!value) continue;
       
-      if (key !== 'employment_insurance') {
+      if (key !== 'employment_insurance' && key !== 'labor_insurance') {
         const escapedValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const count = documentXmlStr.split(escapedValue).length - 1;
         if (count !== 1) {
@@ -181,6 +181,70 @@ export class OutputVerifier {
 
          // Other cells shouldn't contain this exact sequence if we search for it.
          // (Not easily checkable via string since they are separate cells, but we already check global count above)
+      } else if (key === 'labor_insurance') {
+         const laborField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
+         const result = FieldLocator.locateMultiRowDistributedCells(docDom, laborField.labelText, laborField.locator);
+         
+         const normalized = value.replace(/[－-]/g, '');
+         if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
+         
+         // Verify each digit cell
+         for (let i = 0; i < normalized.length; i++) {
+           const cellText = FieldLocator.getCellText(result.digitCells[i]);
+           if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
+           
+           // Check if run is hidden or deleted
+           const runs = result.digitCells[i].getElementsByTagName('w:r');
+           for (let r = 0; r < runs.length; r++) {
+              const rPr = runs[r].getElementsByTagName('w:rPr')[0];
+              if (rPr) {
+                if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
+                  throw new Error(`Digit run has hidden attribute!`);
+                }
+              }
+              let parent = runs[r].parentNode;
+              while (parent) {
+                if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
+                  throw new Error(`Digit run is inside deleted/moved node!`);
+                }
+                parent = parent.parentNode;
+              }
+           }
+         }
+
+         // Verify separator cells remain unchanged and don't contain digits
+         for (const sep of result.separatorCells) {
+           const text = FieldLocator.getCellText(sep);
+           if (text !== '－') throw new Error(`Separator changed to ${text}`);
+           if (/\d/.test(text)) throw new Error('Separator contains digit');
+         }
+
+         // Verify ignored cells don't contain digits
+         for (const ig of result.ignoredCells) {
+           const text = FieldLocator.getCellText(ig);
+           if (/\d/.test(text)) throw new Error('Ignored cell contains digit');
+         }
+
+         // Verify cross contamination
+         const allDigits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
+         if (allDigits !== normalized) throw new Error('Constructed logical number does not match expected');
+
+         // Check groups
+         const pref = result.groupedDigitCells['prefecture'].map(c => FieldLocator.getCellText(c)).join('');
+         const jur = result.groupedDigitCells['jurisdictionType'].map(c => FieldLocator.getCellText(c)).join('');
+         const off = result.groupedDigitCells['office'].map(c => FieldLocator.getCellText(c)).join('');
+         const base = result.groupedDigitCells['baseNumber'].map(c => FieldLocator.getCellText(c)).join('');
+         const branch = result.groupedDigitCells['branchNumber'].map(c => FieldLocator.getCellText(c)).join('');
+         
+         if (pref.length !== 2) throw new Error('Prefecture group length mismatch');
+         if (jur.length !== 1) throw new Error('Jurisdiction group length mismatch');
+         if (off.length !== 2) throw new Error('Office group length mismatch');
+         if (base.length !== 6) throw new Error('Base number group length mismatch');
+         if (branch.length !== 3) throw new Error('Branch number group length mismatch');
+         
+         if (pref + jur + off + base + branch !== normalized) {
+            throw new Error('Groups do not match the expected logical number');
+         }
       }
     }
 

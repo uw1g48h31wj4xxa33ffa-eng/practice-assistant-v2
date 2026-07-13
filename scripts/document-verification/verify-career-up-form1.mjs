@@ -63,6 +63,13 @@ async function verify(scenario, outputsMap) {
     inputsToFill.employment_insurance = outputsMap.employment_insurance;
   }
 
+  if (outputsMap.labor_insurance) {
+    const laborField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
+    const result = FieldLocator.locateMultiRowDistributedCells(documentDom, laborField.labelText, laborField.locator);
+    WordFiller.fillDistributedField(result, outputsMap.labor_insurance, { ...laborField, status: 'confirmed' });
+    inputsToFill.labor_insurance = outputsMap.labor_insurance;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
@@ -83,8 +90,8 @@ async function run() {
   }
   
   try {
-    await verify('employment_insurance', { employment_insurance: '1234-567890-1' });
-    await verify('owner_address_phone_contact_employment_insurance', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1' });
+    await verify('labor_insurance', { labor_insurance: '01123123456789' });
+    await verify('owner_address_phone_contact_employment_labor_insurance', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789' });
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);

@@ -85,5 +85,31 @@ export const careerUpR8Form1Mapping = {
         ]
       }
     },
+    {
+      fieldId: 'labor_insurance_number',
+      labelText: '⑥労働保険番号',
+      locator: {
+        type: 'multi-row-distributed-cells',
+        targetRowOffset: 1,
+        pattern: [
+          { type: 'ignore', count: 1 },
+          { type: 'digits', count: 2, groupId: 'prefecture' },
+          { type: 'digits', count: 1, groupId: 'jurisdictionType' },
+          { type: 'digits', count: 2, groupId: 'office' },
+          { type: 'digits', count: 6, groupId: 'baseNumber' },
+          { type: 'separator', text: '－' },
+          { type: 'digits', count: 3, groupId: 'branchNumber' }
+        ]
+      },
+      validation: {
+        required: true,
+        digits: 14,
+        acceptedInputPatterns: [
+          '##############',
+          '###########-###',
+          '###########－###'
+        ]
+      }
+    }
   ],
 };

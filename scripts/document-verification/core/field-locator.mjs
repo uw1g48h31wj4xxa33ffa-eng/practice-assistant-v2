@@ -162,4 +162,112 @@ export class FieldLocator {
 
     return result;
   }
+
+  static locateMultiRowDistributedCells(documentDom, exactLabelText, config) {
+    const matches = this.findCellByExactText(documentDom, exactLabelText);
+    if (matches.length === 0) throw new Error(`Label "${exactLabelText}" not found`);
+    if (matches.length > 1) throw new Error(`Label "${exactLabelText}" found multiple times`);
+
+    const match = matches[0];
+    let targetRow = match.trNode;
+    
+    // Move to target row
+    const offset = config.targetRowOffset || 0;
+    for (let i = 0; i < offset; i++) {
+      let next = targetRow.nextSibling;
+      while (next && next.nodeName !== 'w:tr') {
+        next = next.nextSibling;
+      }
+      if (!next) throw new Error(`Target row offset ${offset} exceeds available rows for "${exactLabelText}"`);
+      targetRow = next;
+    }
+
+    const cells = targetRow.getElementsByTagName('w:tc');
+    let currentIndex = 0;
+
+    const result = {
+      labelCell: match.tcNode,
+      labelRow: match.trNode,
+      targetRow: targetRow,
+      digitCells: [],
+      separatorCells: [],
+      ignoredCells: [],
+      groupedDigitCells: {},
+      metadata: {
+        digitCount: 0,
+        separatorCount: 0,
+        ignoreCount: 0,
+        groups: [],
+        targetRowOffset: offset
+      }
+    };
+
+    // Initialize groupedDigitCells for all digit groups
+    for (const p of config.pattern) {
+      if (p.type === 'digits' && p.groupId) {
+        result.groupedDigitCells[p.groupId] = [];
+      }
+    }
+
+    for (const p of config.pattern) {
+      const pCount = p.count || 1;
+      if (currentIndex + pCount > cells.length) {
+        throw new Error(`Not enough cells remaining to match pattern for "${exactLabelText}"`);
+      }
+
+      for (let i = 0; i < pCount; i++) {
+        const cell = cells[currentIndex];
+        const text = this.getCellText(cell);
+        
+        // Ensure not crossed out unless it's ignore
+        const tcPr = cell.getElementsByTagName('w:tcPr')[0];
+        let isCrossed = false;
+        if (tcPr && tcPr.getElementsByTagName('w:tr2bl').length > 0) {
+          isCrossed = true;
+        }
+
+        // Check for history or form controls
+        if (cell.getElementsByTagName('w:del').length > 0) throw new Error('Cell contains deletion history');
+        if (cell.getElementsByTagName('w:moveFrom').length > 0) throw new Error('Cell contains move history');
+        if (cell.getElementsByTagName('w:fldChar').length > 0) throw new Error('Cell contains form controls');
+        
+        // Check for hidden (vanish)
+        const rPrs = cell.getElementsByTagName('w:rPr');
+        for (let j = 0; j < rPrs.length; j++) {
+          if (rPrs[j].getElementsByTagName('w:vanish').length > 0) throw new Error('Cell is hidden');
+        }
+
+        if (p.type === 'digits') {
+          if (isCrossed) throw new Error('Digit cell cannot be crossed out');
+          result.digitCells.push(cell);
+          result.metadata.digitCount++;
+          if (p.groupId) {
+            result.groupedDigitCells[p.groupId].push(cell);
+          }
+        } else if (p.type === 'separator') {
+          if (isCrossed) throw new Error('Separator cell cannot be crossed out');
+          if (text !== p.text) {
+            throw new Error(`Separator mismatch. Expected "${p.text}", found "${text}"`);
+          }
+          result.separatorCells.push(cell);
+          result.metadata.separatorCount++;
+        } else if (p.type === 'ignore') {
+          result.ignoredCells.push(cell);
+          result.metadata.ignoreCount++;
+        }
+        
+        currentIndex++;
+      }
+
+      if (p.type === 'digits') {
+        result.metadata.groups.push(pCount);
+      }
+    }
+
+    if (currentIndex < cells.length) {
+      throw new Error(`Unclassified cells remaining after pattern matching for "${exactLabelText}"`);
+    }
+
+    return result;
+  }
 }

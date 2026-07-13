@@ -444,3 +444,146 @@ test('E. 分散セルロジック', async (t) => {
   });
 
 });
+
+test('F. 労働保険番号分散セルロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getLaborFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:tcPr><w:vMerge w:val="restart"/></w:tcPr>
+            <w:p><w:r><w:t>⑥労働保険番号</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc><w:tcPr><w:gridSpan w:val="3"/></w:tcPr><w:p><w:r><w:t>都道府県</w:t></w:r></w:p></w:tc>
+          <w:tc><w:p><w:r><w:t>所掌</w:t></w:r></w:p></w:tc>
+          <w:tc><w:tcPr><w:gridSpan w:val="4"/></w:tcPr><w:p><w:r><w:t>管轄</w:t></w:r></w:p></w:tc>
+          <w:tc><w:tcPr><w:gridSpan w:val="17"/></w:tcPr><w:p><w:r><w:t>基幹番号</w:t></w:r></w:p></w:tc>
+          <w:tc><w:tcPr><w:gridSpan w:val="6"/></w:tcPr><w:p><w:r><w:t>枝番号</w:t></w:r></w:p></w:tc>
+        </w:tr>
+        <w:tr>
+          <w:tc><w:tcPr><w:vMerge w:val="continue"/></w:tcPr><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p><w:r><w:t>－</w:t></w:r></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('Locator正常系: 正しく取得できる', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.strictEqual(result.digitCells.length, 14);
+    assert.strictEqual(result.separatorCells.length, 1);
+    assert.strictEqual(result.ignoredCells.length, 1);
+    assert.deepStrictEqual(result.metadata.groups, [2, 1, 2, 6, 3]);
+  });
+
+  await t.test('Locator異常系: ラベルなし', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator), /Label "⑥労働保険番号" not found/);
+  });
+
+  await t.test('Locator異常系: ラベル複数', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:p><w:r><w:t>⑥労働保険番号</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>⑥労働保険番号</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator), /Label "⑥労働保険番号" found multiple times/);
+  });
+
+  await t.test('Locator異常系: 次行なし (targetRowOffset不正)', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:p><w:r><w:t>⑥労働保険番号</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator), /Target row offset 1 exceeds available rows/);
+  });
+
+  await t.test('Locator異常系: digit不足', () => {
+    const doc = getLaborFixture();
+    const rows = doc.getElementsByTagName('w:tr');
+    const cells = rows[1].getElementsByTagName('w:tc');
+    rows[1].removeChild(cells[cells.length - 1]);
+    assert.throws(() => FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator), /Not enough cells remaining/);
+  });
+
+  await t.test('Locator異常系: 未分類セル残存 (過剰)', () => {
+    const doc = getLaborFixture();
+    const rows = doc.getElementsByTagName('w:tr');
+    const newCell = doc.createElement('w:tc');
+    rows[1].appendChild(newCell);
+    assert.throws(() => FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator), /Unclassified cells remaining/);
+  });
+
+  await t.test('Locator異常系: separator文字不一致', () => {
+    const fixtureStr = getLaborFixture().toString();
+    const doc = parser.parseFromString(fixtureStr.replace('<w:t>－</w:t>', '<w:t>ー</w:t>'), 'text/xml');
+    assert.throws(() => FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator), /Separator mismatch/);
+  });
+
+  await t.test('Filler正常系: 正常な入力', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    WordFiller.fillDistributedField(result, '01123123456789', config);
+    const digits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
+    assert.strictEqual(digits, '01123123456789');
+  });
+
+  await t.test('Filler異常系: 13桁', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '0112312345678', config), /Digit count mismatch/);
+  });
+
+  await t.test('Filler異常系: 15桁', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '011231234567890', config), /Digit count mismatch/);
+  });
+
+  await t.test('Filler異常系: 空白混入', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '01 123123456789', config), /Value contains spaces/);
+  });
+
+  await t.test('Filler異常系: ピリオド混入', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '01.123123456789', config), /Value contains non-digit/);
+  });
+
+  await t.test('Filler異常系: スラッシュ混入', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '01/123123456789', config), /Value contains non-digit/);
+  });
+
+  await t.test('Filler異常系: 空文字', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '', config), /Value is empty/);
+  });
+
+  await t.test('Filler異常系: 未confirmed', () => {
+    const doc = getLaborFixture();
+    const result = FieldLocator.locateMultiRowDistributedCells(doc, '⑥労働保険番号', config.locator);
+    assert.throws(() => WordFiller.fillDistributedField(result, '01123123456789', { ...config, status: 'draft' }), /Status is not 'confirmed'/);
+  });
+});
+
