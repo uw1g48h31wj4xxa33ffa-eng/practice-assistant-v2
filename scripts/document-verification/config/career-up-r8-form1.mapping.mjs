@@ -123,6 +123,29 @@ export const careerUpR8Form1Mapping = {
         rejectInvalidChars: true,
         maxLength: 100
       }
+    },
+    {
+      fieldId: 'employee_count',
+      labelText: '⑧企業規模（人数）',
+      locator: {
+        type: 'adjacent-cell'
+      },
+      inputMode: 'numeric-preserve-affix',
+      affix: {
+        suffixText: '人',
+        preserveSuffix: true,
+        position: 'after-value'
+      },
+      validation: {
+        dataType: 'integer',
+        required: true,
+        normalizeFullWidthDigits: true,
+        allowZero: false,
+        allowNegative: false,
+        allowDecimal: false,
+        allowComma: false,
+        min: 1
+      }
     }
   ],
 };

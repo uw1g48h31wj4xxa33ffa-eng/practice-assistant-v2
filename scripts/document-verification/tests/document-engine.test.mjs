@@ -638,3 +638,98 @@ test('G. 主たる事業検証ロジック', async (t) => {
   });
 });
 
+test('H. 企業規模（人数）検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getEmpCountFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:p><w:r><w:t>⑧企業規模（人数）</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:p>
+              <w:r><w:t></w:t></w:r>
+              <w:r><w:t>人</w:t></w:r>
+            </w:p>
+          </w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employee_count');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('正常系: 半角数字', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    WordFiller.fillNumericFieldPreservingAffix(cell, '25', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '25人');
+  });
+
+  await t.test('正常系: 全角数字の半角化', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    WordFiller.fillNumericFieldPreservingAffix(cell, '２５', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '25人');
+  });
+
+  await t.test('異常系: 空文字', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '', config), /Value is empty/);
+  });
+
+  await t.test('異常系: 負数', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '-25', config), /Value contains negative sign/);
+  });
+
+  await t.test('異常系: 小数', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '2.5', config), /Value contains decimal point/);
+  });
+  
+  await t.test('異常系: カンマ', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '1,000', config), /Value contains comma/);
+  });
+
+  await t.test('異常系: 英字混入', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '25a', config), /Value contains letters/);
+  });
+
+  await t.test('異常系: 単位を含める', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '25人', config), /Value contains affix 人/);
+  });
+
+  await t.test('異常系: 単位を含める (スペースあり)', () => {
+    const doc = getEmpCountFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '25 人', config), /Value contains affix 人/);
+  });
+
+  await t.test('異常系: 接尾辞なし', () => {
+    const doc = parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl><w:tr>
+        <w:tc><w:p><w:r><w:t>⑧企業規模（人数）</w:t></w:r></w:p></w:tc>
+        <w:tc><w:p><w:r><w:t></w:t></w:r></w:p></w:tc>
+      </w:tr></w:tbl>
+    </w:document>`, 'text/xml');
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
+    assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '25', config), /Suffix run not found in target cell/);
+  });
+});

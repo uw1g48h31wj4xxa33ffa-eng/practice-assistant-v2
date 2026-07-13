@@ -77,16 +77,21 @@ async function verify(scenario, outputsMap) {
     inputsToFill.main_business = outputsMap.main_business;
   }
 
+  if (outputsMap.employee_count) {
+    const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employee_count');
+    const targetCell = FieldLocator.locateAdjacentCell(documentDom, empField.labelText);
+    WordFiller.fillNumericFieldPreservingAffix(targetCell, outputsMap.employee_count, { ...empField, status: 'confirmed' });
+    inputsToFill.employee_count = outputsMap.employee_count;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
-    // If running verification multiple times, we might need to overwrite, 
-    // but tests should check for "既存出力の無断上書き".
-    // For this runner, we will overwrite to allow re-runs.
+    fs.unlinkSync(outputPath);
   }
   doc.save(outputPath);
   console.log(`Saved output to ${outputPath}`);
-
+  
   await OutputVerifier.verify(originalBuffer, outputPath, careerUpR8Form1Mapping.template.expectedSha256, inputsToFill);
   console.log(`Output verification passed for ${scenario}`);
 }
@@ -97,8 +102,8 @@ async function run() {
   }
   
   try {
-    await verify('main_business', { main_business: 'ソフトウェア開発業' });
-    await verify('owner_address_phone_contact_employment_labor_main_business_company_scale', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業' });
+    await verify('employee_count', { employee_count: '25' });
+    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25' });
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);
