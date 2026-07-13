@@ -315,3 +315,132 @@ test('D. 担当者検証ロジック', async (t) => {
     }, /Value contains HTML\/XML tags/);
   });
 });
+
+test('E. 分散セルロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc><w:p><w:r><w:t>⑤雇用保険適用</w:t></w:r></w:p><w:p><w:r><w:t>事業所番号</w:t></w:r></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p><w:r><w:t>－</w:t></w:r></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:p><w:r><w:t>－</w:t></w:r></w:p></w:tc>
+          <w:tc><w:p></w:p></w:tc>
+          <w:tc><w:tcPr><w:tr2bl w:val="single"/></w:tcPr><w:p></w:p></w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('Locator正常系: 正しく取得できる', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.strictEqual(result.digitCells.length, 11);
+    assert.strictEqual(result.separatorCells.length, 2);
+    assert.strictEqual(result.ignoredCells.length, 1);
+    assert.strictEqual(result.metadata.digitCount, 11);
+    assert.strictEqual(result.metadata.separatorCount, 2);
+    assert.deepStrictEqual(result.metadata.groups, [4, 6, 1]);
+  });
+
+  await t.test('Locator異常系: ラベルなし', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern), /Label "⑤雇用保険適用事業所番号" not found/);
+  });
+
+  await t.test('Locator異常系: ラベル複数', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:p><w:r><w:t>⑤雇用保険適用事業所番号</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>⑤雇用保険適用事業所番号</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern), /Label "⑤雇用保険適用事業所番号" found multiple times/);
+  });
+
+  await t.test('Locator異常系: digitセル不足', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:p><w:r><w:t>⑤雇用保険適用事業所番号</w:t></w:r></w:p></w:tc><w:tc></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern), /Not enough cells remaining/);
+  });
+
+  await t.test('Locator異常系: pattern処理後に未分類セルが残る (過剰セル)', () => {
+    const fixtureStr = getFixture().toString();
+    const doc = parser.parseFromString(fixtureStr.replace('</w:tr>', '<w:tc></w:tc></w:tr>'), 'text/xml');
+    assert.throws(() => FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern), /Unclassified cells remaining/);
+  });
+
+  await t.test('Locator異常系: separator文字不一致', () => {
+    const fixtureStr = getFixture().toString();
+    const doc = parser.parseFromString(fixtureStr.replace('<w:t>－</w:t>', '<w:t>ー</w:t>'), 'text/xml');
+    assert.throws(() => FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern), /Separator mismatch/);
+  });
+
+  await t.test('Filler正常系: 正常な入力', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    WordFiller.fillDistributedField(result, '1234-567890-1', config);
+    const digits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
+    assert.strictEqual(digits, '12345678901');
+  });
+
+  await t.test('Filler異常系: 10桁', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '1234-567890', config), /Digit count mismatch/);
+  });
+
+  await t.test('Filler異常系: 英字混入', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '1234-56789a-1', config), /Value contains letters/);
+  });
+
+  await t.test('Filler異常系: 誤ハイフン位置', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '123-4567890-1', config), /Invalid hyphen position or group length/);
+  });
+
+  await t.test('Filler異常系: スラッシュ混入', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '1234/567890-1', config), /Value contains non-digit/);
+  });
+
+  await t.test('Filler異常系: ピリオド混入', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '1234.567890-1', config), /Value contains non-digit/);
+  });
+  
+  await t.test('Filler異常系: 空白混入', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '1234 567890 1', config), /Value contains spaces/);
+  });
+  
+  await t.test('Filler異常系: 未confirmed', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '1234-567890-1', { ...config, status: 'draft' }), /Status is not 'confirmed'/);
+  });
+  
+  await t.test('Filler異常系: 空文字', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '', config), /Value is empty/);
+  });
+
+});

@@ -61,5 +61,29 @@ export const careerUpR8Form1Mapping = {
         rejectInvalidChars: true
       }
     },
+    {
+      fieldId: 'employment_insurance_office_number',
+      labelText: '⑤雇用保険適用事業所番号',
+      locator: {
+        type: 'distributed-cells',
+        pattern: [
+          { type: 'digits', count: 4 },
+          { type: 'separator', text: '－' },
+          { type: 'digits', count: 6 },
+          { type: 'separator', text: '－' },
+          { type: 'digits', count: 1 },
+          { type: 'ignore', count: 1 }
+        ]
+      },
+      validation: {
+        required: true,
+        digits: 11,
+        acceptedInputPatterns: [
+          '####-######-#',
+          '####－######－#',
+          '###########'
+        ]
+      }
+    },
   ],
 };

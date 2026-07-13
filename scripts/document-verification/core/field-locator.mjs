@@ -93,4 +93,73 @@ export class FieldLocator {
 
     throw new Error(`Could not find empty continuation cell for "${exactLabelText}"`);
   }
+
+  static locateDistributedCells(documentDom, exactLabelText, pattern) {
+    const matches = this.findCellByExactText(documentDom, exactLabelText);
+    if (matches.length === 0) throw new Error(`Label "${exactLabelText}" not found`);
+    if (matches.length > 1) throw new Error(`Label "${exactLabelText}" found multiple times`);
+
+    const match = matches[0];
+    const cells = match.cells;
+    let currentIndex = match.cellIndex + 1;
+
+    const result = {
+      labelCell: match.tcNode,
+      rowNode: match.trNode,
+      digitCells: [],
+      separatorCells: [],
+      ignoredCells: [],
+      metadata: {
+        digitCount: 0,
+        separatorCount: 0,
+        groups: []
+      }
+    };
+
+    for (const p of pattern) {
+      const pCount = p.count || 1;
+      if (currentIndex + pCount > cells.length) {
+        throw new Error(`Not enough cells remaining to match pattern for "${exactLabelText}"`);
+      }
+
+      for (let i = 0; i < pCount; i++) {
+        const cell = cells[currentIndex];
+        const text = this.getCellText(cell);
+        
+        // Ensure not crossed out unless it's ignore
+        const tcPr = cell.getElementsByTagName('w:tcPr')[0];
+        let isCrossed = false;
+        if (tcPr && tcPr.getElementsByTagName('w:tr2bl').length > 0) {
+          isCrossed = true;
+        }
+
+        if (p.type === 'digits') {
+          if (isCrossed) throw new Error('Digit cell cannot be crossed out');
+          result.digitCells.push(cell);
+          result.metadata.digitCount++;
+        } else if (p.type === 'separator') {
+          if (isCrossed) throw new Error('Separator cell cannot be crossed out');
+          if (text !== p.text) {
+            throw new Error(`Separator mismatch. Expected "${p.text}", found "${text}"`);
+          }
+          result.separatorCells.push(cell);
+          result.metadata.separatorCount++;
+        } else if (p.type === 'ignore') {
+          result.ignoredCells.push(cell);
+        }
+        
+        currentIndex++;
+      }
+
+      if (p.type === 'digits') {
+        result.metadata.groups.push(pCount);
+      }
+    }
+
+    if (currentIndex < cells.length) {
+      throw new Error(`Unclassified cells remaining after pattern matching for "${exactLabelText}"`);
+    }
+
+    return result;
+  }
 }
