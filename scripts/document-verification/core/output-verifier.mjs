@@ -245,6 +245,13 @@ export class OutputVerifier {
          if (pref + jur + off + base + branch !== normalized) {
             throw new Error('Groups do not match the expected logical number');
          }
+      } else if (key === 'main_business') {
+         const mainBusField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'main_business');
+         const targetCell = FieldLocator.locateAdjacentCell(docDom, mainBusField.labelText);
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) {
+           throw new Error(`Main business cell does not contain the value!`);
+         }
       }
     }
 

@@ -587,3 +587,54 @@ test('F. 労働保険番号分散セルロジック', async (t) => {
   });
 });
 
+
+test('G. 主たる事業検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getBusinessFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:p><w:r><w:t>⑦主たる事業</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:p><w:r><w:t></w:t></w:r></w:p>
+          </w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'main_business');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('正常系: 日本語短文', () => {
+    const doc = getBusinessFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑦主たる事業');
+    WordFiller.fillField(cell, 'ソフトウェア開発', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), 'ソフトウェア開発');
+  });
+
+  await t.test('異常系: 空文字', () => {
+    const doc = getBusinessFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑦主たる事業');
+    assert.throws(() => WordFiller.fillField(cell, '', config), /Value is empty/);
+  });
+
+  await t.test('異常系: タブ含有', () => {
+    const doc = getBusinessFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑦主たる事業');
+    assert.throws(() => WordFiller.fillField(cell, 'ソフト\tウェア', config), /Value contains newline or tab/);
+  });
+  
+  await t.test('異常系: 最大文字数超過', () => {
+    const doc = getBusinessFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑦主たる事業');
+    assert.throws(() => WordFiller.fillField(cell, 'a'.repeat(101), config), /Value exceeds max length of 100/);
+  });
+});
+

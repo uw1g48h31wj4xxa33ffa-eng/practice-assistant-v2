@@ -110,6 +110,19 @@ export const careerUpR8Form1Mapping = {
           '###########－###'
         ]
       }
+    },
+    {
+      fieldId: 'main_business',
+      labelText: '⑦主たる事業',
+      locator: {
+        type: 'adjacent-cell'
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true,
+        rejectInvalidChars: true,
+        maxLength: 100
+      }
     }
   ],
 };
