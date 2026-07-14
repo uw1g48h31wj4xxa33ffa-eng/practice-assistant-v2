@@ -16,7 +16,7 @@ export function buildMockScheduleFromRequiredDocuments(
 
   requiredDocuments.forEach((doc, index) => {
     let title = '';
-    let category = '資料準備';
+    const category = '資料準備';
     let progressStatus: SubsidyScheduleItem['progressStatus'] = 'not_started';
     let dueDate = formatDate(today);
 

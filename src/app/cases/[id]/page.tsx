@@ -44,7 +44,7 @@ export default function CaseDetailPage() {
 
   // 動的なステップリストの生成
   // progressStatusに基づいて完了・現在・未着手を判定
-  let currentIndex = template ? template.steps.findIndex(s => s.id === initialCase?.progressStatus) : -1;
+  const currentIndex = template ? template.steps.findIndex(s => s.id === initialCase?.progressStatus) : -1;
   const isCompleted = initialCase?.progressStatus === 'completed';
 
   const handleResetData = () => {
