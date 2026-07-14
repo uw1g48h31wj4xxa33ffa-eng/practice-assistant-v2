@@ -55,13 +55,18 @@ export class WordFiller {
       targetP.removeChild(run);
     }
     
-    const newRun = doc.createElement('w:r');
+    if (!value || value === '') {
+      return;
+    }
+
+    // append text as a single run in the first paragraph
+    const newRun = tcNode.ownerDocument.createElement('w:r');
     if (rPrClone) newRun.appendChild(rPrClone);
-    
-    const newText = doc.createElement('w:t');
+    const newText = tcNode.ownerDocument.createElement('w:t');
     newText.setAttribute('xml:space', 'preserve');
     newText.textContent = value;
     newRun.appendChild(newText);
+    
     targetP.appendChild(newRun);
   }
 

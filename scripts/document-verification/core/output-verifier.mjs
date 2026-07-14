@@ -299,6 +299,13 @@ export class OutputVerifier {
          // 4. 入力値に単位が含まれていない -> Yes (tested by filler)
          // 5. 接尾辞が原本と同一 -> Yes
          // 6. 対象セル以外への数値混入なし -> Yes, output verifier will be robust
+      } else if (key === 'agent_name') {
+         const agentField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_name');
+         const targetCell = FieldLocator.locateAdjacentCell(docDom, agentField.labelText);
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) {
+           throw new Error(`Agent name cell does not contain the value!`);
+         }
       }
     }
 

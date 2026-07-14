@@ -733,3 +733,114 @@ test('H. 企業規模（人数）検証ロジック', async (t) => {
     assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '25', config), /Suffix run not found in target cell/);
   });
 });
+
+test('I. 代理人等氏名検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getAgentFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:p><w:r><w:t>⑩代理人等氏名</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:p><w:r><w:t></w:t></w:r></w:p>
+          </w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_name');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('正常系: 日本語氏名', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, '代理 太郎', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '代理 太郎');
+  });
+
+  await t.test('正常系: 半角スペースあり', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, '代理 Taro', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '代理 Taro');
+  });
+
+  await t.test('正常系: 全角スペースあり', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, '代理　太郎', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '代理　太郎');
+  });
+
+  await t.test('正常系: カタカナ氏名', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, 'ダイリ タロウ', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), 'ダイリ タロウ');
+  });
+
+  await t.test('正常系: 英字氏名', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, 'Taro Dairi', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), 'Taro Dairi');
+  });
+
+  await t.test('正常系: 中黒を含む氏名', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, 'ダ・ヴィンチ', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), 'ダ・ヴィンチ');
+  });
+
+  await t.test('正常系: 空文字は処理をスキップ', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    WordFiller.fillField(cell, '', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '');
+  });
+
+  await t.test('異常系: 未confirmed', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const unconfirmedConfig = { ...config, status: 'aiDraft' };
+    assert.throws(() => WordFiller.fillField(cell, '代理 太郎', unconfirmedConfig), /Cannot fill value. Status is not 'confirmed'/);
+  });
+
+  await t.test('異常系: 最大文字数超過', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    assert.throws(() => WordFiller.fillField(cell, 'a'.repeat(51), config), /Value exceeds max length of 50/);
+  });
+
+  await t.test('異常系: 改行含有', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    assert.throws(() => WordFiller.fillField(cell, '代理\n太郎', config), /Value contains newline or tab/);
+  });
+
+  await t.test('異常系: タブ含有', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    assert.throws(() => WordFiller.fillField(cell, '代理\t太郎', config), /Value contains newline or tab/);
+  });
+
+  await t.test('異常系: 制御文字', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    assert.throws(() => WordFiller.fillField(cell, '代理\x00太郎', config), /Value contains control characters/);
+  });
+
+  await t.test('異常系: XMLタグ風文字列', () => {
+    const doc = getAgentFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    assert.throws(() => WordFiller.fillField(cell, '<w:t>代理</w:t>', config), /Value contains HTML\/XML tags/);
+  });
+});

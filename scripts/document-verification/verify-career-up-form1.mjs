@@ -84,6 +84,13 @@ async function verify(scenario, outputsMap) {
     inputsToFill.employee_count = outputsMap.employee_count;
   }
 
+  if (outputsMap.agent_name) {
+    const agentField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_name');
+    const targetCell = FieldLocator.locateAdjacentCell(documentDom, agentField.labelText);
+    WordFiller.fillField(targetCell, outputsMap.agent_name, { ...agentField, status: 'confirmed' });
+    inputsToFill.agent_name = outputsMap.agent_name;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
@@ -102,8 +109,8 @@ async function run() {
   }
   
   try {
-    await verify('employee_count', { employee_count: '25' });
-    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25' });
+    await verify('agent_name', { agent_name: '代理 太郎' });
+    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count_agent_name', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎' });
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);

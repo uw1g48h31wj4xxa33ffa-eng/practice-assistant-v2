@@ -146,6 +146,20 @@ export const careerUpR8Form1Mapping = {
         allowComma: false,
         min: 1
       }
+    },
+    {
+      fieldId: 'agent_name',
+      labelText: '⑩代理人等氏名',
+      locator: {
+        type: 'adjacent-cell'
+      },
+      validation: {
+        required: false,
+        maxLength: 50,
+        rejectInvalidChars: true,
+        allowHalfWidthSpace: true,
+        allowFullWidthSpace: true
+      }
     }
   ],
 };
