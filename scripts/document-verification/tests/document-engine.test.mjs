@@ -1183,13 +1183,13 @@ test('O. SDT Checkbox ロジック', async (t) => {
     </w:p>
     <w:p><w:r><w:t>当てはまる方に☑をしてください</w:t></w:r></w:p>
   </w:tc></w:tr></w:tbl></w:document>`;
-  
+
   const locatorConfig = {
     type: 'sdt-checkbox-group',
     groupContextText: '当てはまる方に☑をしてください',
     optionContextMode: 'adjacent-text'
   };
-  
+
   const selectionConfig = {
     mode: 'single',
     options: [
@@ -1198,7 +1198,7 @@ test('O. SDT Checkbox ロジック', async (t) => {
     ],
     clearUnselected: true
   };
-  
+
   const { SdtCheckboxLocator } = await import('../core/sdt-checkbox-locator.mjs');
   const { SdtCheckboxFiller } = await import('../core/sdt-checkbox-filler.mjs');
 
@@ -1209,31 +1209,31 @@ test('O. SDT Checkbox ロジック', async (t) => {
     assert.strictEqual(groupInfo.options[0].value, '事業主又は役員');
     assert.strictEqual(groupInfo.options[0].checked, false);
   });
-  
+
   await t.test('Locator異常系: グループ未検出', () => {
     const doc = parser.parseFromString(tcXml.replace('当てはまる方に☑をしてください', 'なし'), 'text/xml');
     assert.throws(() => SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig), /not found in any cell/);
   });
-  
+
   await t.test('Filler正常系: 1つ目を選択', () => {
     const doc = parser.parseFromString(tcXml, 'text/xml');
     const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
     SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
-    
+
     const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
     assert.strictEqual(updatedGroupInfo.options[0].checked, true);
     assert.strictEqual(updatedGroupInfo.options[1].checked, false);
-    
+
     const tNodes = Array.from(updatedGroupInfo.options[0].sdtNode.getElementsByTagName('w:t'));
     assert.strictEqual(tNodes[0].textContent, String.fromCharCode(parseInt('00FE', 16)));
   });
-  
+
   await t.test('Filler異常系: 空文字', () => {
     const doc = parser.parseFromString(tcXml, 'text/xml');
     const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
     assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '', selectionConfig, 'confirmed'), /Value is empty/);
   });
-  
+
   await t.test('Filler異常系: 未confirmed', () => {
     const doc = parser.parseFromString(tcXml, 'text/xml');
     const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
@@ -1424,3 +1424,197 @@ test('O. SDT Checkbox ロジック', async (t) => {
     assert.strictEqual(updatedGroupInfo.options[1].checked, false);
   });
 });
+
+test('P. OutputVerifier SDT Verification', async (t) => {
+  const { OutputVerifier } = await import('../core/output-verifier.mjs');
+  const { SdtCheckboxFiller } = await import('../core/sdt-checkbox-filler.mjs');
+  const { SdtCheckboxLocator } = await import('../core/sdt-checkbox-locator.mjs');
+  const { DOMParser, XMLSerializer } = await import('@xmldom/xmldom');
+  const PizZip = (await import('pizzip')).default;
+  const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+  const crypto = await import('crypto');
+
+  const inputPath = '/Users/to/Documents/practice-assistant-input/001688046.docx';
+  const originalBuffer = fs.readFileSync(inputPath);
+  const expectedSha256 = crypto.createHash('sha256').update(originalBuffer).digest('hex');
+
+  // Single selection scenario (G3 manager role)
+  const fManagerRole = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'career_up_manager_role_type');
+  // Multi selection scenario (G12 wage increase)
+  const fWageInc = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'wage_increase_rate');
+  // 複数選択テストのために一時的にmultiモードに変更
+  fWageInc.selection.mode = 'multi';
+
+  // Single selection clearUnselected: false (G1)
+  const fWorkerConsent = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'worker_representative_consent');
+
+  const tempOutputPath = '/tmp/practice-assistant-test-output.docx';
+
+  await t.test('1. 単一選択で指定optionがcheckedならPASS, 2. 単一選択で非選択optionがuncheckedならPASS', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fManagerRole.locator, fManagerRole.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, '役員でない', fManagerRole.selection, 'confirmed');
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, {
+      career_up_manager_role_type: '役員でない'
+    }));
+  });
+
+  await t.test('3. 複数選択で指定した全optionがcheckedならPASS, 4. 未指定optionがuncheckedならPASS', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fWageInc.locator, fWageInc.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, ['3%以上4%未満', '5%以上6%未満'], fWageInc.selection, 'confirmed');
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, {
+      wage_increase_rate: ['3%以上4%未満', '5%以上6%未満']
+    }));
+  });
+
+  await t.test('6. 1択グループ・clearUnselected: falseでPASS', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fWorkerConsent.locator, fWorkerConsent.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, 'はい', fWorkerConsent.selection, 'confirmed');
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, {
+      worker_representative_consent: 'はい'
+    }));
+  });
+
+  await t.test('最重要回帰テスト(異常系1, 2, 5): 出力DOMの対象SDTを意図的に誤状態へ改ざん → FAIL', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    // Fillerを正常実行
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fManagerRole.locator, fManagerRole.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, '役員でない', fManagerRole.selection, 'confirmed');
+
+    // 意図的に誤状態へ改ざん (事業主又は役員をcheckedにする)
+    const wrongGroupInfo = SdtCheckboxLocator.locateGroup(docDom, fManagerRole.locator, fManagerRole.selection);
+    const optWrong = wrongGroupInfo.options.find(o => o.value === '事業主又は役員');
+    const cb = optWrong.sdtNode.getElementsByTagName('w14:checkbox')[0];
+    cb.getElementsByTagName('w14:checked')[0].setAttribute('w14:val', '1');
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    // 修正前はPASSしていたが、修正後はFAILする
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { career_up_manager_role_type: '役員でない' }),
+      /Expected 1 checked, found 2/
+    );
+  });
+
+  await t.test('異常系3: 単一選択で複数optionがcheckedの場合にFAIL', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fManagerRole.locator, fManagerRole.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, '役員でない', fManagerRole.selection, 'confirmed');
+
+    // 改ざん: もう一つcheckedにする
+    const optWrong = groupInfo.options.find(o => o.value === '事業主又は役員');
+    const cb = optWrong.sdtNode.getElementsByTagName('w14:checkbox')[0];
+    cb.getElementsByTagName('w14:checked')[0].setAttribute('w14:val', '1');
+    const checkedState = cb.getElementsByTagName('w14:checkedState')[0].getAttribute('w14:val');
+    optWrong.sdtNode.getElementsByTagName('w:t')[0].textContent = String.fromCharCode(parseInt(checkedState, 16));
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { career_up_manager_role_type: '役員でない' }),
+      /Expected 1 checked, found 2 for "career_up_manager_role_type"/
+    );
+  });
+
+  await t.test('異常系4: 複数選択で一部optionが未checkedの場合にFAIL', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fWageInc.locator, fWageInc.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, ['3%以上4%未満', '5%以上6%未満'], fWageInc.selection, 'confirmed');
+
+    // 改ざん: 3%以上をuncheckedに戻す
+    const optToUncheck = groupInfo.options.find(o => o.value === '3%以上4%未満');
+    const cb = optToUncheck.sdtNode.getElementsByTagName('w14:checkbox')[0];
+    cb.getElementsByTagName('w14:checked')[0].setAttribute('w14:val', '0');
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { wage_increase_rate: ['3%以上4%未満', '5%以上6%未満'] }),
+      /Expected 2 checked, found 1 for "wage_increase_rate"/
+    );
+  });
+
+  await t.test('異常系6, 7: w14:checked=1だが表示文字がunchecked文字の場合にFAIL', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fWorkerConsent.locator, fWorkerConsent.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, 'はい', fWorkerConsent.selection, 'confirmed');
+
+    // 改ざん: 表示文字をuncheckedの文字に戻す
+    const opt = groupInfo.options[0];
+    const cb = opt.sdtNode.getElementsByTagName('w14:checkbox')[0];
+    const uncheckedState = cb.getElementsByTagName('w14:uncheckedState')[0].getAttribute('w14:val');
+    opt.sdtNode.getElementsByTagName('w:t')[0].textContent = String.fromCharCode(parseInt(uncheckedState, 16));
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { worker_representative_consent: 'はい' }),
+      /sdtContent display char mismatch/
+    );
+  });
+
+  await t.test('異常系8: 未定義option値の場合にFAIL', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    const groupInfo = SdtCheckboxLocator.locateGroup(docDom, fManagerRole.locator, fManagerRole.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, '役員でない', fManagerRole.selection, 'confirmed');
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { career_up_manager_role_type: '存在しない役職' }),
+      /not found in options for/
+    );
+  });
+});
+

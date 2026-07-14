@@ -2,6 +2,147 @@ import fs from 'node:fs';
 import PizZip from 'pizzip';
 import { VersionGuard } from './version-guard.mjs';
 
+async function verifySdtCheckboxField({ originalDom, outputDom, field, value, key }) {
+  const { SdtCheckboxLocator } = await import('./sdt-checkbox-locator.mjs');
+
+  // 原本DOMでグループとオプションを特定
+  const origGroupInfo = SdtCheckboxLocator.locateGroup(originalDom, field.locator, field.selection);
+
+  const origAllSdts = Array.from(originalDom.getElementsByTagName('w:sdt'));
+  const outAllSdts = Array.from(outputDom.getElementsByTagName('w:sdt'));
+
+  // 出力DOMにおける対象グループの情報を再構築する
+  // (outputDomに対してlocateGroupを呼ぶと、チェック状態の変更でテキストが変わり特定できなくなるため、原本のインデックスでマッピングする)
+  const groupInfo = {
+    allGroupSdts: [],
+    options: []
+  };
+
+  for (const sdt of origGroupInfo.allGroupSdts) {
+    const idx = origAllSdts.indexOf(sdt);
+    groupInfo.allGroupSdts.push(outAllSdts[idx]);
+  }
+
+  for (const origOpt of origGroupInfo.options) {
+    const idx = origAllSdts.indexOf(origOpt.sdtNode);
+    const outSdt = outAllSdts[idx];
+    const cb = outSdt.getElementsByTagName('w14:checkbox')[0];
+    const checkedNode = cb?.getElementsByTagName('w14:checked')[0];
+    const checked = checkedNode ? checkedNode.getAttribute('w14:val') === '1' : false;
+
+    groupInfo.options.push({
+      value: origOpt.value,
+      sdtNode: outSdt,
+      checked
+    });
+  }
+
+  // SDT数不変確認
+  if (origGroupInfo.allGroupSdts.length !== groupInfo.allGroupSdts.length) {
+    throw new Error(`SDT count changed in group for field "${key}"`);
+  }
+
+  // checkedState/uncheckedState維持確認（元の原本と同じ構造）
+  for (let idx = 0; idx < origGroupInfo.allGroupSdts.length; idx++) {
+    const origCb = origGroupInfo.allGroupSdts[idx].getElementsByTagName('w14:checkbox')[0];
+    const outCb = groupInfo.allGroupSdts[idx].getElementsByTagName('w14:checkbox')[0];
+    const origCS = origCb?.getElementsByTagName('w14:checkedState')[0]?.getAttribute('w14:val');
+    const outCS = outCb?.getElementsByTagName('w14:checkedState')[0]?.getAttribute('w14:val');
+    if (origCS !== outCS) throw new Error(`checkedState changed for SDT ${idx} in "${key}"`);
+    const origUS = origCb?.getElementsByTagName('w14:uncheckedState')[0]?.getAttribute('w14:val');
+    const outUS = outCb?.getElementsByTagName('w14:uncheckedState')[0]?.getAttribute('w14:val');
+    if (origUS !== outUS) throw new Error(`uncheckedState changed for SDT ${idx} in "${key}"`);
+  }
+
+  // 選択値と checked 状態の一致確認
+  if (field.selection.mode === 'single') {
+    const selectedOption = groupInfo.options.find(opt => opt.value === value);
+    if (!selectedOption) throw new Error(`Value "${value}" not found in options for "${key}"`);
+    if (!selectedOption.checked) throw new Error(`Option "${value}" is not checked for "${key}"`);
+
+    // clearUnselectedがtrueの場合、他のオプションは未選択であることを確認
+    if (field.selection.clearUnselected) {
+      const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
+      if (checkedCount !== 1) throw new Error(`Expected 1 checked, found ${checkedCount} for "${key}"`);
+      const unselectedOptions = groupInfo.options.filter(opt => opt.value !== value);
+      for (const opt of unselectedOptions) {
+        if (opt.checked) throw new Error(`Option "${opt.value}" should not be checked for "${key}"`);
+      }
+    }
+
+    // sdtContent表示文字の確認
+    const checkedSdt = selectedOption.sdtNode;
+    const checkbox = checkedSdt.getElementsByTagName('w14:checkbox')[0];
+    const checkedState = checkbox.getElementsByTagName('w14:checkedState')[0];
+    const expectedChar = String.fromCharCode(parseInt(checkedState.getAttribute('w14:val'), 16));
+    const actualChar = checkedSdt.getElementsByTagName('w:t')[0]?.textContent;
+    if (actualChar !== expectedChar) {
+      throw new Error(`sdtContent display char mismatch for "${key}": expected "${expectedChar}" got "${actualChar}"`);
+    }
+
+    // Unselected elements display char sync check
+    if (field.selection.clearUnselected) {
+      const unselectedOptions = groupInfo.options.filter(opt => opt.value !== value);
+      for (const opt of unselectedOptions) {
+        const unselectedSdt = opt.sdtNode;
+        const ucCheckbox = unselectedSdt.getElementsByTagName('w14:checkbox')[0];
+        const uncheckedState = ucCheckbox.getElementsByTagName('w14:uncheckedState')[0];
+        const ucExpectedChar = String.fromCharCode(parseInt(uncheckedState.getAttribute('w14:val'), 16));
+        const ucActualChar = unselectedSdt.getElementsByTagName('w:t')[0]?.textContent;
+        if (ucActualChar !== ucExpectedChar) {
+          throw new Error(`sdtContent display char mismatch for unselected option in "${key}": expected "${ucExpectedChar}" got "${ucActualChar}"`);
+        }
+      }
+    }
+
+  } else if (field.selection.mode === 'multi') {
+    const expectedValues = Array.isArray(value) ? value : [value];
+
+    // check if all expectedValues are in options
+    for (const v of expectedValues) {
+      const opt = groupInfo.options.find(o => o.value === v);
+      if (!opt) throw new Error(`Value "${v}" not found in options for "${key}"`);
+    }
+
+    const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
+    // Expected unique items count
+    const uniqueExpectedCount = new Set(expectedValues).size;
+    if (checkedCount !== uniqueExpectedCount) {
+      throw new Error(`Expected ${uniqueExpectedCount} checked, found ${checkedCount} for "${key}"`);
+    }
+    for (const v of expectedValues) {
+      const opt = groupInfo.options.find(o => o.value === v);
+      if (!opt?.checked) throw new Error(`Option "${v}" is not checked for "${key}"`);
+
+      // display char sync check for checked elements
+      const checkedSdt = opt.sdtNode;
+      const checkbox = checkedSdt.getElementsByTagName('w14:checkbox')[0];
+      const checkedState = checkbox.getElementsByTagName('w14:checkedState')[0];
+      const expectedChar = String.fromCharCode(parseInt(checkedState.getAttribute('w14:val'), 16));
+      const actualChar = checkedSdt.getElementsByTagName('w:t')[0]?.textContent;
+      if (actualChar !== expectedChar) {
+        throw new Error(`sdtContent display char mismatch for checked option in "${key}": expected "${expectedChar}" got "${actualChar}"`);
+      }
+    }
+
+    if (field.selection.clearUnselected) {
+      const unselectedOptions = groupInfo.options.filter(opt => !expectedValues.includes(opt.value));
+      for (const opt of unselectedOptions) {
+        if (opt.checked) throw new Error(`Option "${opt.value}" should not be checked for "${key}"`);
+        // display char sync check for unselected elements
+        const unselectedSdt = opt.sdtNode;
+        const ucCheckbox = unselectedSdt.getElementsByTagName('w14:checkbox')[0];
+        const uncheckedState = ucCheckbox.getElementsByTagName('w14:uncheckedState')[0];
+        const ucExpectedChar = String.fromCharCode(parseInt(uncheckedState.getAttribute('w14:val'), 16));
+        const ucActualChar = unselectedSdt.getElementsByTagName('w:t')[0]?.textContent;
+        if (ucActualChar !== ucExpectedChar) {
+          throw new Error(`sdtContent display char mismatch for unselected option in "${key}": expected "${ucExpectedChar}" got "${ucActualChar}"`);
+        }
+      }
+    }
+  }
+}
+
 export class OutputVerifier {
   static async verify(originalBuffer, outputPath, expectedSha256, inputs) {
     // Verify Original Hash unchanged
@@ -39,16 +180,27 @@ export class OutputVerifier {
     const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
 
     for (const [key, value] of Object.entries(inputs)) {
-      if (!value) continue;
+      if (value === null || value === undefined || value === '') {
+        continue;
+      }
 
       const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
-      if (f && f.inputMode === 'sdt-checkbox') continue;
-      
+      if (f && f.inputMode === 'sdt-checkbox') {
+        await verifySdtCheckboxField({
+          originalDom: origDom,
+          outputDom: docDom,
+          field: f,
+          value,
+          key
+        });
+        continue;
+      }
+
       if (key === 'manager_name') continue;
 
       if (
-        key !== 'employment_insurance' && 
-        key !== 'labor_insurance' && 
+        key !== 'employment_insurance' &&
+        key !== 'labor_insurance' &&
         key !== 'employee_count' &&
         key !== 'manager_assigned_date' &&
         key !== 'plan_start_date' &&
@@ -366,60 +518,6 @@ export class OutputVerifier {
          if (!cellText.includes(`${yearStr}${yearToken}`)) throw new Error(`Year missing in cell!`);
          if (!cellText.includes(`${monthStr}${monthToken}`)) throw new Error(`Month missing in cell!`);
          if (!cellText.includes(`${dayStr}${dayToken}`)) throw new Error(`Day missing in cell!`);
-      } else {
-         const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
-         if (f && f.inputMode === 'sdt-checkbox') {
-           const { SdtCheckboxLocator } = await import('./sdt-checkbox-locator.mjs');
-           const groupInfo = SdtCheckboxLocator.locateGroup(docDom, f.locator, f.selection);
-           const origGroupInfo = SdtCheckboxLocator.locateGroup(origDom, f.locator, f.selection);
-           
-           // SDT数不変確認
-           if (origGroupInfo.allGroupSdts.length !== groupInfo.allGroupSdts.length) {
-             throw new Error(`SDT count changed in group for field "${key}"`);
-           }
-           
-           // checkedState/uncheckedState維持確認（元の原本と同じ構造）
-           for (let idx = 0; idx < origGroupInfo.allGroupSdts.length; idx++) {
-             const origCb = origGroupInfo.allGroupSdts[idx].getElementsByTagName('w14:checkbox')[0];
-             const outCb = groupInfo.allGroupSdts[idx].getElementsByTagName('w14:checkbox')[0];
-             const origCS = origCb?.getElementsByTagName('w14:checkedState')[0]?.getAttribute('w14:val');
-             const outCS = outCb?.getElementsByTagName('w14:checkedState')[0]?.getAttribute('w14:val');
-             if (origCS !== outCS) throw new Error(`checkedState changed for SDT ${idx} in "${key}"`);
-             const origUS = origCb?.getElementsByTagName('w14:uncheckedState')[0]?.getAttribute('w14:val');
-             const outUS = outCb?.getElementsByTagName('w14:uncheckedState')[0]?.getAttribute('w14:val');
-             if (origUS !== outUS) throw new Error(`uncheckedState changed for SDT ${idx} in "${key}"`);
-           }
-           
-           // 選択値と checked 状態の一致確認
-           if (f.selection.mode === 'single') {
-             const selectedOption = groupInfo.options.find(opt => opt.value === value);
-             if (!selectedOption) throw new Error(`Value "${value}" not found in options for "${key}"`);
-             if (!selectedOption.checked) throw new Error(`Option "${value}" is not checked for "${key}"`);
-             
-             const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
-             if (checkedCount !== 1) throw new Error(`Expected 1 checked, found ${checkedCount} for "${key}"`);
-             
-             // sdtContent表示文字の確認
-             const checkedSdt = selectedOption.sdtNode;
-             const checkbox = checkedSdt.getElementsByTagName('w14:checkbox')[0];
-             const checkedState = checkbox.getElementsByTagName('w14:checkedState')[0];
-             const expectedChar = String.fromCharCode(parseInt(checkedState.getAttribute('w14:val'), 16));
-             const actualChar = checkedSdt.getElementsByTagName('w:t')[0]?.textContent;
-             if (actualChar !== expectedChar) {
-               throw new Error(`sdtContent display char mismatch for "${key}": expected "${expectedChar}" got "${actualChar}"`);
-             }
-           } else if (f.selection.mode === 'multi') {
-             const expectedValues = Array.isArray(value) ? value : [value];
-             const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
-             if (checkedCount !== expectedValues.length) {
-               throw new Error(`Expected ${expectedValues.length} checked, found ${checkedCount} for "${key}"`);
-             }
-             for (const v of expectedValues) {
-               const opt = groupInfo.options.find(o => o.value === v);
-               if (!opt?.checked) throw new Error(`Option "${v}" is not checked for "${key}"`);
-             }
-           }
-         }
       }
     }
 
@@ -444,7 +542,7 @@ export class OutputVerifier {
       const origCb = origAllSdts[i].getElementsByTagName('w14:checkbox')[0];
       if (!origCb) continue;
       if (allowedChangedIndices.has(i)) continue;  // 変更許可済み
-      
+
       const origChecked = origCb.getElementsByTagName('w14:checked')[0]?.getAttribute('w14:val');
       const outChecked = outAllSdts[i]?.getElementsByTagName('w14:checkbox')[0]?.getElementsByTagName('w14:checked')[0]?.getAttribute('w14:val');
       if (origChecked !== outChecked) {
