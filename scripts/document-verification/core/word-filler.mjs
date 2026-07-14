@@ -4,9 +4,23 @@ export class WordFiller {
       throw new Error(`Cannot fill value. Status is not 'confirmed'`);
     }
 
+    const isEmpty = value === undefined || value === null || value === '';
+
+    if (isEmpty) {
+      if (fieldConfig.validation && fieldConfig.validation.rejectEmpty) {
+        throw new Error(`Value is empty`);
+      }
+      return;
+    }
+
+    if (typeof value !== 'string') {
+      throw new Error(`Value must be a string`);
+    }
+
     if (fieldConfig.validation) {
       const val = fieldConfig.validation;
-      if (val.rejectEmpty && (!value || value.trim() === '')) {
+
+      if (val.rejectEmpty && value.trim() === '') {
         throw new Error(`Value is empty`);
       }
       if (val.rejectLetters && /[a-zA-Z]/.test(value)) {
@@ -49,17 +63,11 @@ export class WordFiller {
       }
     }
 
-    // Remove all existing runs to cleanly replace text (e.g. removing placeholders like "(   )")
     const runsArray = Array.from(runs);
     for (const run of runsArray) {
       targetP.removeChild(run);
     }
-    
-    if (!value || value === '') {
-      return;
-    }
 
-    // append text as a single run in the first paragraph
     const newRun = tcNode.ownerDocument.createElement('w:r');
     if (rPrClone) newRun.appendChild(rPrClone);
     const newText = tcNode.ownerDocument.createElement('w:t');

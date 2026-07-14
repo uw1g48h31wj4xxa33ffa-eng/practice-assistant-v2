@@ -844,3 +844,148 @@ test('I. 代理人等氏名検証ロジック', async (t) => {
     assert.throws(() => WordFiller.fillField(cell, '<w:t>代理</w:t>', config), /Value contains HTML\/XML tags/);
   });
 });
+
+test('J. WordFiller空値処理の最終是正', async (t) => {
+  const { DOMParser, XMLSerializer } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+
+  function getFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:p><w:r><w:t>⑩代理人等氏名</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:p><w:r><w:t></w:t></w:r></w:p>
+          </w:tc>
+        </w:tr>
+        <w:tr>
+          <w:tc>
+            <w:p><w:r><w:t>④事業所の担当者</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:p><w:r><w:t></w:t></w:r></w:p>
+          </w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const optConfigBase = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_name');
+  const optCfg = { ...optConfigBase, status: 'confirmed' };
+
+  const reqConfigBase = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_contact_name');
+  const reqCfg = { ...reqConfigBase, status: 'confirmed' };
+
+  await t.test('A. optional空値: undefined', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    WordFiller.fillField(cell, undefined, optCfg);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test('A. optional空値: null', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    WordFiller.fillField(cell, null, optCfg);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test("A. optional空値: ''", () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    WordFiller.fillField(cell, '', optCfg);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+
+  await t.test('B. required空値: undefined', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '④事業所の担当者');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, undefined, reqCfg), /Value is empty/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test('B. required空値: null', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '④事業所の担当者');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, null, reqCfg), /Value is empty/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test("B. required空値: ''", () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '④事業所の担当者');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, '', reqCfg), /Value is empty/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+
+  for (const invalid of [0, 1, false, true, NaN, {}, []]) {
+    await t.test(`C. 型検証: ${String(invalid)}`, () => {
+      const doc = getFixture();
+      const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+      const originalXml = serializer.serializeToString(cell);
+      assert.throws(() => WordFiller.fillField(cell, invalid, optCfg), /Value must be a string/);
+      assert.strictEqual(serializer.serializeToString(cell), originalXml);
+    });
+  }
+
+  for (const valid of ['0', 'false', '代理 太郎', 'ソフトウェア開発業']) {
+    await t.test(`D. 文字列として許可: '${valid}'`, () => {
+      const doc = getFixture();
+      const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+      WordFiller.fillField(cell, valid, optCfg);
+      assert.strictEqual(FieldLocator.getCellText(cell), valid);
+    });
+  }
+
+  for (const unconf of ['通常文字列', undefined, null, '']) {
+    await t.test(`E. 未confirmed: ${String(unconf)}`, () => {
+      const doc = getFixture();
+      const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+      const unconfirmedCfg = { ...optCfg, status: 'aiDraft' };
+      assert.throws(() => WordFiller.fillField(cell, unconf, unconfirmedCfg), /Cannot fill value. Status is not 'confirmed'/);
+    });
+  }
+
+  await t.test('F. validation失敗時の非破壊性: 改行', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, '代理\n太郎', optCfg), /Value contains newline or tab/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test('F. validation失敗時の非破壊性: タブ', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, '代理\t太郎', optCfg), /Value contains newline or tab/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test('F. validation失敗時の非破壊性: 制御文字', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, '代理\x00太郎', optCfg), /Value contains control characters/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test('F. validation失敗時の非破壊性: HTML/XMLタグ風文字列', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, '<w:t>代理</w:t>', optCfg), /Value contains HTML\/XML tags/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+  await t.test('F. validation失敗時の非破壊性: maxLength超過', () => {
+    const doc = getFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑩代理人等氏名');
+    const originalXml = serializer.serializeToString(cell);
+    assert.throws(() => WordFiller.fillField(cell, 'a'.repeat(51), optCfg), /Value exceeds max length of 50/);
+    assert.strictEqual(serializer.serializeToString(cell), originalXml);
+  });
+});
