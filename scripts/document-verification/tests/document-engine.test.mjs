@@ -1239,4 +1239,188 @@ test('O. SDT Checkbox ロジック', async (t) => {
     const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
     assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'pending'), /is not confirmed/);
   });
+  await t.test('Locator: option[1]を特定できる', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(groupInfo.options[1].value, '役員でない');
+    assert.strictEqual(groupInfo.options[1].checked, false);
+  });
+
+  await t.test('Locator: SDT数とoption数不一致でエラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const badConfig = { ...selectionConfig, options: [{ value: '事業主又は役員', contextText: '事業主又は役員である' }] };
+    assert.throws(() => SdtCheckboxLocator.locateGroup(doc, locatorConfig, badConfig), /does not match mapped options count/);
+  });
+
+  await t.test('Filler: option[1]を選択（2つ目）', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '役員でない', selectionConfig, 'confirmed');
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, false);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, true);
+  });
+
+  await t.test('Filler: 1→2の選択変更（clearUnselected後の切り替え確認）', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    let groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
+    groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '役員でない', selectionConfig, 'confirmed');
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, false);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, true);
+  });
+
+  await t.test('Filler: 未定義値でエラー・DOM変更なし', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    const beforeXml = serializer.serializeToString(doc);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '存在しない値', selectionConfig, 'confirmed'), /is not a valid option/);
+    const afterXml = serializer.serializeToString(doc);
+    assert.strictEqual(beforeXml, afterXml);
+  });
+
+  await t.test('Filler: 配列渡し(単一選択)でエラー・DOM変更なし', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    const beforeXml = serializer.serializeToString(doc);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, ['事業主又は役員'], selectionConfig, 'confirmed'), /Single selection mode received array/);
+    const afterXml = serializer.serializeToString(doc);
+    assert.strictEqual(beforeXml, afterXml);
+  });
+
+  await t.test('Filler: sdtContent欠損SDTで例外発生', () => {
+    const badXml = tcXml.replace(/<w:sdtContent>[\s\S]*?<\/w:sdtContent>/, ''); // remove the first one
+    const doc = parser.parseFromString(badXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed'), /has no w:sdtContent/);
+  });
+
+  await t.test('Filler: w14:checkbox欠損SDTで例外発生', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    const cb = groupInfo.options[0].sdtNode.getElementsByTagName('w14:checkbox')[0];
+    cb.parentNode.removeChild(cb);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed'), /has no w14:checkbox/);
+  });
+
+  await t.test('対象以外のSDTが変化しないこと', () => {
+    const multiXml = `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"><w:tbl><w:tr><w:tc>
+      <w:p>
+        <w:sdt><w:sdtPr><w14:checkbox><w14:checked w14:val="0"/><w14:checkedState w14:val="00FE" w14:font="Wingdings"/><w14:uncheckedState w14:val="2610" w14:font="ＭＳ ゴシック"/></w14:checkbox></w:sdtPr><w:sdtContent><w:r><w:t>☐</w:t></w:r></w:sdtContent></w:sdt>
+        <w:r><w:t>対象外</w:t></w:r>
+      </w:p>
+    </w:tc></w:tr></w:tbl>${tcXml.replace('<w:document', '<w:body').replace('</w:document>', '</w:body>')}</w:document>`;
+    const doc = parser.parseFromString(multiXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
+    const sdts = doc.getElementsByTagName('w:sdt');
+    const outCb0 = sdts[0].getElementsByTagName('w14:checked')[0].getAttribute('w14:val');
+    assert.strictEqual(outCb0, '0', 'Target-outside SDT should remain unchecked');
+  });
+
+  await t.test('Locator: checked=1の場合にchecked=trueを返す', () => {
+    const checkedXml = tcXml.replace('<w14:checked w14:val="0"/>', '<w14:checked w14:val="1"/>');
+    const doc = parser.parseFromString(checkedXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(groupInfo.options[0].checked, true);
+  });
+
+  await t.test('Filler: null値でエラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, null, selectionConfig, 'confirmed'), /Value is empty/);
+  });
+
+  await t.test('Filler: undefined値でエラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, undefined, selectionConfig, 'confirmed'), /Value is empty/);
+  });
+
+  await t.test('Filler: 非文字列（数値0）でエラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, 0, selectionConfig, 'confirmed'), /is not a valid option/);
+  });
+
+  await t.test('Filler: 冪等性（同値2回実行）', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    let groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
+    groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, true);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, false);
+  });
+
+  await t.test('シリアライズ後再パースで状態維持', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
+    const xml = serializer.serializeToString(doc);
+    const doc2 = parser.parseFromString(xml, 'text/xml');
+    const groupInfo2 = SdtCheckboxLocator.locateGroup(doc2, locatorConfig, selectionConfig);
+    assert.strictEqual(groupInfo2.options[0].checked, true);
+  });
+
+  const multiSelectionConfig = {
+    mode: 'multi',
+    options: [
+      { value: 'A', contextText: '事業主又は役員である' },
+      { value: 'B', contextText: '事業主又は役員ではない' }
+    ],
+    clearUnselected: true,
+    minSelections: 1,
+    maxSelections: 2
+  };
+
+  await t.test('複数選択: 0件でrequired時エラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, [], multiSelectionConfig, 'confirmed'), /below minimum/);
+  });
+
+  await t.test('複数選択: 1件選択', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, ['A'], multiSelectionConfig, 'confirmed');
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, true);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, false);
+  });
+
+  await t.test('複数選択: 2件選択', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, ['A', 'B'], multiSelectionConfig, 'confirmed');
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, true);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, true);
+  });
+
+  await t.test('複数選択: 重複値エラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, ['A', 'A'], multiSelectionConfig, 'confirmed'), /Duplicate values/);
+  });
+
+  await t.test('複数選択: 未定義値混入エラー', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, ['A', 'C'], multiSelectionConfig, 'confirmed'), /is not a valid option/);
+  });
+
+  await t.test('複数選択: clearUnselected動作確認', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    let groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, ['A', 'B'], multiSelectionConfig, 'confirmed');
+    groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, ['A'], multiSelectionConfig, 'confirmed');
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, multiSelectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, true);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, false);
+  });
 });

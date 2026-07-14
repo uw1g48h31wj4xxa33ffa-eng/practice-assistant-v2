@@ -305,6 +305,70 @@ export const careerUpR8Form1Mapping = {
         required: true,
         rejectEmpty: true
       }
+    },
+    {
+      fieldId: 'worker_representative_consent',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: 'はい☐',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'single',
+        options: [
+          { value: 'はい', contextText: '☐' }
+        ],
+        clearUnselected: false
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true
+      }
+    },
+    {
+      fieldId: 'opinion_hearing_method',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: 'ア　☐イ　☐ウ　☐',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'single',
+        options: [
+          { value: 'ア', contextText: 'ア' },
+          { value: 'イ', contextText: 'イ' },
+          { value: 'ウ', contextText: 'ウ' }
+        ],
+        clearUnselected: true
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true
+      }
+    },
+    {
+      fieldId: 'wage_increase_rate',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: '３％以上４％未満の増額改定',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'single',
+        options: [
+          { value: '3%以上4%未満', contextText: '３％以上４％未満の増額改定' },
+          { value: '4%以上5%未満', contextText: '４％以上５％未満の増額改定' },
+          { value: '5%以上6%未満', contextText: '５％以上６％未満の増額改定' },
+          { value: '6%以上', contextText: '６％以上の増額改定' }
+        ],
+        clearUnselected: true
+      },
+      validation: {
+        required: false
+      }
     }
   ],
 };

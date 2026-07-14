@@ -366,21 +366,89 @@ export class OutputVerifier {
          if (!cellText.includes(`${yearStr}${yearToken}`)) throw new Error(`Year missing in cell!`);
          if (!cellText.includes(`${monthStr}${monthToken}`)) throw new Error(`Month missing in cell!`);
          if (!cellText.includes(`${dayStr}${dayToken}`)) throw new Error(`Day missing in cell!`);
-      } else if (key === 'career_up_manager_role_type') {
-         const { SdtCheckboxLocator } = await import('./sdt-checkbox-locator.mjs');
+      } else {
          const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
-         const groupInfo = SdtCheckboxLocator.locateGroup(docDom, f.locator, f.selection);
-         const selectedOption = groupInfo.options.find(opt => opt.value === value);
-         if (!selectedOption) throw new Error(`Value ${value} not found in options`);
-         if (!selectedOption.checked) throw new Error(`Option ${value} is not checked!`);
-         
-         const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
-         if (checkedCount !== 1) throw new Error(`Expected exactly 1 option to be checked, found ${checkedCount}`);
-         
-         const origGroupInfo = SdtCheckboxLocator.locateGroup(origDom, f.locator, f.selection);
-         const origCheckboxSdts = origGroupInfo.allGroupSdts;
-         const outCheckboxSdts = groupInfo.allGroupSdts;
-         if (origCheckboxSdts.length !== outCheckboxSdts.length) throw new Error(`SDT count changed in group`);
+         if (f && f.inputMode === 'sdt-checkbox') {
+           const { SdtCheckboxLocator } = await import('./sdt-checkbox-locator.mjs');
+           const groupInfo = SdtCheckboxLocator.locateGroup(docDom, f.locator, f.selection);
+           const origGroupInfo = SdtCheckboxLocator.locateGroup(origDom, f.locator, f.selection);
+           
+           // SDT数不変確認
+           if (origGroupInfo.allGroupSdts.length !== groupInfo.allGroupSdts.length) {
+             throw new Error(`SDT count changed in group for field "${key}"`);
+           }
+           
+           // checkedState/uncheckedState維持確認（元の原本と同じ構造）
+           for (let idx = 0; idx < origGroupInfo.allGroupSdts.length; idx++) {
+             const origCb = origGroupInfo.allGroupSdts[idx].getElementsByTagName('w14:checkbox')[0];
+             const outCb = groupInfo.allGroupSdts[idx].getElementsByTagName('w14:checkbox')[0];
+             const origCS = origCb?.getElementsByTagName('w14:checkedState')[0]?.getAttribute('w14:val');
+             const outCS = outCb?.getElementsByTagName('w14:checkedState')[0]?.getAttribute('w14:val');
+             if (origCS !== outCS) throw new Error(`checkedState changed for SDT ${idx} in "${key}"`);
+             const origUS = origCb?.getElementsByTagName('w14:uncheckedState')[0]?.getAttribute('w14:val');
+             const outUS = outCb?.getElementsByTagName('w14:uncheckedState')[0]?.getAttribute('w14:val');
+             if (origUS !== outUS) throw new Error(`uncheckedState changed for SDT ${idx} in "${key}"`);
+           }
+           
+           // 選択値と checked 状態の一致確認
+           if (f.selection.mode === 'single') {
+             const selectedOption = groupInfo.options.find(opt => opt.value === value);
+             if (!selectedOption) throw new Error(`Value "${value}" not found in options for "${key}"`);
+             if (!selectedOption.checked) throw new Error(`Option "${value}" is not checked for "${key}"`);
+             
+             const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
+             if (checkedCount !== 1) throw new Error(`Expected 1 checked, found ${checkedCount} for "${key}"`);
+             
+             // sdtContent表示文字の確認
+             const checkedSdt = selectedOption.sdtNode;
+             const checkbox = checkedSdt.getElementsByTagName('w14:checkbox')[0];
+             const checkedState = checkbox.getElementsByTagName('w14:checkedState')[0];
+             const expectedChar = String.fromCharCode(parseInt(checkedState.getAttribute('w14:val'), 16));
+             const actualChar = checkedSdt.getElementsByTagName('w:t')[0]?.textContent;
+             if (actualChar !== expectedChar) {
+               throw new Error(`sdtContent display char mismatch for "${key}": expected "${expectedChar}" got "${actualChar}"`);
+             }
+           } else if (f.selection.mode === 'multi') {
+             const expectedValues = Array.isArray(value) ? value : [value];
+             const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
+             if (checkedCount !== expectedValues.length) {
+               throw new Error(`Expected ${expectedValues.length} checked, found ${checkedCount} for "${key}"`);
+             }
+             for (const v of expectedValues) {
+               const opt = groupInfo.options.find(o => o.value === v);
+               if (!opt?.checked) throw new Error(`Option "${v}" is not checked for "${key}"`);
+             }
+           }
+         }
+      }
+    }
+
+    // 対象外SDT全件の checked値不変確認
+    const origAllSdts = origDom.getElementsByTagName('w:sdt');
+    const outAllSdts = docDom.getElementsByTagName('w:sdt');
+    const sdtCheckboxFields = careerUpR8Form1Mapping.fields.filter(f => f.inputMode === 'sdt-checkbox');
+
+    // 変更を許可するSDTノードのoriginalインデックスを収集
+    const allowedChangedIndices = new Set();
+    for (const cbField of sdtCheckboxFields) {
+      if (!inputs[cbField.fieldId]) continue;
+      const { SdtCheckboxLocator } = await import('./sdt-checkbox-locator.mjs');
+      const origGroupInfo = SdtCheckboxLocator.locateGroup(origDom, cbField.locator, cbField.selection);
+      for (const sdt of origGroupInfo.allGroupSdts) {
+        const idx = Array.from(origAllSdts).indexOf(sdt);
+        if (idx >= 0) allowedChangedIndices.add(idx);
+      }
+    }
+
+    for (let i = 0; i < origAllSdts.length; i++) {
+      const origCb = origAllSdts[i].getElementsByTagName('w14:checkbox')[0];
+      if (!origCb) continue;
+      if (allowedChangedIndices.has(i)) continue;  // 変更許可済み
+      
+      const origChecked = origCb.getElementsByTagName('w14:checked')[0]?.getAttribute('w14:val');
+      const outChecked = outAllSdts[i]?.getElementsByTagName('w14:checkbox')[0]?.getElementsByTagName('w14:checked')[0]?.getAttribute('w14:val');
+      if (origChecked !== outChecked) {
+        throw new Error(`Non-target SDT ${i} changed from ${origChecked} to ${outChecked}`);
       }
     }
 
