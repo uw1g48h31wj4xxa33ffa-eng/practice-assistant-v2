@@ -42,31 +42,55 @@ export class FieldLocator {
     const matches = this.findCellByExactText(documentDom, exactLabelText);
     if (matches.length === 0) throw new Error(`Label "${exactLabelText}" not found`);
     if (matches.length > 1) throw new Error(`Label "${exactLabelText}" found multiple times`);
-    
+
     const match = matches[0];
     if (match.cellIndex + 1 >= match.cells.length) {
       throw new Error(`No adjacent cell found for label "${exactLabelText}"`);
     }
     const targetCell = match.cells[match.cellIndex + 1];
-    
+
     // Check if it has a paragraph
     if (targetCell.getElementsByTagName('w:p').length === 0) {
       throw new Error(`Adjacent cell has no paragraph`);
     }
-    
+
     return targetCell;
+  }
+
+  static locateSameCellByExactText(documentDom, exactLabelText, config = {}) {
+    const matches = this.findCellByExactText(documentDom, exactLabelText);
+    if (matches.length === 0) throw new Error(`Label "${exactLabelText}" not found`);
+
+    let match;
+    if (config.matchIndex !== undefined) {
+      if (config.matchIndex >= matches.length) {
+        throw new Error(`Label "${exactLabelText}" found, but matchIndex ${config.matchIndex} is out of bounds (found ${matches.length})`);
+      }
+      match = matches[config.matchIndex];
+    } else {
+      if (matches.length > 1) {
+        throw new Error(`Label "${exactLabelText}" found multiple times and no matchIndex provided`);
+      }
+      match = matches[0];
+    }
+
+    if (match.tcNode.getElementsByTagName('w:p').length === 0) {
+      throw new Error(`Same cell has no paragraph`);
+    }
+
+    return match.tcNode;
   }
 
   static locateNextRowContinuationCell(documentDom, exactLabelText) {
     const matches = this.findCellByExactText(documentDom, exactLabelText);
     if (matches.length === 0) throw new Error(`Label "${exactLabelText}" not found`);
     if (matches.length > 1) throw new Error(`Label "${exactLabelText}" found multiple times`);
-    
+
     const match = matches[0];
     if (match.rowIndex + 1 >= match.rows.length) {
       throw new Error(`No next row found for label "${exactLabelText}"`);
     }
-    
+
     // Verify vMerge of label
     const labelTcPr = match.tcNode.getElementsByTagName('w:tcPr')[0];
     let labelHasVMerge = false;
@@ -80,7 +104,7 @@ export class FieldLocator {
 
     const nextRow = match.rows[match.rowIndex + 1];
     const nextRowCells = nextRow.getElementsByTagName('w:tc');
-    
+
     // In the next row, Cell 0 is the vMerge continuation of the label.
     // The actual address input area is Cell 1 (which spans across columns).
     if (nextRowCells.length > 1) {
@@ -125,7 +149,7 @@ export class FieldLocator {
       for (let i = 0; i < pCount; i++) {
         const cell = cells[currentIndex];
         const text = this.getCellText(cell);
-        
+
         // Ensure not crossed out unless it's ignore
         const tcPr = cell.getElementsByTagName('w:tcPr')[0];
         let isCrossed = false;
@@ -147,7 +171,7 @@ export class FieldLocator {
         } else if (p.type === 'ignore') {
           result.ignoredCells.push(cell);
         }
-        
+
         currentIndex++;
       }
 
@@ -170,7 +194,7 @@ export class FieldLocator {
 
     const match = matches[0];
     let targetRow = match.trNode;
-    
+
     // Move to target row
     const offset = config.targetRowOffset || 0;
     for (let i = 0; i < offset; i++) {
@@ -218,7 +242,7 @@ export class FieldLocator {
       for (let i = 0; i < pCount; i++) {
         const cell = cells[currentIndex];
         const text = this.getCellText(cell);
-        
+
         // Ensure not crossed out unless it's ignore
         const tcPr = cell.getElementsByTagName('w:tcPr')[0];
         let isCrossed = false;
@@ -230,7 +254,7 @@ export class FieldLocator {
         if (cell.getElementsByTagName('w:del').length > 0) throw new Error('Cell contains deletion history');
         if (cell.getElementsByTagName('w:moveFrom').length > 0) throw new Error('Cell contains move history');
         if (cell.getElementsByTagName('w:fldChar').length > 0) throw new Error('Cell contains form controls');
-        
+
         // Check for hidden (vanish)
         const rPrs = cell.getElementsByTagName('w:rPr');
         for (let j = 0; j < rPrs.length; j++) {
@@ -255,7 +279,7 @@ export class FieldLocator {
           result.ignoredCells.push(cell);
           result.metadata.ignoreCount++;
         }
-        
+
         currentIndex++;
       }
 

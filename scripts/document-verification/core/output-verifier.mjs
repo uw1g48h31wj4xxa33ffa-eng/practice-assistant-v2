@@ -32,13 +32,23 @@ export class OutputVerifier {
     const { DOMParser } = await import('@xmldom/xmldom');
     const parser = new DOMParser();
     const docDom = parser.parseFromString(documentXmlStr, 'text/xml');
+    const origZip = new PizZip(originalBuffer);
+    const origXmlStr = origZip.file('word/document.xml').asText();
+    const origDom = parser.parseFromString(origXmlStr, 'text/xml');
     const { FieldLocator } = await import('./field-locator.mjs');
     const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
 
     for (const [key, value] of Object.entries(inputs)) {
       if (!value) continue;
-      
-      if (key !== 'employment_insurance' && key !== 'labor_insurance' && key !== 'employee_count') {
+
+      if (
+        key !== 'employment_insurance' && 
+        key !== 'labor_insurance' && 
+        key !== 'employee_count' &&
+        key !== 'manager_assigned_date' &&
+        key !== 'plan_start_date' &&
+        key !== 'plan_end_date'
+      ) {
         const escapedValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const count = documentXmlStr.split(escapedValue).length - 1;
         if (count !== 1) {
@@ -98,7 +108,7 @@ export class OutputVerifier {
          if (!cellText.includes(value)) {
            throw new Error(`Phone cell does not contain the phone value!`);
          }
-         
+
          // Verify digits count
          const digitCount = (value.match(/\d/g) || []).length;
          if (digitCount !== 10 && digitCount !== 11) {
@@ -134,15 +144,15 @@ export class OutputVerifier {
       } else if (key === 'employment_insurance') {
          const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
          const result = FieldLocator.locateDistributedCells(docDom, empField.labelText, empField.locator.pattern);
-         
+
          const normalized = value.replace(/[－-]/g, '');
          if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
-         
+
          // Verify each digit cell
          for (let i = 0; i < normalized.length; i++) {
            const cellText = FieldLocator.getCellText(result.digitCells[i]);
            if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
-           
+
            // Check if run is hidden or deleted
            const runs = result.digitCells[i].getElementsByTagName('w:r');
            for (let r = 0; r < runs.length; r++) {
@@ -184,15 +194,15 @@ export class OutputVerifier {
       } else if (key === 'labor_insurance') {
          const laborField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
          const result = FieldLocator.locateMultiRowDistributedCells(docDom, laborField.labelText, laborField.locator);
-         
+
          const normalized = value.replace(/[－-]/g, '');
          if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
-         
+
          // Verify each digit cell
          for (let i = 0; i < normalized.length; i++) {
            const cellText = FieldLocator.getCellText(result.digitCells[i]);
            if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
-           
+
            // Check if run is hidden or deleted
            const runs = result.digitCells[i].getElementsByTagName('w:r');
            for (let r = 0; r < runs.length; r++) {
@@ -235,13 +245,13 @@ export class OutputVerifier {
          const off = result.groupedDigitCells['office'].map(c => FieldLocator.getCellText(c)).join('');
          const base = result.groupedDigitCells['baseNumber'].map(c => FieldLocator.getCellText(c)).join('');
          const branch = result.groupedDigitCells['branchNumber'].map(c => FieldLocator.getCellText(c)).join('');
-         
+
          if (pref.length !== 2) throw new Error('Prefecture group length mismatch');
          if (jur.length !== 1) throw new Error('Jurisdiction group length mismatch');
          if (off.length !== 2) throw new Error('Office group length mismatch');
          if (base.length !== 6) throw new Error('Base number group length mismatch');
          if (branch.length !== 3) throw new Error('Branch number group length mismatch');
-         
+
          if (pref + jur + off + base + branch !== normalized) {
             throw new Error('Groups do not match the expected logical number');
          }
@@ -257,7 +267,7 @@ export class OutputVerifier {
          const targetCell = FieldLocator.locateAdjacentCell(docDom, empField.labelText);
          const cellText = FieldLocator.getCellText(targetCell);
          const expectedText = `${value}${empField.affix.suffixText}`;
-         
+
          // 1. 対象セル内に数値が1件存在 (well, the whole string should be "25人" assuming no spaces)
          // Wait, the new run just contains "25" and the old run contains "人". The combined cell text is "25人".
          if (cellText !== expectedText) {
@@ -266,7 +276,7 @@ export class OutputVerifier {
                 throw new Error(`Cell text "${cellText}" does not contain expected text "${expectedText}"`);
              }
          }
-         
+
          // 2. 単位が含まれていない etc. is checked before we enter here, but let's check structure
          const ps = targetCell.getElementsByTagName('w:p');
          let foundValue = false;
@@ -286,10 +296,10 @@ export class OutputVerifier {
                 }
              }
          }
-         
+
          if (!foundSuffix) throw new Error('Suffix is not found as a separate run');
          if (!foundValue) throw new Error('Numeric value is not found as a separate run');
-         
+
          // Verify cross contamination
          // Check if other '人' are unmodified, but here we only have docDom. We can just check the number of '人' in the document?
          // Actually the instructions say:
@@ -320,6 +330,37 @@ export class OutputVerifier {
          if (!cellText.includes(value)) {
            throw new Error(`Agent phone cell does not contain the value!`);
          }
+      } else if (key === 'manager_name') {
+         const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'manager_name');
+         const origCell = FieldLocator.locateSameCellByExactText(origDom, f.labelText, f.locator);
+         const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
+         const origIndex = origCells.indexOf(origCell);
+         const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) throw new Error(`Manager name cell does not contain the value!`);
+         if (!cellText.startsWith(f.preserve.prefixText)) throw new Error(`Manager name cell prefix not preserved!`);
+      } else if (key === 'manager_assigned_date' || key === 'plan_start_date' || key === 'plan_end_date') {
+         const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+         const origCell = FieldLocator.locateSameCellByExactText(origDom, f.labelText, f.locator);
+         const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
+         const origIndex = origCells.indexOf(origCell);
+         const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
+         const cellText = FieldLocator.getCellText(targetCell);
+         const { yearToken, monthToken, dayToken } = f.preserve;
+
+         const isoRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+         const match = value.match(isoRegex);
+         const y = parseInt(match[1], 10);
+         const m = parseInt(match[2], 10);
+         const d = parseInt(match[3], 10);
+
+         const yearStr = f.format?.yearDigits === 2 ? String(y).slice(-2) : String(y);
+         const monthStr = f.format?.padMonth ? String(m).padStart(2, '0') : String(m);
+         const dayStr = f.format?.padDay ? String(d).padStart(2, '0') : String(d);
+
+         if (!cellText.includes(`${yearStr}${yearToken}`)) throw new Error(`Year missing in cell!`);
+         if (!cellText.includes(`${monthStr}${monthToken}`)) throw new Error(`Month missing in cell!`);
+         if (!cellText.includes(`${dayStr}${dayToken}`)) throw new Error(`Day missing in cell!`);
       }
     }
 

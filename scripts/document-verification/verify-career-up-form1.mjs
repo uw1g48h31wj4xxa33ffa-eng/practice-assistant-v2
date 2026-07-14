@@ -105,6 +105,42 @@ async function verify(scenario, outputsMap) {
     inputsToFill.agent_phone = outputsMap.agent_phone;
   }
 
+  if (outputsMap.manager_name) {
+    const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'manager_name');
+    const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
+    const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
+    const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
+    WordFiller.fillField(targetCell, outputsMap.manager_name, { ...f, status: 'confirmed' });
+    inputsToFill.manager_name = outputsMap.manager_name;
+  }
+
+  if (outputsMap.manager_assigned_date) {
+    const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'manager_assigned_date');
+    const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
+    const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
+    const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
+    WordFiller.fillField(targetCell, outputsMap.manager_assigned_date, { ...f, status: 'confirmed' });
+    inputsToFill.manager_assigned_date = outputsMap.manager_assigned_date;
+  }
+
+  if (outputsMap.plan_start_date) {
+    const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'plan_start_date');
+    const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
+    const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
+    const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
+    WordFiller.fillField(targetCell, outputsMap.plan_start_date, { ...f, status: 'confirmed' });
+    inputsToFill.plan_start_date = outputsMap.plan_start_date;
+  }
+
+  if (outputsMap.plan_end_date) {
+    const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'plan_end_date');
+    const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
+    const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
+    const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
+    WordFiller.fillField(targetCell, outputsMap.plan_end_date, { ...f, status: 'confirmed' });
+    inputsToFill.plan_end_date = outputsMap.plan_end_date;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
@@ -112,7 +148,7 @@ async function verify(scenario, outputsMap) {
   }
   doc.save(outputPath);
   console.log(`Saved output to ${outputPath}`);
-  
+
   await OutputVerifier.verify(originalBuffer, outputPath, careerUpR8Form1Mapping.template.expectedSha256, inputsToFill);
   console.log(`Output verification passed for ${scenario}`);
 }
@@ -121,10 +157,18 @@ async function run() {
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-  
+
   try {
     await verify('agent_info', { agent_name: '代理 太郎', agent_address: '東京都新宿区1-1-1', agent_phone: '03-1234-5678' });
     await verify('owner_address_phone_contact_employment_labor_main_business_employee_count_agent_name', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222' });
+
+    // G2 new tests
+    await verify('manager_name_only', { manager_name: '管理 花子' });
+    await verify('assigned_date_only', { manager_assigned_date: '2026-04-01' });
+    await verify('plan_period_only', { plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
+    await verify('g2_all_fields', { manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
+    await verify('g2_full_suite', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
+
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { DOMParser } from '@xmldom/xmldom';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { FieldLocator } from '../core/field-locator.mjs';
 import { WordFiller } from '../core/word-filler.mjs';
 
@@ -95,7 +95,7 @@ test('A. Unit Tests', async (t) => {
     `;
     const dom = parser.parseFromString(xml, 'text/xml');
     const tc = dom.getElementsByTagName('w:tc')[0];
-    
+
     assert.throws(() => {
       WordFiller.fillField(tc, 'テスト', { status: 'pending' });
     }, /Status is not 'confirmed'/);
@@ -108,7 +108,7 @@ import { careerUpR8Form1Mapping } from '../config/career-up-r8-form1.mapping.mjs
 
 test('B. 実原本結合テスト', async (t) => {
   const inputPath = process.env.INPUT_PATH || '/Users/to/Documents/practice-assistant-input/001688046.docx';
-  
+
   if (!fs.existsSync(inputPath)) {
     console.log(`未実行：原本なし (${inputPath})`);
     return;
@@ -122,7 +122,7 @@ test('B. 実原本結合テスト', async (t) => {
       VersionGuard.verifyVersionString(doc, careerUpR8Form1Mapping.template.version);
     });
   });
-  
+
   await t.test('同一パス拒否', () => {
     assert.throws(() => {
       VersionGuard.verifyPaths(inputPath, inputPath);
@@ -133,77 +133,77 @@ test('B. 実原本結合テスト', async (t) => {
 test('C. 電話番号検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getDummyCell() {
     return parser.parseFromString(`<w:tc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>(   )</w:t></w:r></w:p></w:tc>`, 'text/xml').documentElement;
   }
-  
+
   const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
   const config = { ...baseConfig, status: 'confirmed' };
-  
+
   await t.test('正常系: 固定電話・ハイフンあり', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '03-1234-5678', { ...config, value: '03-1234-5678' });
     });
   });
-  
+
   await t.test('正常系: 固定電話・ハイフンなし', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '0312345678', { ...config, value: '0312345678' });
     });
   });
-  
+
   await t.test('正常系: 携帯電話・ハイフンあり', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '090-1234-5678', { ...config, value: '090-1234-5678' });
     });
   });
-  
+
   await t.test('正常系: 携帯電話・ハイフンなし', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '09012345678', { ...config, value: '09012345678' });
     });
   });
-  
+
   await t.test('異常系: 空文字', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '', { ...config, value: '' });
     }, /Value is empty|Value for field.*is empty/);
   });
-  
+
   await t.test('異常系: 未confirmed', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '03-1234-5678', { ...config, status: 'draft', value: '03-1234-5678' });
     }, /Status is not 'confirmed'/);
   });
-  
+
   await t.test('異常系: 9桁以下', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '03-123-5678', { ...config, value: '03-123-5678' });
     }, /Invalid digit count: 9/);
   });
-  
+
   await t.test('異常系: 12桁以上', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '03-1234-567890', { ...config, value: '03-1234-567890' });
     }, /Invalid digit count: 12/);
   });
-  
+
   await t.test('異常系: 英字混入', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '03-1234-abcd', { ...config, value: '03-1234-abcd' });
     }, /Value contains letters/);
   });
-  
+
   await t.test('異常系: 記号混入', () => {
     const tc = getDummyCell();
     assert.throws(() => {
@@ -215,35 +215,35 @@ test('C. 電話番号検証ロジック', async (t) => {
 test('D. 担当者検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getDummyCell() {
     return parser.parseFromString(`<w:tc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p></w:p></w:tc>`, 'text/xml').documentElement;
   }
-  
+
   const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_contact_name');
   const config = { ...baseConfig, status: 'confirmed' };
-  
+
   await t.test('正常系: 日本語氏名', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '山田太郎', { ...config, value: '山田太郎' });
     });
   });
-  
+
   await t.test('正常系: 半角スペースあり', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '山田 太郎', { ...config, value: '山田 太郎' });
     });
   });
-  
+
   await t.test('正常系: 全角スペースあり', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
       WordFiller.fillField(tc, '山田　太郎', { ...config, value: '山田　太郎' });
     });
   });
-  
+
   await t.test('正常系: カタカナ氏名', () => {
     const tc = getDummyCell();
     assert.doesNotThrow(() => {
@@ -271,14 +271,14 @@ test('D. 担当者検証ロジック', async (t) => {
       WordFiller.fillField(tc, '', { ...config, value: '' });
     }, /Value is empty/);
   });
-  
+
   await t.test('異常系: 未confirmed', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '山田 太郎', { ...config, status: 'draft', value: '山田 太郎' });
     }, /Status is not 'confirmed'/);
   });
-  
+
   await t.test('異常系: 31文字以上', () => {
     const tc = getDummyCell();
     const longName = 'あ'.repeat(31);
@@ -286,21 +286,21 @@ test('D. 担当者検証ロジック', async (t) => {
       WordFiller.fillField(tc, longName, { ...config, value: longName });
     }, /Value exceeds max length of 30/);
   });
-  
+
   await t.test('異常系: 改行含有', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '山田\n太郎', { ...config, value: '山田\n太郎' });
     }, /Value contains newline or tab/);
   });
-  
+
   await t.test('異常系: タブ含有', () => {
     const tc = getDummyCell();
     assert.throws(() => {
       WordFiller.fillField(tc, '山田\t太郎', { ...config, value: '山田\t太郎' });
     }, /Value contains newline or tab/);
   });
-  
+
   await t.test('異常系: 制御文字', () => {
     const tc = getDummyCell();
     assert.throws(() => {
@@ -319,7 +319,7 @@ test('D. 担当者検証ロジック', async (t) => {
 test('E. 分散セルロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -424,19 +424,19 @@ test('E. 分散セルロジック', async (t) => {
     const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
     assert.throws(() => WordFiller.fillDistributedField(result, '1234.567890-1', config), /Value contains non-digit/);
   });
-  
+
   await t.test('Filler異常系: 空白混入', () => {
     const doc = getFixture();
     const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
     assert.throws(() => WordFiller.fillDistributedField(result, '1234 567890 1', config), /Value contains spaces/);
   });
-  
+
   await t.test('Filler異常系: 未confirmed', () => {
     const doc = getFixture();
     const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
     assert.throws(() => WordFiller.fillDistributedField(result, '1234-567890-1', { ...config, status: 'draft' }), /Status is not 'confirmed'/);
   });
-  
+
   await t.test('Filler異常系: 空文字', () => {
     const doc = getFixture();
     const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
@@ -448,7 +448,7 @@ test('E. 分散セルロジック', async (t) => {
 test('F. 労働保険番号分散セルロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getLaborFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -591,7 +591,7 @@ test('F. 労働保険番号分散セルロジック', async (t) => {
 test('G. 主たる事業検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getBusinessFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -630,7 +630,7 @@ test('G. 主たる事業検証ロジック', async (t) => {
     const cell = FieldLocator.locateAdjacentCell(doc, '⑦主たる事業');
     assert.throws(() => WordFiller.fillField(cell, 'ソフト\tウェア', config), /Value contains newline or tab/);
   });
-  
+
   await t.test('異常系: 最大文字数超過', () => {
     const doc = getBusinessFixture();
     const cell = FieldLocator.locateAdjacentCell(doc, '⑦主たる事業');
@@ -641,7 +641,7 @@ test('G. 主たる事業検証ロジック', async (t) => {
 test('H. 企業規模（人数）検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getEmpCountFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -696,7 +696,7 @@ test('H. 企業規模（人数）検証ロジック', async (t) => {
     const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
     assert.throws(() => WordFiller.fillNumericFieldPreservingAffix(cell, '2.5', config), /Value contains decimal point/);
   });
-  
+
   await t.test('異常系: カンマ', () => {
     const doc = getEmpCountFixture();
     const cell = FieldLocator.locateAdjacentCell(doc, '⑧企業規模（人数）');
@@ -737,7 +737,7 @@ test('H. 企業規模（人数）検証ロジック', async (t) => {
 test('I. 代理人等氏名検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getAgentFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -993,7 +993,7 @@ test('J. WordFiller空値処理の最終是正', async (t) => {
 test('K. ⑪代理人等所在地検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getAddrFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -1048,7 +1048,7 @@ test('K. ⑪代理人等所在地検証ロジック', async (t) => {
 test('L. ⑫代理人等電話番号検証ロジック', async (t) => {
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
-  
+
   function getPhoneFixture() {
     return parser.parseFromString(`
     <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -1091,5 +1091,58 @@ test('L. ⑫代理人等電話番号検証ロジック', async (t) => {
   await t.test('異常系: ラベル重複', () => {
     const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:p><w:r><w:t>⑫電話番号</w:t></w:r></w:p></w:tc><w:tc></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>⑫電話番号</w:t></w:r></w:p></w:tc><w:tc></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
     assert.throws(() => FieldLocator.locateAdjacentCell(doc, '⑫電話番号'), /Label "⑫電話番号" found multiple times/);
+  });
+});
+
+test('M. 管理者氏名・文字列維持ロジック', async (t) => {
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+  const tcXml = `<w:tc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>（氏　名）：　　</w:t></w:r></w:p></w:tc>`;
+  const config = {
+    status: 'confirmed',
+    inputMode: 'text-preserve-prefix',
+    preserve: { prefixText: '（氏　名）：' },
+    validation: { required: true, rejectEmpty: true, maxLength: 30, rejectInvalidChars: true }
+  };
+
+  await t.test('正常系: 日本語氏名', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    WordFiller.fillField(doc.documentElement, '管理 花子', config);
+    const xml = serializer.serializeToString(doc);
+    assert.match(xml, /管理 花子/);
+  });
+
+  await t.test('異常系: 空文字', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    assert.throws(() => WordFiller.fillField(doc.documentElement, '', config), /Value is empty/);
+    assert.strictEqual(serializer.serializeToString(doc), tcXml);
+  });
+});
+
+test('N. 日付維持ロジック', async (t) => {
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+  const tcXml = `<w:tc xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>　年　　月　　日</w:t></w:r></w:p></w:tc>`;
+  const config = {
+    status: 'confirmed',
+    inputMode: 'date-preserve-tokens',
+    preserve: { yearToken: '年', monthToken: '月', dayToken: '日' },
+    format: { yearDigits: 4, padMonth: false, padDay: false },
+    validation: { required: true, rejectEmpty: true, inputFormat: 'YYYY-MM-DD' }
+  };
+
+  await t.test('正常系: 通常日', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    WordFiller.fillField(doc.documentElement, '2026-07-14', config);
+    const xml = serializer.serializeToString(doc);
+    assert.match(xml, /2026/);
+    assert.match(xml, /7/);
+    assert.match(xml, /14/);
+  });
+
+  await t.test('異常系: 実在しない日付', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    assert.throws(() => WordFiller.fillField(doc.documentElement, '2026-02-30', config), /Invalid day/);
+    assert.strictEqual(serializer.serializeToString(doc), tcXml);
   });
 });

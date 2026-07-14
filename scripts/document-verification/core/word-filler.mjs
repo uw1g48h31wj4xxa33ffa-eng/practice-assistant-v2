@@ -1,5 +1,188 @@
 export class WordFiller {
+  static fillTextPreservingPrefix(tcNode, value, fieldConfig) {
+    if (fieldConfig.status !== 'confirmed') throw new Error(`Cannot fill value. Status is not 'confirmed'`);
+    if (value === undefined || value === null || value === '') {
+      if (fieldConfig.validation && fieldConfig.validation.rejectEmpty) throw new Error(`Value is empty`);
+      return;
+    }
+    if (typeof value !== 'string') throw new Error(`Value must be a string`);
+
+    if (fieldConfig.validation) {
+      const val = fieldConfig.validation;
+      if (val.rejectEmpty && value.trim() === '') throw new Error(`Value is empty`);
+      if (val.maxLength && value.length > val.maxLength) throw new Error(`Value exceeds max length of ${val.maxLength}`);
+      if (val.rejectInvalidChars) {
+        if (/[\n\r\t]/.test(value)) throw new Error('Value contains newline or tab');
+        if (/[\x00-\x1F\x7F]/.test(value)) throw new Error('Value contains control characters');
+        if (/<[^>]+>/.test(value)) throw new Error('Value contains HTML/XML tags');
+      }
+    }
+
+    const prefix = fieldConfig.preserve.prefixText;
+    const ps = tcNode.getElementsByTagName('w:p');
+    if (ps.length === 0) throw new Error('Target cell has no paragraph.');
+    const p = ps[0];
+
+    const runs = tcNode.getElementsByTagName('w:r');
+    let fullText = '';
+    for (let i = 0; i < runs.length; i++) {
+       const texts = runs[i].getElementsByTagName('w:t');
+       for (let j = 0; j < texts.length; j++) fullText += texts[j].textContent || '';
+    }
+
+    if (!fullText.includes(prefix)) throw new Error(`Prefix "${prefix}" not found in cell`);
+
+    let prefixRunsEndIndex = -1;
+    let accumulatedText = '';
+    let rPrClone = null;
+
+    for (let i = 0; i < runs.length; i++) {
+       const texts = runs[i].getElementsByTagName('w:t');
+       for (let j = 0; j < texts.length; j++) accumulatedText += texts[j].textContent || '';
+       if (accumulatedText.length >= prefix.length) {
+         if (accumulatedText.substring(0, prefix.length) !== prefix) throw new Error(`Prefix mismatch`);
+         prefixRunsEndIndex = i;
+         const rPrs = runs[i].getElementsByTagName('w:rPr');
+         if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
+         break;
+       }
+    }
+
+    if (prefixRunsEndIndex === -1) throw new Error(`Prefix not fully found`);
+
+    const runsArray = Array.from(runs);
+    for (let i = prefixRunsEndIndex + 1; i < runsArray.length; i++) {
+       p.removeChild(runsArray[i]);
+    }
+
+    const lastPrefixRun = runsArray[prefixRunsEndIndex];
+    const ts = lastPrefixRun.getElementsByTagName('w:t');
+    let runText = '';
+    for (let j = 0; j < ts.length; j++) runText += ts[j].textContent || '';
+
+    let beforeThisRun = accumulatedText.length - runText.length;
+    let keepLengthInThisRun = prefix.length - beforeThisRun;
+
+    let processed = 0;
+    for (let j = 0; j < ts.length; j++) {
+      const nodeText = ts[j].textContent || '';
+      if (processed >= keepLengthInThisRun) {
+        ts[j].textContent = '';
+      } else if (processed + nodeText.length > keepLengthInThisRun) {
+        ts[j].textContent = nodeText.substring(0, keepLengthInThisRun - processed);
+      }
+      processed += nodeText.length;
+    }
+
+    const doc = tcNode.ownerDocument;
+    const newRun = doc.createElement('w:r');
+    if (rPrClone) newRun.appendChild(rPrClone.cloneNode(true));
+
+    const newText = doc.createElement('w:t');
+    newText.setAttribute('xml:space', 'preserve');
+    newText.textContent = value;
+    newRun.appendChild(newText);
+
+    p.appendChild(newRun);
+  }
+
+  static fillDateFieldPreservingTokens(tcNode, value, fieldConfig) {
+    if (fieldConfig.status !== 'confirmed') throw new Error(`Cannot fill value. Status is not 'confirmed'`);
+    if (value === undefined || value === null || value === '') {
+      if (fieldConfig.validation && fieldConfig.validation.rejectEmpty) throw new Error(`Value is empty`);
+      return;
+    }
+    if (typeof value !== 'string') throw new Error('Value must be a string');
+
+    const isoRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const match = value.match(isoRegex);
+    if (!match) throw new Error('Input must be YYYY-MM-DD');
+
+    const y = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const d = parseInt(match[3], 10);
+
+    if (m < 1 || m > 12) throw new Error('Invalid month');
+    const daysInMonth = new Date(y, m, 0).getDate();
+    if (d < 1 || d > daysInMonth) throw new Error('Invalid day');
+
+    const yearStr = fieldConfig.format?.yearDigits === 2 ? String(y).slice(-2) : String(y);
+    const monthStr = fieldConfig.format?.padMonth ? String(m).padStart(2, '0') : String(m);
+    const dayStr = fieldConfig.format?.padDay ? String(d).padStart(2, '0') : String(d);
+
+    const { yearToken, monthToken, dayToken } = fieldConfig.preserve;
+
+    const ps = tcNode.getElementsByTagName('w:p');
+    if (ps.length === 0) throw new Error('Target cell has no paragraph.');
+    const p = ps[0];
+
+    let fullText = '';
+    const ts = Array.from(p.getElementsByTagName('w:t'));
+    for (const t of ts) fullText += t.textContent || '';
+
+    let yIdx = fullText.indexOf(yearToken);
+    let mIdx = fullText.indexOf(monthToken, yIdx + 1);
+    let dIdx = fullText.indexOf(dayToken, mIdx + 1);
+
+    if (yIdx === -1 || mIdx === -1 || dIdx === -1) throw new Error('Tokens not fully found or in wrong order');
+    if (fullText.indexOf(yearToken, yIdx + 1) !== -1 || fullText.indexOf(monthToken, mIdx + 1) !== -1 || fullText.indexOf(dayToken, dIdx + 1) !== -1) {
+       throw new Error('Multiple tokens found, ambiguous');
+    }
+
+    let rPrClone = null;
+    const rPrs = p.getElementsByTagName('w:rPr');
+    if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
+
+    const createRun = (text) => {
+      const doc = tcNode.ownerDocument;
+      const run = doc.createElement('w:r');
+      if (rPrClone) run.appendChild(rPrClone.cloneNode(true));
+      const textNode = doc.createElement('w:t');
+      textNode.setAttribute('xml:space', 'preserve');
+      textNode.textContent = text;
+      run.appendChild(textNode);
+      return run;
+    };
+
+    let startOfPlaceholders = yIdx;
+    while(startOfPlaceholders > 0 && (fullText[startOfPlaceholders - 1] === ' ' || fullText[startOfPlaceholders - 1] === '　')) {
+      startOfPlaceholders--;
+    }
+
+    let currentIdx = 0;
+    for (const t of ts) {
+      const txt = t.textContent || '';
+      let newTxt = '';
+      for (let i = 0; i < txt.length; i++) {
+        const char = txt[i];
+
+        if (currentIdx === yIdx) newTxt += yearStr;
+        else if (currentIdx === mIdx) newTxt += monthStr;
+        else if (currentIdx === dIdx) newTxt += dayStr;
+
+        if (char === ' ' || char === '　') {
+          if (currentIdx >= startOfPlaceholders && currentIdx <= dIdx) {
+            // skip space
+          } else {
+            newTxt += char;
+          }
+        } else {
+          newTxt += char;
+        }
+        currentIdx++;
+      }
+      t.textContent = newTxt;
+    }
+  }
+
   static fillField(tcNode, value, fieldConfig) {
+    if (fieldConfig.inputMode === 'text-preserve-prefix') {
+      return this.fillTextPreservingPrefix(tcNode, value, fieldConfig);
+    }
+    if (fieldConfig.inputMode === 'date-preserve-tokens') {
+      return this.fillDateFieldPreservingTokens(tcNode, value, fieldConfig);
+    }
+
     if (fieldConfig.status !== 'confirmed') {
       throw new Error(`Cannot fill value. Status is not 'confirmed'`);
     }
@@ -46,10 +229,10 @@ export class WordFiller {
     const ps = tcNode.getElementsByTagName('w:p');
     if (ps.length === 0) throw new Error('Target cell has no paragraph.');
     const targetP = ps[0];
-    
+
     const doc = tcNode.ownerDocument;
     const runs = targetP.getElementsByTagName('w:r');
-    
+
     let rPrClone = null;
     if (runs.length > 0) {
       const rPrs = runs[0].getElementsByTagName('w:rPr');
@@ -74,7 +257,7 @@ export class WordFiller {
     newText.setAttribute('xml:space', 'preserve');
     newText.textContent = value;
     newRun.appendChild(newText);
-    
+
     targetP.appendChild(newRun);
   }
 
@@ -118,14 +301,14 @@ export class WordFiller {
     for (let i = 0; i < normalized.length; i++) {
       const char = normalized[i];
       const tcNode = distributedResult.digitCells[i];
-      
+
       const ps = tcNode.getElementsByTagName('w:p');
       if (ps.length === 0) throw new Error('Target cell has no paragraph.');
       const targetP = ps[0];
-      
+
       const doc = tcNode.ownerDocument;
       const runs = targetP.getElementsByTagName('w:r');
-      
+
       let rPrClone = null;
       if (runs.length > 0) {
         const rPrs = runs[0].getElementsByTagName('w:rPr');
@@ -144,10 +327,10 @@ export class WordFiller {
       for (const run of runsArray) {
         targetP.removeChild(run);
       }
-      
+
       const newRun = doc.createElement('w:r');
       if (rPrClone) newRun.appendChild(rPrClone);
-      
+
       const newText = doc.createElement('w:t');
       newText.setAttribute('xml:space', 'preserve');
       newText.textContent = char;
@@ -197,7 +380,7 @@ export class WordFiller {
     if (/[^\d\.\-,]/.test(normalized)) {
        throw new Error('Value contains symbols');
     }
-    
+
     // Parse to number to check bounds
     const numValue = Number(normalized.replace(/,/g, ''));
     if (isNaN(numValue)) {
@@ -215,7 +398,7 @@ export class WordFiller {
     if (fieldConfig.validation?.max !== undefined && numValue > fieldConfig.validation.max) {
        throw new Error(`Value exceeds maximum ${fieldConfig.validation.max}`);
     }
-    
+
     if (fieldConfig.validation?.maxDigits !== undefined) {
        const digitCount = (normalized.match(/\d/g) || []).length;
        if (digitCount > fieldConfig.validation.maxDigits) {
@@ -225,7 +408,7 @@ export class WordFiller {
 
     const ps = tcNode.getElementsByTagName('w:p');
     if (ps.length === 0) throw new Error('Target cell has no paragraph.');
-    
+
     // We expect to find exactly one run that contains the suffix text
     let suffixRun = null;
     let targetP = null;
@@ -268,12 +451,12 @@ export class WordFiller {
     }
 
     const doc = tcNode.ownerDocument;
-    
+
     // Create new numeric run
     let rPrClone = null;
     const rPrs = suffixRun.getElementsByTagName('w:rPr');
     if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
-    
+
     if (!rPrClone) {
        const pPrs = targetP.getElementsByTagName('w:pPr');
        if (pPrs.length > 0) {
@@ -284,7 +467,7 @@ export class WordFiller {
 
     const newRun = doc.createElement('w:r');
     if (rPrClone) newRun.appendChild(rPrClone);
-    
+
     const newText = doc.createElement('w:t');
     newText.setAttribute('xml:space', 'preserve');
     // Ensure we insert a space if needed? Instructions say "25 人" is rejected as input, but output should be "25 人"?

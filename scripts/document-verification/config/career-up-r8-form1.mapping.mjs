@@ -190,6 +190,94 @@ export const careerUpR8Form1Mapping = {
         rejectSymbols: true,
         rejectEmpty: false
       }
+    },
+    {
+      fieldId: 'manager_name',
+      labelText: '（氏　名）：',
+      locator: {
+        type: 'same-cell'
+      },
+      inputMode: 'text-preserve-prefix',
+      preserve: {
+        prefixText: '（氏　名）：'
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true,
+        maxLength: 30,
+        rejectInvalidChars: true
+      }
+    },
+    {
+      fieldId: 'manager_assigned_date',
+      labelText: '（配置日）：　　　　　　年　　　　月　　　　日',
+      locator: {
+        type: 'same-cell'
+      },
+      inputMode: 'date-preserve-tokens',
+      preserve: {
+        yearToken: '年',
+        monthToken: '月',
+        dayToken: '日'
+      },
+      format: {
+        yearDigits: 4,
+        padMonth: false,
+        padDay: false
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true,
+        inputFormat: 'YYYY-MM-DD'
+      }
+    },
+    {
+      fieldId: 'plan_start_date',
+      labelText: '年　　　月　　　日',
+      locator: {
+        type: 'same-cell',
+        matchIndex: 0
+      },
+      inputMode: 'date-preserve-tokens',
+      preserve: {
+        yearToken: '年',
+        monthToken: '月',
+        dayToken: '日'
+      },
+      format: {
+        yearDigits: 4,
+        padMonth: false,
+        padDay: false
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true,
+        inputFormat: 'YYYY-MM-DD'
+      }
+    },
+    {
+      fieldId: 'plan_end_date',
+      labelText: '年　　　月　　　日',
+      locator: {
+        type: 'same-cell',
+        matchIndex: 1
+      },
+      inputMode: 'date-preserve-tokens',
+      preserve: {
+        yearToken: '年',
+        monthToken: '月',
+        dayToken: '日'
+      },
+      format: {
+        yearDigits: 4,
+        padMonth: false,
+        padDay: false
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true,
+        inputFormat: 'YYYY-MM-DD'
+      }
     }
   ],
 };
