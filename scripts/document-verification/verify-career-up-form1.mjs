@@ -200,6 +200,48 @@ async function run() {
       disability_regularization_targets: ['fixed_term_to_indefinite']
     });
 
+    // Level 1 Complete - All Fields Integrated
+    await verify('level1_complete_test', {
+      // General Info
+      owner: '株式会社テストレベル１', 
+      address: '東京都千代田区テスト1-2-3', 
+      phone: '090-1234-5678', 
+      contact: '山田 太郎', 
+      employment_insurance: '1234-567890-1', 
+      labor_insurance: '01123123456789', 
+      main_business: 'ソフトウェア開発業', 
+      employee_count: '25', 
+      agent_name: '代理 太郎', 
+      agent_address: '大阪府大阪市北区1', 
+      agent_phone: '06-1111-2222', 
+      manager_name: '管理 花子', 
+      manager_assigned_date: '2026-04-01', 
+      plan_start_date: '2026-04-01', 
+      plan_end_date: '2031-03-31',
+      
+      // Existing SDTs
+      career_up_manager_role_type: '役員でない',
+      worker_representative_consent: 'はい',
+      opinion_hearing_method: 'イ',
+      wage_increase_rate: '4%以上5%未満',
+      
+      // G5A SDTs
+      regularization_candidates: ['fixed_term', 'dispatch'],
+      regularization_goals: ['direct_employment_to_regular'],
+      disability_regularization_targets: ['indefinite_to_regular'],
+      
+      // G5B SDTs
+      manager_duties: ['disseminate', 'consultation'],
+      disability_regularization_candidates: ['fixed_term'],
+      disability_regularization_actions: ['new_rules', 'interview'],
+      wage_revision_target_category: ['employment_type', 'job_type'],
+      wage_rules_revision_actions: ['create_rules'],
+      wage_rules_commonization_actions: ['evaluation', 'check_wage'],
+      bonus_retirement_new_systems: ['bonus', 'retirement'],
+      bonus_retirement_actions: ['balance', 'apply'],
+      social_insurance_actions: ['interview', 'ext_4h_base_5pct']
+    });
+
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);

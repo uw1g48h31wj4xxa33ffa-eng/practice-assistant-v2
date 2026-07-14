@@ -56,6 +56,20 @@ export class SdtCheckboxLocator {
               matchedCount++;
             }
           }
+        } else if (locatorConfig.optionContextMode === 'exact-match-text') {
+          let pNode = sdt.parentNode;
+          while (pNode && pNode.tagName !== 'w:p') {
+            pNode = pNode.parentNode;
+          }
+          if (pNode) {
+            const pText = pNode.textContent || '';
+            // Remove the checkbox character (☐ or ☑) and any leading/trailing spaces
+            const cleanedText = pText.replace(/^[☐☑\s　]+/, '').trim();
+            if (cleanedText === option.contextText) {
+              matchedSdt = sdt;
+              matchedCount++;
+            }
+          }
         }
       }
 

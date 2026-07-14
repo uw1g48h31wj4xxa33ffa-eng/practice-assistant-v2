@@ -1671,3 +1671,64 @@ test('Q. Phase G5A Mapping Uniqueness Tests', async (t) => {
   }
 });
 
+test('R. Phase G5B Mapping Uniqueness Tests', async (t) => {
+  const fs = await import('node:fs');
+  const PizZip = (await import('pizzip')).default;
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+
+  const inputPath = '/Users/to/Documents/practice-assistant-input/001688046.docx';
+  const originalBuffer = fs.readFileSync(inputPath);
+  const zip = new PizZip(originalBuffer);
+  const xml = zip.file('word/document.xml').asText();
+  const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+  const g5bFieldIds = [
+    'manager_duties',
+    'disability_regularization_candidates',
+    'disability_regularization_actions',
+    'wage_revision_target_category',
+    'wage_rules_revision_actions',
+    'wage_rules_commonization_actions',
+    'bonus_retirement_new_systems',
+    'bonus_retirement_actions',
+    'social_insurance_actions'
+  ];
+
+  for (const fieldId of g5bFieldIds) {
+    await t.test(`G5B mapping tests for: ${fieldId}`, async () => {
+      const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === fieldId);
+      assert.ok(field, `Field ${fieldId} should exist in mapping`);
+
+      const cells = Array.from(docDom.getElementsByTagName('w:tc'));
+      const matchingCells = cells.filter(cell => cell.textContent.includes(field.locator.groupContextText));
+      assert.strictEqual(matchingCells.length, 1, `groupContextText "${field.locator.groupContextText}" should match exactly 1 cell, found ${matchingCells.length}`);
+
+      const targetCell = matchingCells[0];
+      const sdtsInCell = Array.from(targetCell.getElementsByTagName('w:sdt'));
+      assert.strictEqual(sdtsInCell.length, field.selection.options.length, `Number of SDTs (${sdtsInCell.length}) should match number of options (${field.selection.options.length})`);
+
+      const matchedSdts = new Set();
+      for (const option of field.selection.options) {
+        const optionMatchingSdts = sdtsInCell.filter(sdt => {
+          let parentP = sdt.parentNode;
+          while (parentP && parentP.tagName !== 'w:p') parentP = parentP.parentNode;
+          const pText = parentP ? parentP.textContent : sdt.textContent;
+          if (field.locator.optionContextMode === 'exact-match-text') {
+            const cleanedText = pText.replace(/^[☐☑\s　]+/, '').trim();
+            return cleanedText === option.contextText;
+          }
+          return pText.includes(option.contextText);
+        });
+
+        assert.strictEqual(optionMatchingSdts.length, 1, `option.contextText "${option.contextText}" should match exactly 1 SDT, found ${optionMatchingSdts.length}`);
+        
+        const matchedSdt = optionMatchingSdts[0];
+        assert.ok(!matchedSdts.has(matchedSdt), `SDT matched by "${option.contextText}" was already matched by another option`);
+        matchedSdts.add(matchedSdt);
+      }
+      
+      assert.strictEqual(matchedSdts.size, field.selection.options.length, 'All options should be assigned to unique SDTs');
+    });
+  }
+});
