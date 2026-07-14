@@ -989,3 +989,107 @@ test('J. WordFiller空値処理の最終是正', async (t) => {
     assert.strictEqual(serializer.serializeToString(cell), originalXml);
   });
 });
+
+test('K. ⑪代理人等所在地検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getAddrFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:tcPr><w:vMerge w:val="restart"/></w:tcPr>
+            <w:p><w:r><w:t>⑪所在地</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc><w:p><w:r><w:t>〒123-4567</w:t></w:r></w:p></w:tc>
+        </w:tr>
+        <w:tr>
+          <w:tc>
+            <w:tcPr><w:vMerge w:val="continue"/></w:tcPr>
+            <w:p></w:p>
+          </w:tc>
+          <w:tc><w:p></w:p></w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_address');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('正常系: 日本語住所', () => {
+    const doc = getAddrFixture();
+    const cell = FieldLocator.locateNextRowContinuationCell(doc, '⑪所在地');
+    WordFiller.fillField(cell, '東京都新宿区', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '東京都新宿区');
+  });
+
+  await t.test('異常系: 空文字は処理をスキップ', () => {
+    const doc = getAddrFixture();
+    const cell = FieldLocator.locateNextRowContinuationCell(doc, '⑪所在地');
+    WordFiller.fillField(cell, '', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '');
+  });
+
+  await t.test('異常系: ラベル未検出', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateNextRowContinuationCell(doc, '⑪所在地'), /Label "⑪所在地" not found/);
+  });
+
+  await t.test('異常系: ラベル重複', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:tcPr><w:vMerge w:val="restart"/></w:tcPr><w:p><w:r><w:t>⑪所在地</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:tcPr><w:vMerge w:val="continue"/></w:tcPr><w:p></w:p></w:tc></w:tr><w:tr><w:tc><w:tcPr><w:vMerge w:val="restart"/></w:tcPr><w:p><w:r><w:t>⑪所在地</w:t></w:r></w:p></w:tc></w:tr><w:tr><w:tc><w:tcPr><w:vMerge w:val="continue"/></w:tcPr><w:p></w:p></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateNextRowContinuationCell(doc, '⑪所在地'), /Label "⑪所在地" found multiple times/);
+  });
+});
+
+test('L. ⑫代理人等電話番号検証ロジック', async (t) => {
+  const { DOMParser } = await import('@xmldom/xmldom');
+  const parser = new DOMParser();
+  
+  function getPhoneFixture() {
+    return parser.parseFromString(`
+    <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:tbl>
+        <w:tr>
+          <w:tc>
+            <w:p><w:r><w:t>⑫電話番号</w:t></w:r></w:p>
+          </w:tc>
+          <w:tc>
+            <w:p><w:r><w:t>(   )</w:t></w:r></w:p>
+          </w:tc>
+        </w:tr>
+      </w:tbl>
+    </w:document>
+    `, 'text/xml');
+  }
+
+  const baseConfig = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_phone_number');
+  const config = { ...baseConfig, status: 'confirmed' };
+
+  await t.test('正常系: 電話番号入力', () => {
+    const doc = getPhoneFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑫電話番号');
+    WordFiller.fillField(cell, '03-1234-5678', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '03-1234-5678');
+  });
+
+  await t.test('異常系: 空文字は処理をスキップ', () => {
+    const doc = getPhoneFixture();
+    const cell = FieldLocator.locateAdjacentCell(doc, '⑫電話番号');
+    WordFiller.fillField(cell, '', config);
+    assert.strictEqual(FieldLocator.getCellText(cell), '(   )');
+  });
+
+  await t.test('異常系: ラベル未検出', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateAdjacentCell(doc, '⑫電話番号'), /Label "⑫電話番号" not found/);
+  });
+
+  await t.test('異常系: ラベル重複', () => {
+    const doc = parser.parseFromString(`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tbl><w:tr><w:tc><w:p><w:r><w:t>⑫電話番号</w:t></w:r></w:p></w:tc><w:tc></w:tc></w:tr><w:tr><w:tc><w:p><w:r><w:t>⑫電話番号</w:t></w:r></w:p></w:tc><w:tc></w:tc></w:tr></w:tbl></w:document>`, 'text/xml');
+    assert.throws(() => FieldLocator.locateAdjacentCell(doc, '⑫電話番号'), /Label "⑫電話番号" found multiple times/);
+  });
+});

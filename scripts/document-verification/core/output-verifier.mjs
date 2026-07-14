@@ -306,6 +306,20 @@ export class OutputVerifier {
          if (!cellText.includes(value)) {
            throw new Error(`Agent name cell does not contain the value!`);
          }
+      } else if (key === 'agent_address') {
+         const agentAddrField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_address');
+         const targetCell = FieldLocator.locateNextRowContinuationCell(docDom, agentAddrField.labelText);
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) {
+           throw new Error(`Agent address cell does not contain the value!`);
+         }
+      } else if (key === 'agent_phone') {
+         const agentPhoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_phone_number');
+         const targetCell = FieldLocator.locateAdjacentCell(docDom, agentPhoneField.labelText);
+         const cellText = FieldLocator.getCellText(targetCell);
+         if (!cellText.includes(value)) {
+           throw new Error(`Agent phone cell does not contain the value!`);
+         }
       }
     }
 

@@ -160,6 +160,36 @@ export const careerUpR8Form1Mapping = {
         allowHalfWidthSpace: true,
         allowFullWidthSpace: true
       }
+    },
+    {
+      fieldId: "agent_address",
+      labelRunTexts: ["⑪", "所在地"],
+      labelText: "⑪所在地",
+      locator: {
+        type: "next-row-continuation-cell",
+        matchMode: "exact-concatenated-cell-text",
+        requireEmptyParagraph: true,
+      },
+      validation: {
+        required: false,
+        maxLength: 100,
+      },
+    },
+    {
+      fieldId: 'agent_phone_number',
+      labelText: '⑫電話番号',
+      locator: {
+        type: 'adjacent-cell',
+        matchMode: 'exact-cell-text'
+      },
+      validation: {
+        required: false,
+        allowedDigits: [10, 11],
+        allowHyphen: true,
+        rejectLetters: true,
+        rejectSymbols: true,
+        rejectEmpty: false
+      }
     }
   ],
 };

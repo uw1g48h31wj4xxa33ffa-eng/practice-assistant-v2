@@ -91,6 +91,20 @@ async function verify(scenario, outputsMap) {
     inputsToFill.agent_name = outputsMap.agent_name;
   }
 
+  if (outputsMap.agent_address) {
+    const agentAddrField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_address');
+    const targetCell = FieldLocator.locateNextRowContinuationCell(documentDom, agentAddrField.labelText);
+    WordFiller.fillField(targetCell, outputsMap.agent_address, { ...agentAddrField, status: 'confirmed' });
+    inputsToFill.agent_address = outputsMap.agent_address;
+  }
+
+  if (outputsMap.agent_phone) {
+    const agentPhoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_phone_number');
+    const targetCell = FieldLocator.locateAdjacentCell(documentDom, agentPhoneField.labelText);
+    WordFiller.fillField(targetCell, outputsMap.agent_phone, { ...agentPhoneField, status: 'confirmed' });
+    inputsToFill.agent_phone = outputsMap.agent_phone;
+  }
+
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
   if (fs.existsSync(outputPath)) {
@@ -109,8 +123,8 @@ async function run() {
   }
   
   try {
-    await verify('agent_name', { agent_name: '代理 太郎' });
-    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count_agent_name', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎' });
+    await verify('agent_info', { agent_name: '代理 太郎', agent_address: '東京都新宿区1-1-1', agent_phone: '03-1234-5678' });
+    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count_agent_name', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222' });
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);
