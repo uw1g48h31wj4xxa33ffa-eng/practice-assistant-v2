@@ -19,6 +19,10 @@ export class DomSerializationVerifier {
        }
     }
 
+    const sdtIds = Array.from(dom.getElementsByTagName('w:id')).map(n => n.getAttribute('w:val')).sort().join(',');
+    const sdtAliases = Array.from(dom.getElementsByTagName('w:alias')).map(n => n.getAttribute('w:val')).sort().join(',');
+    const sdtTags = Array.from(dom.getElementsByTagName('w:tag')).map(n => n.getAttribute('w:val')).sort().join(',');
+
     return {
       tableCount: dom.getElementsByTagName('w:tbl').length,
       rowCount: dom.getElementsByTagName('w:tr').length,
@@ -31,7 +35,17 @@ export class DomSerializationVerifier {
       footerReferenceCount: dom.getElementsByTagName('w:footerReference').length,
       pgSzCount: dom.getElementsByTagName('w:pgSz').length,
       pgMarCount: dom.getElementsByTagName('w:pgMar').length,
-      dottedBorderCount: dottedBorderCount
+      dottedBorderCount: dottedBorderCount,
+      sdtCount: dom.getElementsByTagName('w:sdt').length,
+      sdtPrCount: dom.getElementsByTagName('w:sdtPr').length,
+      sdtContentCount: dom.getElementsByTagName('w:sdtContent').length,
+      checkboxCount: dom.getElementsByTagName('w14:checkbox').length,
+      checkedCount: dom.getElementsByTagName('w14:checked').length,
+      checkedStateCount: dom.getElementsByTagName('w14:checkedState').length,
+      uncheckedStateCount: dom.getElementsByTagName('w14:uncheckedState').length,
+      sdtIds,
+      sdtAliases,
+      sdtTags
     };
   }
 }

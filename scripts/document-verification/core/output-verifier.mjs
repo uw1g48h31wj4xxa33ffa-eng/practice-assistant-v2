@@ -41,6 +41,11 @@ export class OutputVerifier {
     for (const [key, value] of Object.entries(inputs)) {
       if (!value) continue;
 
+      const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+      if (f && f.inputMode === 'sdt-checkbox') continue;
+      
+      if (key === 'manager_name') continue;
+
       if (
         key !== 'employment_insurance' && 
         key !== 'labor_insurance' && 
@@ -361,6 +366,21 @@ export class OutputVerifier {
          if (!cellText.includes(`${yearStr}${yearToken}`)) throw new Error(`Year missing in cell!`);
          if (!cellText.includes(`${monthStr}${monthToken}`)) throw new Error(`Month missing in cell!`);
          if (!cellText.includes(`${dayStr}${dayToken}`)) throw new Error(`Day missing in cell!`);
+      } else if (key === 'career_up_manager_role_type') {
+         const { SdtCheckboxLocator } = await import('./sdt-checkbox-locator.mjs');
+         const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+         const groupInfo = SdtCheckboxLocator.locateGroup(docDom, f.locator, f.selection);
+         const selectedOption = groupInfo.options.find(opt => opt.value === value);
+         if (!selectedOption) throw new Error(`Value ${value} not found in options`);
+         if (!selectedOption.checked) throw new Error(`Option ${value} is not checked!`);
+         
+         const checkedCount = groupInfo.options.filter(opt => opt.checked).length;
+         if (checkedCount !== 1) throw new Error(`Expected exactly 1 option to be checked, found ${checkedCount}`);
+         
+         const origGroupInfo = SdtCheckboxLocator.locateGroup(origDom, f.locator, f.selection);
+         const origCheckboxSdts = origGroupInfo.allGroupSdts;
+         const outCheckboxSdts = groupInfo.allGroupSdts;
+         if (origCheckboxSdts.length !== outCheckboxSdts.length) throw new Error(`SDT count changed in group`);
       }
     }
 

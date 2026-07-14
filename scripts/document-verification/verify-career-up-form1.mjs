@@ -140,6 +140,15 @@ async function verify(scenario, outputsMap) {
     WordFiller.fillField(targetCell, outputsMap.plan_end_date, { ...f, status: 'confirmed' });
     inputsToFill.plan_end_date = outputsMap.plan_end_date;
   }
+  
+  if (outputsMap.career_up_manager_role_type) {
+    const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'career_up_manager_role_type');
+    const { SdtCheckboxLocator } = await import('./core/sdt-checkbox-locator.mjs');
+    const { SdtCheckboxFiller } = await import('./core/sdt-checkbox-filler.mjs');
+    const groupInfo = SdtCheckboxLocator.locateGroup(documentDom, f.locator, f.selection);
+    SdtCheckboxFiller.fillGroup(groupInfo, outputsMap.career_up_manager_role_type, f.selection, 'confirmed');
+    inputsToFill.career_up_manager_role_type = outputsMap.career_up_manager_role_type;
+  }
 
   DomSerializationVerifier.verify(originalDomClone, documentDom);
 
@@ -168,6 +177,10 @@ async function run() {
     await verify('plan_period_only', { plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
     await verify('g2_all_fields', { manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
     await verify('g2_full_suite', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
+
+    // G3 tests
+    await verify('manager_role_checkbox', { career_up_manager_role_type: '役員でない' });
+    await verify('full_with_manager_role_checkbox', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31', career_up_manager_role_type: '役員でない' });
 
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {

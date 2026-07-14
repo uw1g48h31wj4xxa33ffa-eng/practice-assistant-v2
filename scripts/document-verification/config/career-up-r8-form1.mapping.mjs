@@ -278,6 +278,33 @@ export const careerUpR8Form1Mapping = {
         rejectEmpty: true,
         inputFormat: 'YYYY-MM-DD'
       }
+    },
+    {
+      fieldId: 'career_up_manager_role_type',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: '当てはまる方に☑をしてください',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'single',
+        options: [
+          {
+            value: '事業主又は役員',
+            contextText: '事業主又は役員である'
+          },
+          {
+            value: '役員でない',
+            contextText: '事業主又は役員ではない'
+          }
+        ],
+        clearUnselected: true
+      },
+      validation: {
+        required: true,
+        rejectEmpty: true
+      }
     }
   ],
 };

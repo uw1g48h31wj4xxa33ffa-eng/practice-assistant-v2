@@ -1146,3 +1146,97 @@ test('N. 日付維持ロジック', async (t) => {
     assert.strictEqual(serializer.serializeToString(doc), tcXml);
   });
 });
+
+test('O. SDT Checkbox ロジック', async (t) => {
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+  const tcXml = `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"><w:tbl><w:tr><w:tc>
+    <w:p>
+      <w:sdt>
+        <w:sdtPr>
+          <w14:checkbox>
+            <w14:checked w14:val="0"/>
+            <w14:checkedState w14:val="00FE" w14:font="Wingdings"/>
+            <w14:uncheckedState w14:val="2610" w14:font="ＭＳ ゴシック"/>
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r><w:rPr><w:rFonts w:ascii="ＭＳ ゴシック" w:eastAsia="ＭＳ ゴシック" w:hAnsi="ＭＳ ゴシック"/></w:rPr><w:t>☐</w:t></w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r><w:t>事業主又は役員である</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:sdt>
+        <w:sdtPr>
+          <w14:checkbox>
+            <w14:checked w14:val="0"/>
+            <w14:checkedState w14:val="00FE" w14:font="Wingdings"/>
+            <w14:uncheckedState w14:val="2610" w14:font="ＭＳ ゴシック"/>
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r><w:rPr><w:rFonts w:ascii="ＭＳ ゴシック" w:eastAsia="ＭＳ ゴシック" w:hAnsi="ＭＳ ゴシック"/></w:rPr><w:t>☐</w:t></w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r><w:t>事業主又は役員ではない</w:t></w:r>
+    </w:p>
+    <w:p><w:r><w:t>当てはまる方に☑をしてください</w:t></w:r></w:p>
+  </w:tc></w:tr></w:tbl></w:document>`;
+  
+  const locatorConfig = {
+    type: 'sdt-checkbox-group',
+    groupContextText: '当てはまる方に☑をしてください',
+    optionContextMode: 'adjacent-text'
+  };
+  
+  const selectionConfig = {
+    mode: 'single',
+    options: [
+      { value: '事業主又は役員', contextText: '事業主又は役員である' },
+      { value: '役員でない', contextText: '事業主又は役員ではない' }
+    ],
+    clearUnselected: true
+  };
+  
+  const { SdtCheckboxLocator } = await import('../core/sdt-checkbox-locator.mjs');
+  const { SdtCheckboxFiller } = await import('../core/sdt-checkbox-filler.mjs');
+
+  await t.test('Locator正常系: グループ特定', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(groupInfo.options.length, 2);
+    assert.strictEqual(groupInfo.options[0].value, '事業主又は役員');
+    assert.strictEqual(groupInfo.options[0].checked, false);
+  });
+  
+  await t.test('Locator異常系: グループ未検出', () => {
+    const doc = parser.parseFromString(tcXml.replace('当てはまる方に☑をしてください', 'なし'), 'text/xml');
+    assert.throws(() => SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig), /not found in any cell/);
+  });
+  
+  await t.test('Filler正常系: 1つ目を選択', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'confirmed');
+    
+    const updatedGroupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.strictEqual(updatedGroupInfo.options[0].checked, true);
+    assert.strictEqual(updatedGroupInfo.options[1].checked, false);
+    
+    const tNodes = Array.from(updatedGroupInfo.options[0].sdtNode.getElementsByTagName('w:t'));
+    assert.strictEqual(tNodes[0].textContent, String.fromCharCode(parseInt('00FE', 16)));
+  });
+  
+  await t.test('Filler異常系: 空文字', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '', selectionConfig, 'confirmed'), /Value is empty/);
+  });
+  
+  await t.test('Filler異常系: 未confirmed', () => {
+    const doc = parser.parseFromString(tcXml, 'text/xml');
+    const groupInfo = SdtCheckboxLocator.locateGroup(doc, locatorConfig, selectionConfig);
+    assert.throws(() => SdtCheckboxFiller.fillGroup(groupInfo, '事業主又は役員', selectionConfig, 'pending'), /is not confirmed/);
+  });
+});
