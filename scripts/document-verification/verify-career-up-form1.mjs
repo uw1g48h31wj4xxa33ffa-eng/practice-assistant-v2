@@ -190,6 +190,16 @@ async function run() {
     await verify('opinion_hearing_method_イ', { opinion_hearing_method: 'イ' });
     await verify('wage_increase_3pct', { wage_increase_rate: '3%以上4%未満' });
 
+    // G5A tests - mapping expansion
+    await verify('g5a_regularization_candidates', { regularization_candidates: ['fixed_term', 'dispatch'] });
+    await verify('g5a_regularization_goals', { regularization_goals: ['conversion_to_regular', 'direct_employment_to_regular'] });
+    await verify('g5a_disability_targets', { disability_regularization_targets: ['fixed_term_to_regular', 'indefinite_to_regular'] });
+    await verify('g5a_all_new_fields', {
+      regularization_candidates: ['fixed_term'],
+      regularization_goals: ['conversion_to_regular'],
+      disability_regularization_targets: ['fixed_term_to_indefinite']
+    });
+
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
     console.error('\nVerification failed:', err.message);

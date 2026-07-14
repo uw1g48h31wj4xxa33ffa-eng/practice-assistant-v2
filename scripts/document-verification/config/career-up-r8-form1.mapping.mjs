@@ -349,6 +349,101 @@ export const careerUpR8Form1Mapping = {
       }
     },
     {
+      fieldId: 'regularization_candidates',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: '有期雇用労働者（勤続５年以内の有期雇用労働者）',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'multi',
+        clearUnselected: true,
+        minSelections: 1,
+        maxSelections: 3,
+        options: [
+          {
+            value: 'fixed_term',
+            contextText: '有期雇用労働者（勤続５年以内の有期雇用労働者）'
+          },
+          {
+            value: 'indefinite_term',
+            contextText: '無期雇用労働者（正規雇用労働者を除く・勤続５年超の有期雇用労働者含む）'
+          },
+          {
+            value: 'dispatch',
+            contextText: '派遣労働者'
+          }
+        ]
+      },
+      validation: {
+        required: false,
+        rejectEmpty: false
+      }
+    },
+    {
+      fieldId: 'regularization_goals',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: '対象者のうち、（　　　）名程度に対し、正規雇用労働者（多様な正社員※含む）への転換を実施',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'multi',
+        clearUnselected: true,
+        minSelections: 1,
+        maxSelections: 2,
+        options: [
+          {
+            value: 'conversion_to_regular',
+            contextText: '対象者のうち、（　　　）名程度に対し、正規雇用労働者（多様な正社員※含む）への転換を実施'
+          },
+          {
+            value: 'direct_employment_to_regular',
+            contextText: '対象者（派遣労働者）のうち、（　　　）名程度に対し、正規雇用労働者（多様な正社員※含む）としての直接雇用を実施'
+          }
+        ]
+      },
+      validation: {
+        required: false,
+        rejectEmpty: false
+      }
+    },
+    {
+      fieldId: 'disability_regularization_targets',
+      inputMode: 'sdt-checkbox',
+      locator: {
+        type: 'sdt-checkbox-group',
+        groupContextText: '有期雇用労働者の対象者のうち、（　　　）名程度に対して正規雇用労働者（多様な正社員※含む）への転換を実施',
+        optionContextMode: 'adjacent-text'
+      },
+      selection: {
+        mode: 'multi',
+        clearUnselected: true,
+        minSelections: 1,
+        maxSelections: 3,
+        options: [
+          {
+            value: 'fixed_term_to_regular',
+            contextText: '有期雇用労働者の対象者のうち、（　　　）名程度に対して正規雇用労働者（多様な正社員※含む）への転換を実施'
+          },
+          {
+            value: 'fixed_term_to_indefinite',
+            contextText: '有期雇用労働者の対象者のうち、（　　　）名程度に対して無期雇用労働者（※２）への転換を実施（※３）'
+          },
+          {
+            value: 'indefinite_to_regular',
+            contextText: '無期雇用労働者の対象者のうち、（　　　）名程度に対して正規雇用労働者（多様な正社員※含む）への転換を実施'
+          }
+        ]
+      },
+      validation: {
+        required: false,
+        rejectEmpty: false
+      }
+    },
+    {
       fieldId: 'wage_increase_rate',
       inputMode: 'sdt-checkbox',
       locator: {
