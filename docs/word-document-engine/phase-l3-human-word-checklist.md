@@ -50,3 +50,4 @@
 - **v3 SHA-256**: `7357ca119318cb6d92b77104014e635b0bdb56aad8a9bc7346e365c5488df4fb`
 - **原本SHA-256**: `b87253adeb29b593913c97fe972a4bb3afb8c36bac6dbb66bd70d08146963da8`
 
+※ 数値の整合性を確保した最終報告は `docs/word-document-engine/phase-l3-final-report.md` を参照してください。
