@@ -242,7 +242,8 @@ export const careerUpR8Form1Mapping = {
         required: true,
         rejectEmpty: true,
         inputFormat: 'YYYY-MM-DD'
-      }
+      },
+      verification: { type: 'date' }
     },
     {
       fieldId: 'plan_start_date',
@@ -266,7 +267,8 @@ export const careerUpR8Form1Mapping = {
         required: true,
         rejectEmpty: true,
         inputFormat: 'YYYY-MM-DD'
-      }
+      },
+      verification: { type: 'date' }
     },
     {
       fieldId: 'plan_end_date',
@@ -290,7 +292,8 @@ export const careerUpR8Form1Mapping = {
         required: true,
         rejectEmpty: true,
         inputFormat: 'YYYY-MM-DD'
-      }
+      },
+      verification: { type: 'date' }
     },
     {
       fieldId: 'career_up_manager_role_type',

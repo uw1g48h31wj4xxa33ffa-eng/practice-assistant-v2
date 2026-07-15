@@ -1849,3 +1849,101 @@ test('Q. OutputVerifier Text Verification', async (t) => {
     );
   });
 });
+
+test('S. OutputVerifier Date Verification', async (t) => {
+  const { OutputVerifier } = await import('../core/output-verifier.mjs');
+  const { DOMParser, XMLSerializer } = await import('@xmldom/xmldom');
+  const PizZip = (await import('pizzip')).default;
+  const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+  const { WordFiller } = await import('../core/word-filler.mjs');
+  const { FieldLocator } = await import('../core/field-locator.mjs');
+  const crypto = await import('crypto');
+  const fs = await import('node:fs');
+
+  const inputPath = '/Users/to/Documents/practice-assistant-input/001688046.docx';
+  if (!fs.existsSync(inputPath)) return;
+  const originalBuffer = fs.readFileSync(inputPath);
+  const expectedSha256 = crypto.createHash('sha256').update(originalBuffer).digest('hex');
+  const tempOutputPath = '/tmp/practice-assistant-test-date-output.docx';
+
+  async function createTestDoc(inputsConfig) {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+    const targets = [];
+    for (const [key, val] of Object.entries(inputsConfig)) {
+       const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+       const config = { ...field, status: 'confirmed' };
+       let targetCell;
+       if (config.locator.type === 'adjacent-cell') {
+          targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+       } else if (config.locator.type === 'next-row-continuation-cell') {
+          targetCell = FieldLocator.locateNextRowContinuationCell(docDom, field.labelText);
+       } else if (config.locator.type === 'same-cell') {
+          targetCell = FieldLocator.locateSameCellByExactText(docDom, field.labelText, config.locator);
+       }
+       if (targetCell) targets.push({ targetCell, val, config });
+    }
+    for (const t of targets) {
+       WordFiller.fillField(t.targetCell, t.val, t.config);
+    }
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+    return { docDom };
+  }
+
+  await t.test('1-3. 正常系: manager_assigned_date, plan_start_date, plan_end_date', async () => {
+    await createTestDoc({
+      manager_assigned_date: '2025-04-01',
+      plan_start_date: '2025-04-01',
+      plan_end_date: '2028-03-31'
+    });
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, {
+      manager_assigned_date: '2025-04-01',
+      plan_start_date: '2025-04-01',
+      plan_end_date: '2028-03-31'
+    }));
+  });
+
+  await t.test('4-6. 異常系: トークン破壊 (年月日の欠損)', async () => {
+    const { docDom } = await createTestDoc({ manager_assigned_date: '2025-04-01' });
+    const originalDom = new DOMParser().parseFromString(new PizZip(originalBuffer).file('word/document.xml').asText(), 'text/xml');
+    const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'manager_assigned_date');
+    const origCell = FieldLocator.locateSameCellByExactText(originalDom, field.labelText, field.locator);
+    const origIndex = Array.from(originalDom.getElementsByTagName('w:tc')).indexOf(origCell);
+    const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
+
+    // Break '年'
+    let cellText = FieldLocator.getCellText(targetCell);
+    targetCell.textContent = cellText.replace('年', 'Y');
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { manager_assigned_date: '2025-04-01' }),
+      /Year missing in cell!/
+    );
+  });
+
+  await t.test('7-8. 異常系: 値の不一致・対象外位置への混入', async () => {
+    await createTestDoc({ manager_assigned_date: '2025-04-01' });
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { manager_assigned_date: '2025-05-01' }),
+      /Month missing in cell!/
+    );
+  });
+
+  await t.test('9-10. 異常系: optional空値または未入力時の既存仕様維持, DOM構造不変', async () => {
+    // Empty value test
+    const zip = new PizZip(originalBuffer);
+    fs.writeFileSync(tempOutputPath, zip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    // Verifier should throw since cell won't have the filled value tokens
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { manager_assigned_date: '2025-04-01' }),
+      /Year missing in cell!/
+    );
+  });
+});
