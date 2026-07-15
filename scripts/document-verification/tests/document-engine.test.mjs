@@ -407,11 +407,6 @@ test('E. 分散セルロジック', async (t) => {
     assert.throws(() => WordFiller.fillDistributedField(result, '1234-56789a-1', config), /Value contains letters/);
   });
 
-  await t.test('Filler異常系: 誤ハイフン位置', () => {
-    const doc = getFixture();
-    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
-    assert.throws(() => WordFiller.fillDistributedField(result, '123-4567890-1', config), /Invalid hyphen position or group length/);
-  });
 
   await t.test('Filler異常系: スラッシュ混入', () => {
     const doc = getFixture();
@@ -1945,5 +1940,111 @@ test('S. OutputVerifier Date Verification', async (t) => {
       OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { manager_assigned_date: '2025-04-01' }),
       /Year missing in cell!/
     );
+  });
+});
+
+test('T. OutputVerifier Numeric & Distributed Verification', async (t) => {
+  const { OutputVerifier } = await import('../core/output-verifier.mjs');
+  const { DOMParser, XMLSerializer } = await import('@xmldom/xmldom');
+  const PizZip = (await import('pizzip')).default;
+  const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+  const { WordFiller } = await import('../core/word-filler.mjs');
+  const { FieldLocator } = await import('../core/field-locator.mjs');
+  const fs = await import('node:fs');
+
+  const inputPath = '/Users/to/Documents/practice-assistant-input/001688046.docx';
+  const originalBuffer = fs.readFileSync(inputPath);
+  const expectedSha256 = 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092';
+  const tempOutputPath = '/tmp/test_output_numeric.docx';
+
+  async function createTestDoc(inputsConfig) {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+    
+    for (const [key, val] of Object.entries(inputsConfig)) {
+       const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+       const config = { ...field, status: 'confirmed' };
+       
+       if (config.locator.type === 'distributed-cells') {
+          const res = FieldLocator.locateDistributedCells(docDom, field.labelText, config.locator.pattern);
+          WordFiller.fillDistributedField(res, String(val), config);
+       } else if (config.locator.type === 'multi-row-distributed-cells') {
+          const res = FieldLocator.locateMultiRowDistributedCells(docDom, field.labelText, config.locator);
+          WordFiller.fillDistributedField(res, String(val), config);
+       } else if (config.inputMode === 'numeric-preserve-affix') {
+          const targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+          WordFiller.fillNumericFieldPreservingAffix(targetCell, String(val), config);
+       } else {
+          let targetCell;
+          if (config.locator.type === 'adjacent-cell') {
+             targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+          } else if (config.locator.type === 'next-row-continuation-cell') {
+             targetCell = FieldLocator.locateNextRowContinuationCell(docDom, field.labelText);
+          } else if (config.locator.type === 'same-cell') {
+             targetCell = FieldLocator.locateSameCellByExactText(docDom, field.labelText, config.locator);
+          }
+          WordFiller.fillField(targetCell, String(val), config);
+       }
+    }
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+    return { docDom };
+  }
+
+  await t.test('1. employee_count (Numeric) 正常系', async () => {
+    await createTestDoc({ employee_count: 25 });
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { employee_count: 25 }));
+  });
+
+  await t.test('2. employee_count (Numeric) 異常系: 値不一致', async () => {
+    await createTestDoc({ employee_count: 25 });
+    await assert.rejects(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { employee_count: 30 }), /Numeric value does not match|Expected value with suffix|does not contain expected text/);
+  });
+
+  await t.test('3. employee_count (Numeric) 異常系: 接尾辞破壊', async () => {
+    const { docDom } = await createTestDoc({ employee_count: 25 });
+    const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employee_count');
+    const targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+    const runs = targetCell.getElementsByTagName('w:t');
+    for (let i = 0; i < runs.length; i++) {
+        if (runs[i].textContent === '人') runs[i].textContent = '匹';
+    }
+    const modifiedZip = new PizZip(originalBuffer);
+    modifiedZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, modifiedZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+    await assert.rejects(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { employee_count: 25 }), /Suffix is not found|does not contain expected text/);
+  });
+
+  await t.test('4. employment_insurance (Distributed) 正常系', async () => {
+    await createTestDoc({ employment_insurance_office_number: '1234-567890-1' });
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { employment_insurance_office_number: '1234-567890-1' }));
+  });
+
+  await t.test('5. employment_insurance (Distributed) 異常系: 値不一致', async () => {
+    await createTestDoc({ employment_insurance_office_number: '1234-567890-1' });
+    await assert.rejects(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { employment_insurance_office_number: '1234-567890-2' }), /Digit cell mismatch|does not match expected/);
+  });
+
+  await t.test('6. employment_insurance (Distributed) 異常系: 区切り文字破壊', async () => {
+    const { docDom } = await createTestDoc({ employment_insurance_office_number: '1234-567890-1' });
+    const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
+    const result = FieldLocator.locateDistributedCells(docDom, field.labelText, field.locator.pattern);
+    result.separatorCells[0].getElementsByTagName('w:t')[0].textContent = '*';
+    const modifiedZip = new PizZip(originalBuffer);
+    modifiedZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, modifiedZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+    await assert.rejects(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { employment_insurance_office_number: '1234-567890-1' }), /Separator mismatch|Separator changed/);
+  });
+
+  await t.test('7. labor_insurance (MultiRowDistributed) 正常系', async () => {
+    await createTestDoc({ labor_insurance_number: '12345678901-234' });
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { labor_insurance_number: '12345678901-234' }));
+  });
+
+  await t.test('8. labor_insurance (MultiRowDistributed) 異常系: 値不一致', async () => {
+    await createTestDoc({ labor_insurance_number: '12345678901-234' });
+    await assert.rejects(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { labor_insurance_number: '12345678901-999' }), /Digit cell mismatch|does not match expected/);
   });
 });

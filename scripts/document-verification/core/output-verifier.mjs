@@ -163,7 +163,7 @@ async function verifyTextField({ originalDom, outputDom, documentXmlStr, field, 
      throw new Error(`Unsupported locator type for text verification: ${field.locator.type}`);
   }
 
-  const cellText = FieldLocator.getCellText(targetCell);
+  const cellText = FieldLocator.getCellText(targetCell); console.log("VERIFY NUMERIC CELLTEXT:", cellText);
   if (!cellText.includes(value)) {
     throw new Error(`${key} cell does not contain the value!`);
   }
@@ -195,9 +195,145 @@ async function verifyPrefixTextField(docDom, f, value, origDom) {
   const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
   const origIndex = origCells.indexOf(origCell);
   const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
-  const cellText = FieldLocator.getCellText(targetCell);
+  const cellText = FieldLocator.getCellText(targetCell); console.log("VERIFY NUMERIC CELLTEXT:", cellText);
   if (!cellText.includes(value)) throw new Error(`Cell does not contain the value!`);
   if (!cellText.startsWith(f.preserve.prefixText)) throw new Error(`prefix not preserved!`);
+}
+
+
+async function verifyNumericField(docDom, origDom, field, value) {
+  const { FieldLocator } = await import('./field-locator.mjs');
+  const targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+  const cellText = FieldLocator.getCellText(targetCell);
+
+  if (field.verification?.preserveAffix && field.affix) {
+    const expectedText = `${value}${field.affix.suffixText || ''}`;
+    if (cellText !== expectedText) {
+      if (!cellText.includes(expectedText)) {
+        throw new Error(`Cell text "${cellText}" does not contain expected text "${expectedText}"`);
+      }
+    }
+
+    const ps = targetCell.getElementsByTagName('w:p');
+    let foundValue = false;
+    let foundSuffix = false;
+    for (let i = 0; i < ps.length; i++) {
+        const runs = ps[i].getElementsByTagName('w:r');
+        for (let j = 0; j < runs.length; j++) {
+           const text = Array.from(runs[j].getElementsByTagName('w:t')).map(t => t.textContent).join('');
+           if (text === String(value)) foundValue = true;
+           if (field.affix.suffixText && text === field.affix.suffixText) {
+              foundSuffix = true;
+           }
+        }
+    }
+
+    if (field.affix.suffixText && !foundSuffix) throw new Error('Suffix is not found as a separate run');
+    if (!foundValue) throw new Error('Numeric value is not found as a separate run');
+  } else {
+    const numbers = cellText.match(/\d+/g);
+    if (!numbers || numbers.length !== 1) {
+       throw new Error('Expected exactly one number in cell!');
+    }
+    if (numbers[0] !== String(value)) {
+       throw new Error('Numeric value does not match!');
+    }
+  }
+}
+
+async function verifyDistributedField(docDom, origDom, field, value) {
+  const { FieldLocator } = await import('./field-locator.mjs');
+  const result = FieldLocator.locateDistributedCells(docDom, field.labelText, field.locator.pattern);
+  const normalized = String(value).replace(/[－-]/g, '');
+  if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
+
+  for (let i = 0; i < normalized.length; i++) {
+    const cellText = FieldLocator.getCellText(result.digitCells[i]);
+    if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
+
+    const runs = result.digitCells[i].getElementsByTagName('w:r');
+    for (let r = 0; r < runs.length; r++) {
+       const rPr = runs[r].getElementsByTagName('w:rPr')[0];
+       if (rPr) {
+         if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
+           throw new Error('Digit run has hidden attribute!');
+         }
+       }
+       let parent = runs[r].parentNode;
+       while (parent) {
+         if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
+           throw new Error('Digit run is inside deleted/moved node!');
+         }
+         parent = parent.parentNode;
+       }
+    }
+  }
+
+  for (const sep of result.separatorCells) {
+    const text = FieldLocator.getCellText(sep);
+    if (text !== '－') throw new Error(`Separator changed to ${text}`);
+    if (/\d/.test(text)) throw new Error('Separator contains digit');
+  }
+
+  for (const ig of result.ignoredCells) {
+    const text = FieldLocator.getCellText(ig);
+    if (/\d/.test(text)) throw new Error('Ignored cell contains digit');
+  }
+
+  const allDigits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
+  if (allDigits !== normalized) throw new Error('Constructed logical number does not match expected');
+}
+
+async function verifyMultiRowDistributedField(docDom, origDom, field, value) {
+  const { FieldLocator } = await import('./field-locator.mjs');
+  const result = FieldLocator.locateMultiRowDistributedCells(docDom, field.labelText, field.locator);
+  const normalized = String(value).replace(/[－-]/g, '');
+  if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
+
+  for (let i = 0; i < normalized.length; i++) {
+    const cellText = FieldLocator.getCellText(result.digitCells[i]);
+    if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
+
+    const runs = result.digitCells[i].getElementsByTagName('w:r');
+    for (let r = 0; r < runs.length; r++) {
+       const rPr = runs[r].getElementsByTagName('w:rPr')[0];
+       if (rPr) {
+         if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
+           throw new Error('Digit run has hidden attribute!');
+         }
+       }
+       let parent = runs[r].parentNode;
+       while (parent) {
+         if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
+           throw new Error('Digit run is inside deleted/moved node!');
+         }
+         parent = parent.parentNode;
+       }
+    }
+  }
+
+  for (const sep of result.separatorCells) {
+    const text = FieldLocator.getCellText(sep);
+    if (text !== '－') throw new Error(`Separator changed to ${text}`);
+    if (/\d/.test(text)) throw new Error('Separator contains digit');
+  }
+
+  for (const ig of result.ignoredCells) {
+    const text = FieldLocator.getCellText(ig);
+    if (/\d/.test(text)) throw new Error('Ignored cell contains digit');
+  }
+
+  const allDigits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
+  if (allDigits !== normalized) throw new Error('Constructed logical number does not match expected');
+
+  if (field.locator.pattern) {
+    for (const p of field.locator.pattern) {
+      if (p.groupId && result.groupedDigitCells[p.groupId]) {
+         const groupText = result.groupedDigitCells[p.groupId].map(c => FieldLocator.getCellText(c)).join('');
+         if (groupText.length !== p.count) throw new Error(`Group ${p.groupId} length mismatch`);
+      }
+    }
+  }
 }
 
 async function verifyDateField(docDom, origDom, f, value) {
@@ -206,7 +342,7 @@ async function verifyDateField(docDom, origDom, f, value) {
   const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
   const origIndex = origCells.indexOf(origCell);
   const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
-  const cellText = FieldLocator.getCellText(targetCell);
+  const cellText = FieldLocator.getCellText(targetCell); console.log("VERIFY NUMERIC CELLTEXT:", cellText);
   const { yearToken, monthToken, dayToken } = f.preserve;
 
   const isoRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -296,176 +432,30 @@ export class OutputVerifier {
         continue;
       }
 
+      if (f && f.verification?.type === 'numeric') {
+        await verifyNumericField(docDom, origDom, f, value);
+        continue;
+      }
+
+      if (f && f.verification?.type === 'distributed') {
+        await verifyDistributedField(docDom, origDom, f, value);
+        continue;
+      }
+
+      if (f && f.verification?.type === 'multi-row-distributed') {
+        await verifyMultiRowDistributedField(docDom, origDom, f, value);
+        continue;
+      }
+
       if (key === 'manager_name') {
         throw new Error('manager_name should have been handled by verifyPrefixTextField');
       }
 
-      if (
-        key !== 'employment_insurance' &&
-        key !== 'labor_insurance' &&
-        key !== 'employee_count'
-      ) {
-        const escapedValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const count = documentXmlStr.split(escapedValue).length - 1;
-        if (count !== 1) {
-          throw new Error(`Input value "${value}" (${key}) appears ${count} times in whole document, expected 1.`);
-        }
+      const escapedValue = String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const count = documentXmlStr.split(escapedValue).length - 1;
+      if (count !== 1) {
+        throw new Error(`Input value "${value}" (${key}) appears ${count} times in whole document, expected 1.`);
       }
-
-      // Verify specific cell
-      if (key === 'employment_insurance') {
-         const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
-         const result = FieldLocator.locateDistributedCells(docDom, empField.labelText, empField.locator.pattern);
-
-         const normalized = value.replace(/[－-]/g, '');
-         if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
-
-         // Verify each digit cell
-         for (let i = 0; i < normalized.length; i++) {
-           const cellText = FieldLocator.getCellText(result.digitCells[i]);
-           if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
-
-           // Check if run is hidden or deleted
-           const runs = result.digitCells[i].getElementsByTagName('w:r');
-           for (let r = 0; r < runs.length; r++) {
-              const rPr = runs[r].getElementsByTagName('w:rPr')[0];
-              if (rPr) {
-                if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
-                  throw new Error(`Digit run has hidden attribute!`);
-                }
-              }
-              let parent = runs[r].parentNode;
-              while (parent) {
-                if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
-                  throw new Error(`Digit run is inside deleted/moved node!`);
-                }
-                parent = parent.parentNode;
-              }
-           }
-         }
-
-         // Verify separator cells remain unchanged and don't contain digits
-         for (const sep of result.separatorCells) {
-           const text = FieldLocator.getCellText(sep);
-           if (text !== '－') throw new Error(`Separator changed to ${text}`);
-           if (/\d/.test(text)) throw new Error('Separator contains digit');
-         }
-
-         // Verify ignored cells don't contain digits
-         for (const ig of result.ignoredCells) {
-           const text = FieldLocator.getCellText(ig);
-           if (/\d/.test(text)) throw new Error('Ignored cell contains digit');
-         }
-
-         // Verify cross contamination
-         const allDigits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
-         if (allDigits !== normalized) throw new Error('Constructed logical number does not match expected');
-
-         // Other cells shouldn't contain this exact sequence if we search for it.
-         // (Not easily checkable via string since they are separate cells, but we already check global count above)
-      } else if (key === 'labor_insurance') {
-         const laborField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
-         const result = FieldLocator.locateMultiRowDistributedCells(docDom, laborField.labelText, laborField.locator);
-
-         const normalized = value.replace(/[－-]/g, '');
-         if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
-
-         // Verify each digit cell
-         for (let i = 0; i < normalized.length; i++) {
-           const cellText = FieldLocator.getCellText(result.digitCells[i]);
-           if (cellText !== normalized[i]) throw new Error(`Digit cell mismatch at index ${i}. Expected ${normalized[i]}, got ${cellText}`);
-
-           // Check if run is hidden or deleted
-           const runs = result.digitCells[i].getElementsByTagName('w:r');
-           for (let r = 0; r < runs.length; r++) {
-              const rPr = runs[r].getElementsByTagName('w:rPr')[0];
-              if (rPr) {
-                if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
-                  throw new Error(`Digit run has hidden attribute!`);
-                }
-              }
-              let parent = runs[r].parentNode;
-              while (parent) {
-                if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
-                  throw new Error(`Digit run is inside deleted/moved node!`);
-                }
-                parent = parent.parentNode;
-              }
-           }
-         }
-
-         // Verify separator cells remain unchanged and don't contain digits
-         for (const sep of result.separatorCells) {
-           const text = FieldLocator.getCellText(sep);
-           if (text !== '－') throw new Error(`Separator changed to ${text}`);
-           if (/\d/.test(text)) throw new Error('Separator contains digit');
-         }
-
-         // Verify ignored cells don't contain digits
-         for (const ig of result.ignoredCells) {
-           const text = FieldLocator.getCellText(ig);
-           if (/\d/.test(text)) throw new Error('Ignored cell contains digit');
-         }
-
-         // Verify cross contamination
-         const allDigits = result.digitCells.map(c => FieldLocator.getCellText(c)).join('');
-         if (allDigits !== normalized) throw new Error('Constructed logical number does not match expected');
-
-         // Check groups
-         const pref = result.groupedDigitCells['prefecture'].map(c => FieldLocator.getCellText(c)).join('');
-         const jur = result.groupedDigitCells['jurisdictionType'].map(c => FieldLocator.getCellText(c)).join('');
-         const off = result.groupedDigitCells['office'].map(c => FieldLocator.getCellText(c)).join('');
-         const base = result.groupedDigitCells['baseNumber'].map(c => FieldLocator.getCellText(c)).join('');
-         const branch = result.groupedDigitCells['branchNumber'].map(c => FieldLocator.getCellText(c)).join('');
-
-         if (pref.length !== 2) throw new Error('Prefecture group length mismatch');
-         if (jur.length !== 1) throw new Error('Jurisdiction group length mismatch');
-         if (off.length !== 2) throw new Error('Office group length mismatch');
-         if (base.length !== 6) throw new Error('Base number group length mismatch');
-         if (branch.length !== 3) throw new Error('Branch number group length mismatch');
-
-         if (pref + jur + off + base + branch !== normalized) {
-            throw new Error('Groups do not match the expected logical number');
-         }
-      } else if (key === 'employee_count') {
-         const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employee_count');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, empField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         const expectedText = `${value}${empField.affix.suffixText}`;
-
-         // 1. 対象セル内に数値が1件存在 (well, the whole string should be "25人" assuming no spaces)
-         // Wait, the new run just contains "25" and the old run contains "人". The combined cell text is "25人".
-         if (cellText !== expectedText) {
-             // In case there are some spaces or something from before? No, we deleted other runs.
-             if (!cellText.includes(expectedText)) {
-                throw new Error(`Cell text "${cellText}" does not contain expected text "${expectedText}"`);
-             }
-         }
-
-         // 2. 単位が含まれていない etc. is checked before we enter here, but let's check structure
-         const ps = targetCell.getElementsByTagName('w:p');
-         let foundValue = false;
-         let foundSuffix = false;
-         for (let i = 0; i < ps.length; i++) {
-             const runs = ps[i].getElementsByTagName('w:r');
-             for (let j = 0; j < runs.length; j++) {
-                const text = Array.from(runs[j].getElementsByTagName('w:t')).map(t => t.textContent).join('');
-                if (text === value) foundValue = true;
-                if (text === empField.affix.suffixText) {
-                   foundSuffix = true;
-                   if (!foundValue && j > 0 && Array.from(runs[j-1].getElementsByTagName('w:t')).map(t => t.textContent).join('') === value) {
-                       // Good, value is before suffix
-                   } else if (!foundValue) {
-                       // wait, if value wasn't found before suffix, maybe they are not adjacent runs, but they must be in correct order
-                   }
-                }
-             }
-         }
-
-         if (!foundSuffix) throw new Error('Suffix is not found as a separate run');
-         if (!foundValue) throw new Error('Numeric value is not found as a separate run');
-
-         // Verify cross contamination
          // Check if other '人' are unmodified, but here we only have docDom. We can just check the number of '人' in the document?
          // Actually the instructions say:
          // 1. 対象セル内に数値が1件存在 -> Yes
@@ -474,36 +464,7 @@ export class OutputVerifier {
          // 4. 入力値に単位が含まれていない -> Yes (tested by filler)
          // 5. 接尾辞が原本と同一 -> Yes
          // 6. 対象セル以外への数値混入なし -> Yes, output verifier will be robust
-      } else if (key === 'employee_count') {
-         const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employee_count');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, empField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
 
-         // 1. 対象セル内に数値が1件存在するか？
-         const numbers = cellText.match(/\d+/g);
-         if (!numbers || numbers.length !== 1) {
-            throw new Error(`Expected exactly one number in employee_count cell!`);
-         }
-         if (numbers[0] !== String(value)) {
-            throw new Error(`Employee count does not match!`);
-         }
-
-         // 2. 接尾辞「人」が1件存在するか？
-         // 3. 数値が接尾辞より前にあるか？
-         // => '3人' => /3人/ exists. Wait, original filler asserts these, verifier checks cellText.
-         if (!cellText.includes(`${value}人`)) {
-            throw new Error(`Expected value with suffix!`);
-         }
-
-         // Check if other '人' are unmodified, but here we only have docDom. We can just check the number of '人' in the document?
-         // Actually the instructions say:
-         // 1. 対象セル内に数値が1件存在 -> Yes
-         // 2. 対象セル内に接尾辞が1件存在 -> Yes
-         // 3. 数値が接尾辞より前にある -> Yes
-         // 4. 入力値に単位が含まれていない -> Yes (tested by filler)
-         // 5. 接尾辞が原本と同一 -> Yes
-         // 6. 対象セル以外への数値混入なし -> Yes, output verifier will be robust
-      }
 
     }
 

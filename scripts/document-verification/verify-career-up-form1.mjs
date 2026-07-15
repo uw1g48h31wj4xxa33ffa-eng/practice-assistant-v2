@@ -56,18 +56,18 @@ async function verify(scenario, outputsMap) {
     inputsToFill.contact = outputsMap.contact;
   }
 
-  if (outputsMap.employment_insurance) {
+  if (outputsMap.employment_insurance_office_number) {
     const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
     const result = FieldLocator.locateDistributedCells(documentDom, empField.labelText, empField.locator.pattern);
-    WordFiller.fillDistributedField(result, outputsMap.employment_insurance, { ...empField, status: 'confirmed' });
-    inputsToFill.employment_insurance = outputsMap.employment_insurance;
+    WordFiller.fillDistributedField(result, outputsMap.employment_insurance_office_number, { ...empField, status: 'confirmed' });
+    inputsToFill.employment_insurance_office_number = outputsMap.employment_insurance_office_number;
   }
 
-  if (outputsMap.labor_insurance) {
+  if (outputsMap.labor_insurance_number) {
     const laborField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
     const result = FieldLocator.locateMultiRowDistributedCells(documentDom, laborField.labelText, laborField.locator);
-    WordFiller.fillDistributedField(result, outputsMap.labor_insurance, { ...laborField, status: 'confirmed' });
-    inputsToFill.labor_insurance = outputsMap.labor_insurance;
+    WordFiller.fillDistributedField(result, outputsMap.labor_insurance_number, { ...laborField, status: 'confirmed' });
+    inputsToFill.labor_insurance_number = outputsMap.labor_insurance_number;
   }
 
   if (outputsMap.main_business) {
@@ -171,18 +171,18 @@ async function run() {
 
   try {
     await verify('agent_info', { agent_name: '代理 太郎', agent_address: '東京都新宿区1-1-1', agent_phone: '03-1234-5678' });
-    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count_agent_name', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222' });
+    await verify('owner_address_phone_contact_employment_labor_main_business_employee_count_agent_name', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance_office_number: '1234-567890-1', labor_insurance_number: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222' });
 
     // G2 new tests
     await verify('manager_name_only', { manager_name: '管理 花子' });
     await verify('assigned_date_only', { manager_assigned_date: '2026-04-01' });
     await verify('plan_period_only', { plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
     await verify('g2_all_fields', { manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
-    await verify('g2_full_suite', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
+    await verify('g2_full_suite', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance_office_number: '1234-567890-1', labor_insurance_number: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31' });
 
     // G3 tests
     await verify('manager_role_checkbox', { career_up_manager_role_type: '役員でない' });
-    await verify('full_with_manager_role_checkbox', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance: '1234-567890-1', labor_insurance: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31', career_up_manager_role_type: '役員でない' });
+    await verify('full_with_manager_role_checkbox', { owner: '株式会社テスト', address: '東京都千代田区テスト1-2-3', phone: '090-1234-5678', contact: '山田 太郎', employment_insurance_office_number: '1234-567890-1', labor_insurance_number: '01123123456789', main_business: 'ソフトウェア開発業', employee_count: '25', agent_name: '代理 太郎', agent_address: '大阪府大阪市北区1', agent_phone: '06-1111-2222', manager_name: '管理 花子', manager_assigned_date: '2026-04-01', plan_start_date: '2026-04-01', plan_end_date: '2031-03-31', career_up_manager_role_type: '役員でない' });
 
     // G4 tests - single selection groups
     await verify('worker_consent_yes', { career_up_manager_role_type: '役員でない', worker_representative_consent: 'はい' });
@@ -207,8 +207,8 @@ async function run() {
       address: '東京都千代田区テスト1-2-3', 
       phone: '090-1234-5678', 
       contact: '山田 太郎', 
-      employment_insurance: '1234-567890-1', 
-      labor_insurance: '01123123456789', 
+      employment_insurance_office_number: '1234-567890-1', 
+      labor_insurance_number: '01123123456789', 
       main_business: 'ソフトウェア開発業', 
       employee_count: '25', 
       agent_name: '代理 太郎', 
@@ -244,7 +244,7 @@ async function run() {
 
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
-    console.error('\nVerification failed:', err.message);
+    console.error('\nVerification failed:', err);
     process.exit(1);
   }
 }

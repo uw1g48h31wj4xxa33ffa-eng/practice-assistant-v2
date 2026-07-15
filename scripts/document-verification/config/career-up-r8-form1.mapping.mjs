@@ -87,7 +87,8 @@ export const careerUpR8Form1Mapping = {
           '####－######－#',
           '###########'
         ]
-      }
+      },
+      verification: { type: 'distributed' }
     },
     {
       fieldId: 'labor_insurance_number',
@@ -113,7 +114,8 @@ export const careerUpR8Form1Mapping = {
           '###########-###',
           '###########－###'
         ]
-      }
+      },
+      verification: { type: 'multi-row-distributed' }
     },
     {
       fieldId: 'main_business',
@@ -150,6 +152,10 @@ export const careerUpR8Form1Mapping = {
         allowDecimal: false,
         allowComma: false,
         min: 1
+      },
+      verification: {
+        type: 'numeric',
+        preserveAffix: true
       }
     },
     {
