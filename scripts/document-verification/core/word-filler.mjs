@@ -284,6 +284,23 @@ export class WordFiller {
       throw new Error(`Digit count mismatch. Expected ${distributedResult.metadata.digitCount}, got ${normalized.length}`);
     }
 
+    // Check hyphen format if hyphens are present
+    if (value.includes('-') || value.includes('－')) {
+      const parts = value.split(/[－-]/);
+      let validateGroups = true;
+      if (fieldConfig.fieldId === 'labor_insurance_number') {
+        validateGroups = false;
+      }
+      
+      if (validateGroups) {
+        for (let i = 0; i < parts.length; i++) {
+          if (parts[i].length !== distributedResult.metadata.groups[i]) {
+            throw new Error(`Invalid hyphen position or group length at group index ${i}`);
+          }
+        }
+      }
+    }
+
     // Hyphen formatting is not strictly enforced in filling logic.
     // Fill each digit into each cell
     for (let i = 0; i < normalized.length; i++) {

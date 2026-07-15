@@ -407,6 +407,12 @@ test('E. 分散セルロジック', async (t) => {
     assert.throws(() => WordFiller.fillDistributedField(result, '1234-56789a-1', config), /Value contains letters/);
   });
 
+  await t.test('Filler異常系: 誤ハイフン位置', () => {
+    const doc = getFixture();
+    const result = FieldLocator.locateDistributedCells(doc, '⑤雇用保険適用事業所番号', config.locator.pattern);
+    assert.throws(() => WordFiller.fillDistributedField(result, '123-4567890-1', config), /Invalid hyphen position or group length/);
+  });
+
 
   await t.test('Filler異常系: スラッシュ混入', () => {
     const doc = getFixture();

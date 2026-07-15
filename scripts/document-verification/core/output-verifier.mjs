@@ -163,7 +163,7 @@ async function verifyTextField({ originalDom, outputDom, documentXmlStr, field, 
      throw new Error(`Unsupported locator type for text verification: ${field.locator.type}`);
   }
 
-  const cellText = FieldLocator.getCellText(targetCell); console.log("VERIFY NUMERIC CELLTEXT:", cellText);
+  const cellText = FieldLocator.getCellText(targetCell);
   if (!cellText.includes(value)) {
     throw new Error(`${key} cell does not contain the value!`);
   }
@@ -195,7 +195,7 @@ async function verifyPrefixTextField(docDom, f, value, origDom) {
   const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
   const origIndex = origCells.indexOf(origCell);
   const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
-  const cellText = FieldLocator.getCellText(targetCell); console.log("VERIFY NUMERIC CELLTEXT:", cellText);
+  const cellText = FieldLocator.getCellText(targetCell);
   if (!cellText.includes(value)) throw new Error(`Cell does not contain the value!`);
   if (!cellText.startsWith(f.preserve.prefixText)) throw new Error(`prefix not preserved!`);
 }
@@ -342,7 +342,7 @@ async function verifyDateField(docDom, origDom, f, value) {
   const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
   const origIndex = origCells.indexOf(origCell);
   const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
-  const cellText = FieldLocator.getCellText(targetCell); console.log("VERIFY NUMERIC CELLTEXT:", cellText);
+  const cellText = FieldLocator.getCellText(targetCell);
   const { yearToken, monthToken, dayToken } = f.preserve;
 
   const isoRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -427,10 +427,6 @@ export class OutputVerifier {
         continue;
       }
 
-      if (f && f.verification?.type === 'date') {
-        await verifyDateField(docDom, origDom, f, value);
-        continue;
-      }
 
       if (f && f.verification?.type === 'numeric') {
         await verifyNumericField(docDom, origDom, f, value);
@@ -456,14 +452,6 @@ export class OutputVerifier {
       if (count !== 1) {
         throw new Error(`Input value "${value}" (${key}) appears ${count} times in whole document, expected 1.`);
       }
-         // Check if other '人' are unmodified, but here we only have docDom. We can just check the number of '人' in the document?
-         // Actually the instructions say:
-         // 1. 対象セル内に数値が1件存在 -> Yes
-         // 2. 対象セル内に接尾辞が1件存在 -> Yes
-         // 3. 数値が接尾辞より前にある -> Yes
-         // 4. 入力値に単位が含まれていない -> Yes (tested by filler)
-         // 5. 接尾辞が原本と同一 -> Yes
-         // 6. 対象セル以外への数値混入なし -> Yes, output verifier will be robust
 
 
     }

@@ -244,7 +244,7 @@ async function run() {
 
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
-    console.error('\nVerification failed:', err);
+    console.error('\nVerification failed:', err.message);
     process.exit(1);
   }
 }
