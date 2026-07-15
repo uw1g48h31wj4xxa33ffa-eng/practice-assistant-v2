@@ -16,6 +16,7 @@ export const careerUpR8Form1Mapping = {
         required: true,
         maxLength: 60,
       },
+      verification: { type: 'text' }
     },
     {
       fieldId: "business_address",
@@ -30,6 +31,7 @@ export const careerUpR8Form1Mapping = {
         required: true,
         maxLength: 100,
       },
+      verification: { type: 'text' }
     },
     {
       fieldId: 'business_phone_number',
@@ -45,7 +47,8 @@ export const careerUpR8Form1Mapping = {
         rejectLetters: true,
         rejectSymbols: true,
         rejectEmpty: true
-      }
+      },
+      verification: { type: 'text' }
     },
     {
       fieldId: 'business_contact_name',
@@ -59,7 +62,8 @@ export const careerUpR8Form1Mapping = {
         maxLength: 30,
         rejectEmpty: true,
         rejectInvalidChars: true
-      }
+      },
+      verification: { type: 'text' }
     },
     {
       fieldId: 'employment_insurance_office_number',
@@ -122,7 +126,8 @@ export const careerUpR8Form1Mapping = {
         rejectEmpty: true,
         rejectInvalidChars: true,
         maxLength: 100
-      }
+      },
+      verification: { type: 'text' }
     },
     {
       fieldId: 'employee_count',
@@ -159,7 +164,8 @@ export const careerUpR8Form1Mapping = {
         rejectInvalidChars: true,
         allowHalfWidthSpace: true,
         allowFullWidthSpace: true
-      }
+      },
+      verification: { type: 'text' }
     },
     {
       fieldId: "agent_address",
@@ -174,6 +180,7 @@ export const careerUpR8Form1Mapping = {
         required: false,
         maxLength: 100,
       },
+      verification: { type: 'text' }
     },
     {
       fieldId: 'agent_phone_number',
@@ -189,7 +196,8 @@ export const careerUpR8Form1Mapping = {
         rejectLetters: true,
         rejectSymbols: true,
         rejectEmpty: false
-      }
+      },
+      verification: { type: 'text' }
     },
     {
       fieldId: 'manager_name',
@@ -206,6 +214,11 @@ export const careerUpR8Form1Mapping = {
         rejectEmpty: true,
         maxLength: 30,
         rejectInvalidChars: true
+      },
+      verification: {
+        type: 'text',
+        preservePrefix: true,
+        prefixText: '（氏　名）：'
       }
     },
     {

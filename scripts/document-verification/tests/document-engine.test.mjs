@@ -586,9 +586,8 @@ test('F. 労働保険番号分散セルロジック', async (t) => {
     assert.throws(() => WordFiller.fillDistributedField(result, '01123123456789', { ...config, status: 'draft' }), /Status is not 'confirmed'/);
   });
 });
-
-
 test('G. 主たる事業検証ロジック', async (t) => {
+
   const { DOMParser } = await import('@xmldom/xmldom');
   const parser = new DOMParser();
 
@@ -1722,13 +1721,131 @@ test('R. Phase G5B Mapping Uniqueness Tests', async (t) => {
         });
 
         assert.strictEqual(optionMatchingSdts.length, 1, `option.contextText "${option.contextText}" should match exactly 1 SDT, found ${optionMatchingSdts.length}`);
-        
+
         const matchedSdt = optionMatchingSdts[0];
         assert.ok(!matchedSdts.has(matchedSdt), `SDT matched by "${option.contextText}" was already matched by another option`);
         matchedSdts.add(matchedSdt);
       }
-      
+
       assert.strictEqual(matchedSdts.size, field.selection.options.length, 'All options should be assigned to unique SDTs');
     });
   }
+});
+
+test('Q. OutputVerifier Text Verification', async (t) => {
+  const { OutputVerifier } = await import('../core/output-verifier.mjs');
+  const { DOMParser, XMLSerializer } = await import('@xmldom/xmldom');
+  const PizZip = (await import('pizzip')).default;
+  const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+  const { WordFiller } = await import('../core/word-filler.mjs');
+  const { FieldLocator } = await import('../core/field-locator.mjs');
+  const crypto = await import('crypto');
+  const fs = await import('node:fs');
+
+  const inputPath = '/Users/to/Documents/practice-assistant-input/001688046.docx';
+  if (!fs.existsSync(inputPath)) return;
+  const originalBuffer = fs.readFileSync(inputPath);
+  const expectedSha256 = crypto.createHash('sha256').update(originalBuffer).digest('hex');
+
+  const tempOutputPath = '/tmp/practice-assistant-test-text-output.docx';
+
+  async function createTestDoc(inputsConfig) {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+
+    for (const [key, val] of Object.entries(inputsConfig)) {
+       const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+       const config = { ...field, status: 'confirmed' };
+       let targetCell;
+       if (config.locator.type === 'adjacent-cell') {
+          targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+       } else if (config.locator.type === 'next-row-continuation-cell') {
+          targetCell = FieldLocator.locateNextRowContinuationCell(docDom, field.labelText);
+       } else if (config.locator.type === 'same-cell') {
+          targetCell = FieldLocator.locateSameCellByExactText(docDom, field.labelText, config.locator);
+       }
+
+       if (targetCell) {
+         WordFiller.fillField(targetCell, val, config);
+       }
+    }
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+  }
+
+  await t.test('1. manager_name 正常 (Prefix保持)', async () => {
+    await createTestDoc({ manager_name: '山田太郎' });
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, {
+      manager_name: '山田太郎'
+    }));
+  });
+
+  await t.test('2. manager_name 空値', async () => {
+    // WordFiller throws if empty, but we can verify if we don't fill it and test verifier
+    const zip = new PizZip(originalBuffer);
+    fs.writeFileSync(tempOutputPath, zip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    // Verifier should throw if cell does not contain value!
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { manager_name: '田中次郎' }),
+      /does not contain the value/
+    );
+  });
+
+  await t.test('3. manager_name Prefix破壊', async () => {
+    const zip = new PizZip(originalBuffer);
+    const xml = zip.file('word/document.xml').asText();
+    const docDom = new DOMParser().parseFromString(xml, 'text/xml');
+    const field = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'manager_name');
+    const targetCell = FieldLocator.locateSameCellByExactText(docDom, field.labelText, field.locator);
+
+    // Break prefix manually
+    const ps = targetCell.getElementsByTagName('w:p');
+    for (let i=0; i<ps.length; i++) targetCell.removeChild(ps[i]);
+    const p = docDom.createElement('w:p');
+    const r = docDom.createElement('w:r');
+    const t = docDom.createElement('w:t');
+    t.textContent = '氏名：田中次郎'; // Missing "（" and "）"
+    r.appendChild(t);
+    p.appendChild(r);
+    targetCell.appendChild(p);
+
+    const outZip = new PizZip(originalBuffer);
+    outZip.file('word/document.xml', new XMLSerializer().serializeToString(docDom));
+    fs.writeFileSync(tempOutputPath, outZip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }));
+
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { manager_name: '田中次郎' }),
+      /prefix not preserved/
+    );
+  });
+
+  await t.test('4. 一般テキスト正常 (address, owner, phone, agent_name)', async () => {
+    await createTestDoc({
+      business_address: '東京都新宿区',
+      business_owner_name: 'テスト事業主',
+      business_phone_number: '03-1234-5678',
+      agent_name: '代理人太郎'
+    });
+    // Check that we can pass verifier mappings directly (these maps 1:1 if we pass fieldId as key or if outputverifier logic handles it. Wait, outputverifier looks at `key`. Does `key` match `fieldId`?)
+    await assert.doesNotReject(OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, {
+      business_address: '東京都新宿区',
+      business_owner_name: 'テスト事業主',
+      business_phone_number: '03-1234-5678',
+      agent_name: '代理人太郎'
+    }));
+  });
+
+  await t.test('5. 一般テキスト DOM維持・重複エラー', async () => {
+    await createTestDoc({ business_owner_name: 'テスト社長' });
+
+    // Expect failure since 'テスト事業主' is not there
+    await assert.rejects(
+      OutputVerifier.verify(originalBuffer, tempOutputPath, expectedSha256, { business_owner_name: 'テスト事業主' }),
+      /appears 0 times in whole document/
+    );
+  });
 });

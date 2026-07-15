@@ -143,6 +143,65 @@ async function verifySdtCheckboxField({ originalDom, outputDom, field, value, ke
   }
 }
 
+async function verifyTextField({ originalDom, outputDom, documentXmlStr, field, value, key }) {
+  const { FieldLocator } = await import('./field-locator.mjs');
+
+  const escapedValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const count = documentXmlStr.split(escapedValue).length - 1;
+  if (count !== 1) {
+    throw new Error(`Input value "${value}" (${key}) appears ${count} times in whole document, expected 1.`);
+  }
+
+  let targetCell;
+  if (field.locator.type === 'adjacent-cell') {
+     targetCell = FieldLocator.locateAdjacentCell(outputDom, field.labelText);
+  } else if (field.locator.type === 'next-row-continuation-cell') {
+     targetCell = FieldLocator.locateNextRowContinuationCell(outputDom, field.labelText);
+  } else if (field.locator.type === 'same-cell') {
+     targetCell = FieldLocator.locateSameCellByExactText(outputDom, field.labelText, field.locator);
+  } else {
+     throw new Error(`Unsupported locator type for text verification: ${field.locator.type}`);
+  }
+
+  const cellText = FieldLocator.getCellText(targetCell);
+  if (!cellText.includes(value)) {
+    throw new Error(`${key} cell does not contain the value!`);
+  }
+
+  const runs = targetCell.getElementsByTagName('w:r');
+  for (let r = 0; r < runs.length; r++) {
+    const runText = Array.from(runs[r].getElementsByTagName('w:t')).map(t => t.textContent).join('');
+    if (runText.includes(value)) {
+       const rPr = runs[r].getElementsByTagName('w:rPr')[0];
+       if (rPr) {
+         if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
+           throw new Error(`${key} run has hidden attribute!`);
+         }
+       }
+       let parent = runs[r].parentNode;
+       while (parent) {
+         if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
+           throw new Error(`${key} run is inside deleted/moved node!`);
+         }
+         parent = parent.parentNode;
+       }
+    }
+  }
+}
+
+async function verifyPrefixTextField({ originalDom, outputDom, field, value, key }) {
+  const { FieldLocator } = await import('./field-locator.mjs');
+
+  const origCell = FieldLocator.locateSameCellByExactText(originalDom, field.labelText, field.locator);
+  const origCells = Array.from(originalDom.getElementsByTagName('w:tc'));
+  const origIndex = origCells.indexOf(origCell);
+  const targetCell = outputDom.getElementsByTagName('w:tc')[origIndex];
+
+  const cellText = FieldLocator.getCellText(targetCell);
+  if (!cellText.includes(value)) throw new Error(`${key} cell does not contain the value!`);
+  if (!cellText.startsWith(field.verification.prefixText)) throw new Error(`${key} cell prefix not preserved!`);
+}
+
 export class OutputVerifier {
   static async verify(originalBuffer, outputPath, expectedSha256, inputs) {
     // Verify Original Hash unchanged
@@ -196,7 +255,18 @@ export class OutputVerifier {
         continue;
       }
 
-      if (key === 'manager_name') continue;
+      if (f && f.verification?.type === 'text') {
+        if (f.verification.preservePrefix) {
+          await verifyPrefixTextField({ originalDom: origDom, outputDom: docDom, field: f, value, key });
+        } else {
+          await verifyTextField({ originalDom: origDom, outputDom: docDom, documentXmlStr, field: f, value, key });
+        }
+        continue;
+      }
+
+      if (key === 'manager_name') {
+        throw new Error('manager_name should have been handled by verifyPrefixTextField');
+      }
 
       if (
         key !== 'employment_insurance' &&
@@ -214,91 +284,7 @@ export class OutputVerifier {
       }
 
       // Verify specific cell
-      if (key === 'address') {
-         const addrField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_address');
-         const targetCell = FieldLocator.locateNextRowContinuationCell(docDom, addrField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Address cell does not contain the address value!`);
-         }
-
-         // Verify visibility and no del/move
-         const runs = targetCell.getElementsByTagName('w:r');
-         for (let r = 0; r < runs.length; r++) {
-            const runText = FieldLocator.getCellText({ getElementsByTagName: (tag) => tag === 'w:t' ? runs[r].getElementsByTagName('w:t') : (tag === 'w:r' ? [runs[r]] : []) });
-            if (runText.includes(value)) {
-               const rPr = runs[r].getElementsByTagName('w:rPr')[0];
-               if (rPr) {
-                 if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
-                   throw new Error(`Address run has hidden attribute!`);
-                 }
-               }
-               // Check ancestors for del/move
-               let parent = runs[r].parentNode;
-               while (parent) {
-                 if (parent.nodeName === 'w:del' || parent.nodeName === 'w:moveFrom') {
-                   throw new Error(`Address run is inside deleted/moved node!`);
-                 }
-                 parent = parent.parentNode;
-               }
-            }
-         }
-
-         // Check that the postal code cell doesn't have the address
-         const labelMatches = FieldLocator.findCellByExactText(docDom, addrField.labelText);
-         const postalCell = labelMatches[0].cells[labelMatches[0].cellIndex + 1];
-         const postalText = FieldLocator.getCellText(postalCell);
-         if (postalText.includes(value)) {
-            throw new Error(`Postal cell contains the address value!`);
-         }
-      } else if (key === 'owner') {
-         const ownerField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_owner_name');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, ownerField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Owner cell does not contain the owner value!`);
-         }
-      } else if (key === 'phone') {
-         const phoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, phoneField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Phone cell does not contain the phone value!`);
-         }
-
-         // Verify digits count
-         const digitCount = (value.match(/\d/g) || []).length;
-         if (digitCount !== 10 && digitCount !== 11) {
-            throw new Error(`Phone number digits count is ${digitCount}, expected 10 or 11!`);
-         }
-      } else if (key === 'contact') {
-         const contactField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_contact_name');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, contactField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Contact cell does not contain the contact value!`);
-         }
-
-         // Check it's not in owner, address, phone, or proxy cells
-         const ownerField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_owner_name');
-         const ownerCell = FieldLocator.locateAdjacentCell(docDom, ownerField.labelText);
-         if (FieldLocator.getCellText(ownerCell).includes(value)) throw new Error('Contact value found in owner cell!');
-
-         const addrField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_address');
-         const addrCell = FieldLocator.locateNextRowContinuationCell(docDom, addrField.labelText);
-         if (FieldLocator.getCellText(addrCell).includes(value)) throw new Error('Contact value found in address cell!');
-
-         const phoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'business_phone_number');
-         const phoneCell = FieldLocator.locateAdjacentCell(docDom, phoneField.labelText);
-         if (FieldLocator.getCellText(phoneCell).includes(value)) throw new Error('Contact value found in phone cell!');
-
-         // Check proxy cell (代理人の氏名)
-         const proxyMatches = FieldLocator.findCellByExactText(docDom, '代理人の氏名');
-         if (proxyMatches.length > 0) {
-           const proxyCell = proxyMatches[0].cells[proxyMatches[0].cellIndex + 1];
-           if (proxyCell && FieldLocator.getCellText(proxyCell).includes(value)) throw new Error('Contact value found in proxy cell!');
-         }
-      } else if (key === 'employment_insurance') {
+      if (key === 'employment_insurance') {
          const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
          const result = FieldLocator.locateDistributedCells(docDom, empField.labelText, empField.locator.pattern);
 
@@ -412,13 +398,6 @@ export class OutputVerifier {
          if (pref + jur + off + base + branch !== normalized) {
             throw new Error('Groups do not match the expected logical number');
          }
-      } else if (key === 'main_business') {
-         const mainBusField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'main_business');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, mainBusField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Main business cell does not contain the value!`);
-         }
       } else if (key === 'employee_count') {
          const empField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'employee_count');
          const targetCell = FieldLocator.locateAdjacentCell(docDom, empField.labelText);
@@ -466,36 +445,6 @@ export class OutputVerifier {
          // 4. 入力値に単位が含まれていない -> Yes (tested by filler)
          // 5. 接尾辞が原本と同一 -> Yes
          // 6. 対象セル以外への数値混入なし -> Yes, output verifier will be robust
-      } else if (key === 'agent_name') {
-         const agentField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_name');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, agentField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Agent name cell does not contain the value!`);
-         }
-      } else if (key === 'agent_address') {
-         const agentAddrField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_address');
-         const targetCell = FieldLocator.locateNextRowContinuationCell(docDom, agentAddrField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Agent address cell does not contain the value!`);
-         }
-      } else if (key === 'agent_phone') {
-         const agentPhoneField = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'agent_phone_number');
-         const targetCell = FieldLocator.locateAdjacentCell(docDom, agentPhoneField.labelText);
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) {
-           throw new Error(`Agent phone cell does not contain the value!`);
-         }
-      } else if (key === 'manager_name') {
-         const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === 'manager_name');
-         const origCell = FieldLocator.locateSameCellByExactText(origDom, f.labelText, f.locator);
-         const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
-         const origIndex = origCells.indexOf(origCell);
-         const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
-         const cellText = FieldLocator.getCellText(targetCell);
-         if (!cellText.includes(value)) throw new Error(`Manager name cell does not contain the value!`);
-         if (!cellText.startsWith(f.preserve.prefixText)) throw new Error(`Manager name cell prefix not preserved!`);
       } else if (key === 'manager_assigned_date' || key === 'plan_start_date' || key === 'plan_end_date') {
          const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
          const origCell = FieldLocator.locateSameCellByExactText(origDom, f.labelText, f.locator);
