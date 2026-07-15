@@ -112,9 +112,14 @@ export class WordFiller {
 
     const { yearToken, monthToken, dayToken } = fieldConfig.preserve;
 
-    const ps = tcNode.getElementsByTagName('w:p');
-    if (ps.length === 0) throw new Error('Target cell has no paragraph.');
-    const p = ps[0];
+    let p;
+    if (tcNode.nodeName === 'w:p') {
+      p = tcNode;
+    } else {
+      const ps = tcNode.getElementsByTagName('w:p');
+      if (ps.length === 0) throw new Error('Target node has no paragraph.');
+      p = ps[0];
+    }
 
     let fullText = '';
     const ts = Array.from(p.getElementsByTagName('w:t'));

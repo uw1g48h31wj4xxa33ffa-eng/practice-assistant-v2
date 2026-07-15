@@ -244,6 +244,7 @@ async function verifyNumericField(docDom, origDom, field, value) {
 async function verifyDistributedField(docDom, origDom, field, value) {
   const { FieldLocator } = await import('./field-locator.mjs');
   const result = FieldLocator.locateDistributedCells(docDom, field.labelText, field.locator.pattern);
+  const origResult = FieldLocator.locateDistributedCells(origDom, field.labelText, field.locator.pattern);
   const normalized = String(value).replace(/[－-]/g, '');
   if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
 
@@ -269,9 +270,12 @@ async function verifyDistributedField(docDom, origDom, field, value) {
     }
   }
 
-  for (const sep of result.separatorCells) {
+  for (let i = 0; i < result.separatorCells.length; i++) {
+    const sep = result.separatorCells[i];
+    const origSep = origResult.separatorCells[i];
     const text = FieldLocator.getCellText(sep);
-    if (text !== '－') throw new Error(`Separator changed to ${text}`);
+    const origText = FieldLocator.getCellText(origSep);
+    if (text !== origText) throw new Error(`Separator changed to ${text}`);
     if (/\d/.test(text)) throw new Error('Separator contains digit');
   }
 
@@ -287,6 +291,7 @@ async function verifyDistributedField(docDom, origDom, field, value) {
 async function verifyMultiRowDistributedField(docDom, origDom, field, value) {
   const { FieldLocator } = await import('./field-locator.mjs');
   const result = FieldLocator.locateMultiRowDistributedCells(docDom, field.labelText, field.locator);
+  const origResult = FieldLocator.locateMultiRowDistributedCells(origDom, field.labelText, field.locator);
   const normalized = String(value).replace(/[－-]/g, '');
   if (result.digitCells.length !== normalized.length) throw new Error('Digit cell count mismatch in verifier');
 
@@ -312,9 +317,12 @@ async function verifyMultiRowDistributedField(docDom, origDom, field, value) {
     }
   }
 
-  for (const sep of result.separatorCells) {
+  for (let i = 0; i < result.separatorCells.length; i++) {
+    const sep = result.separatorCells[i];
+    const origSep = origResult.separatorCells[i];
     const text = FieldLocator.getCellText(sep);
-    if (text !== '－') throw new Error(`Separator changed to ${text}`);
+    const origText = FieldLocator.getCellText(origSep);
+    if (text !== origText) throw new Error(`Separator changed to ${text}`);
     if (/\d/.test(text)) throw new Error('Separator contains digit');
   }
 
@@ -338,11 +346,22 @@ async function verifyMultiRowDistributedField(docDom, origDom, field, value) {
 
 async function verifyDateField(docDom, origDom, f, value) {
   const { FieldLocator } = await import('./field-locator.mjs');
-  const origCell = FieldLocator.locateSameCellByExactText(origDom, f.labelText, f.locator);
-  const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
-  const origIndex = origCells.indexOf(origCell);
-  const targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
-  const cellText = FieldLocator.getCellText(targetCell);
+
+  let origCell, targetCell, cellText;
+  if (f.locator.type === 'paragraph-exact-text') {
+    origCell = FieldLocator.locateParagraphByExactText(origDom, f.labelText, f.locator);
+    const origParagraphs = Array.from(origDom.getElementsByTagName('w:p'));
+    const origIndex = origParagraphs.indexOf(origCell);
+    targetCell = docDom.getElementsByTagName('w:p')[origIndex];
+    cellText = FieldLocator.getParagraphText(targetCell);
+  } else {
+    origCell = FieldLocator.locateSameCellByExactText(origDom, f.labelText, f.locator);
+    const origCells = Array.from(origDom.getElementsByTagName('w:tc'));
+    const origIndex = origCells.indexOf(origCell);
+    targetCell = docDom.getElementsByTagName('w:tc')[origIndex];
+    cellText = FieldLocator.getCellText(targetCell);
+  }
+
   const { yearToken, monthToken, dayToken } = f.preserve;
 
   const isoRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -361,7 +380,7 @@ async function verifyDateField(docDom, origDom, f, value) {
 }
 
 export class OutputVerifier {
-  static async verify(originalBuffer, outputPath, expectedSha256, inputs) {
+  static async verify(originalBuffer, outputPath, expectedSha256, inputs, mapping = null) {
     // Verify Original Hash unchanged
     VersionGuard.verifyHash(originalBuffer, expectedSha256);
 
@@ -394,14 +413,17 @@ export class OutputVerifier {
     const origXmlStr = origZip.file('word/document.xml').asText();
     const origDom = parser.parseFromString(origXmlStr, 'text/xml');
     const { FieldLocator } = await import('./field-locator.mjs');
-    const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+    if (!mapping) {
+      const { careerUpR8Form1Mapping } = await import('../config/career-up-r8-form1.mapping.mjs');
+      mapping = careerUpR8Form1Mapping;
+    }
 
     for (const [key, value] of Object.entries(inputs)) {
       if (value === null || value === undefined || value === '') {
         continue;
       }
 
-      const f = careerUpR8Form1Mapping.fields.find(f => f.fieldId === key);
+      const f = mapping.fields.find(f => f.fieldId === key);
       if (f && f.inputMode === 'sdt-checkbox') {
         await verifySdtCheckboxField({
           originalDom: origDom,
@@ -459,7 +481,7 @@ export class OutputVerifier {
     // 対象外SDT全件の checked値不変確認
     const origAllSdts = origDom.getElementsByTagName('w:sdt');
     const outAllSdts = docDom.getElementsByTagName('w:sdt');
-    const sdtCheckboxFields = careerUpR8Form1Mapping.fields.filter(f => f.inputMode === 'sdt-checkbox');
+    const sdtCheckboxFields = mapping.fields.filter(f => f.inputMode === 'sdt-checkbox');
 
     // 変更を許可するSDTノードのoriginalインデックスを収集
     const allowedChangedIndices = new Set();

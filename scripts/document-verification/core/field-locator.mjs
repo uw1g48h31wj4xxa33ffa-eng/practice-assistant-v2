@@ -11,6 +11,54 @@ export class FieldLocator {
     return text.trim();
   }
 
+  static getParagraphText(pNode) {
+    let text = '';
+    const runs = pNode.getElementsByTagName('w:r');
+    for (let i = 0; i < runs.length; i++) {
+      const texts = runs[i].getElementsByTagName('w:t');
+      for (let j = 0; j < texts.length; j++) {
+        text += texts[j].textContent || '';
+      }
+    }
+    return text.trim();
+  }
+
+  static locateParagraphByExactText(documentDom, exactText, config = {}) {
+    let targetParagraphs;
+    if (config.scope === 'body-outside-table') {
+      const body = documentDom.getElementsByTagName('w:body')[0];
+      if (!body) throw new Error('No w:body found in document');
+      // Only get w:p that are direct children of w:body, avoiding tables
+      const children = Array.from(body.childNodes);
+      targetParagraphs = children.filter(node => node.nodeName === 'w:p');
+    } else {
+      targetParagraphs = Array.from(documentDom.getElementsByTagName('w:p'));
+    }
+
+    const matches = [];
+    for (let i = 0; i < targetParagraphs.length; i++) {
+      const p = targetParagraphs[i];
+      if (this.getParagraphText(p) === exactText) {
+        matches.push(p);
+      }
+    }
+
+    if (matches.length === 0) throw new Error(`Paragraph label "${exactText}" not found`);
+
+    if (config.matchIndex !== undefined) {
+      if (config.matchIndex >= matches.length) {
+        throw new Error(`Paragraph label "${exactText}" found, but matchIndex ${config.matchIndex} is out of bounds (found ${matches.length})`);
+      }
+      return matches[config.matchIndex];
+    }
+
+    if (matches.length > 1) {
+      throw new Error(`Paragraph label "${exactText}" found multiple times and no matchIndex provided`);
+    }
+
+    return matches[0];
+  }
+
   static findCellByExactText(documentDom, exactText) {
     const matches = [];
     const tables = documentDom.getElementsByTagName('w:tbl');

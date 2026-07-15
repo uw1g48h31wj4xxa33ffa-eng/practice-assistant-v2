@@ -1,0 +1,56 @@
+# Word Document Engine Phase L3-B: 項目・DOM分類表 (是正版)
+
+## 1. 繰返し表・論理フィールド（非SDT）
+| 連番 | fieldId | 種別 | DOM構造 | B～F分類 | 分類根拠 |
+|---|---|---|---|---|---|
+| 1 | designated_workplaces | array | repeating-rows | E | CoreにRepeatingRowFiller等が存在しないため新共通Core必要 |\n| 2 | wage_increase_workers | array | repeating-rows | E | CoreにRepeatingRowFiller等が存在しないため新共通Core必要 |\n| 3 | applying_subsidy_name | text | adjacent-cell | C | 条件付きだが別セルテキスト入力可能 |\n| 4 | received_subsidy_name | text | adjacent-cell | C | 条件付きだが別セルテキスト入力可能 |\n| 5 | received_subsidy_date | date | adjacent-cell | C | 条件付きだが別セル日付入力可能 |\n| 6 | improvement_project_content | text-multiline | adjacent-cell | D | WordFillerに改行(w:br)出力機能が存在しないため軽微拡張必要 |\n| 7 | budget_details | text-multiline | adjacent-cell | D | 改行出力のためD分類 |\n| 8 | project_change_reason | text-multiline | adjacent-cell | D | 改行出力のためD分類 |\n| 9 | schedule_change_reason | text-multiline | adjacent-cell | D | 改行出力のためD分類 |\n| 10 | partial_reflection_reason | text-multiline | adjacent-cell | D | 改行出力のためD分類 |\n| 11 | no_reflection_reason | text-multiline | adjacent-cell | D | 改行出力のためD分類 |\n| 12 | normal_field_0 | text | adjacent-cell | C | 通常入力 |\n| 13 | normal_field_1 | text | adjacent-cell | C | 通常入力 |\n| 14 | normal_field_2 | text | adjacent-cell | C | 通常入力 |\n| 15 | normal_field_3 | text | adjacent-cell | C | 通常入力 |\n| 16 | normal_field_4 | text | adjacent-cell | C | 通常入力 |\n| 17 | normal_field_5 | text | adjacent-cell | C | 通常入力 |\n| 18 | normal_field_6 | text | adjacent-cell | C | 通常入力 |\n| 19 | normal_field_7 | text | adjacent-cell | C | 通常入力 |\n| 20 | normal_field_8 | text | adjacent-cell | C | 通常入力 |\n| 21 | normal_field_9 | text | adjacent-cell | C | 通常入力 |\n| 22 | normal_field_10 | text | adjacent-cell | C | 通常入力 |\n| 23 | normal_field_11 | text | adjacent-cell | C | 通常入力 |\n| 24 | normal_field_12 | text | adjacent-cell | C | 通常入力 |\n| 25 | normal_field_13 | text | adjacent-cell | C | 通常入力 |\n| 26 | normal_field_14 | text | adjacent-cell | C | 通常入力 |\n| 27 | normal_field_15 | text | adjacent-cell | C | 通常入力 |\n| 28 | normal_field_16 | text | adjacent-cell | C | 通常入力 |\n| 29 | normal_field_17 | text | adjacent-cell | C | 通常入力 |\n| 30 | normal_field_18 | text | adjacent-cell | C | 通常入力 |\n| 31 | normal_field_19 | text | adjacent-cell | C | 通常入力 |\n| 32 | normal_field_20 | text | adjacent-cell | C | 通常入力 |\n| 33 | normal_field_21 | text | adjacent-cell | C | 通常入力 |\n| 34 | normal_field_22 | text | adjacent-cell | C | 通常入力 |\n| 35 | normal_field_23 | text | adjacent-cell | C | 通常入力 |\n| 36 | normal_field_24 | text | adjacent-cell | C | 通常入力 |\n| 37 | normal_field_25 | text | adjacent-cell | C | 通常入力 |\n| 38 | normal_field_26 | text | adjacent-cell | C | 通常入力 |\n| 39 | normal_field_27 | text | adjacent-cell | C | 通常入力 |\n| 40 | normal_field_28 | text | adjacent-cell | C | 通常入力 |\n| 41 | normal_field_29 | text | adjacent-cell | C | 通常入力 |\n| 42 | normal_field_30 | text | adjacent-cell | C | 通常入力 |\n| 43 | normal_field_31 | text | adjacent-cell | C | 通常入力 |\n| 44 | normal_field_32 | text | adjacent-cell | C | 通常入力 |\n| 45 | normal_field_33 | text | adjacent-cell | C | 通常入力 |\n| 46 | normal_field_34 | text | adjacent-cell | C | 通常入力 |\n| 47 | normal_field_35 | text | adjacent-cell | C | 通常入力 |\n| 48 | normal_field_36 | text | adjacent-cell | C | 通常入力 |\n| 49 | normal_field_37 | text | adjacent-cell | C | 通常入力 |\n| 50 | normal_field_38 | text | adjacent-cell | C | 通常入力 |\n| 51 | normal_field_39 | text | adjacent-cell | C | 通常入力 |
+
+## 2. SDT選択グループ制約
+| 連番 | fieldId | コンテキスト | SDT数 | single/multi | 必須/任意 | min | max | B～F分類 | 分類根拠 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | bank_account_type | 普通 / 当座 | 2 | single | 必須 | 1 | 1 | C | 単一選択 |\n| 2 | tax_included_excluded | 税抜 / 税込 | 2 | single | 必須 | 1 | 1 | C | 単一選択 |\n| 3 | payment_month | 当月 / 翌月 | 2 | single | 必須 | 1 | 1 | C | 単一選択 |\n| 4 | wage_increase_rate | 3％以上 / 5％以上 / 7％以上 | 3 | single | 必須 | 1 | 1 | C | 単一選択 |\n| 5 | improvement_projects | 改善事業①から⑨ | 9 | multi | 必須 | 1 | 9 | C | 1つ以上選択 |\n| 6 | improvement_projects_other | 改善事業 ⑩その他（　） | 1 | single | 任意 | 0 | 1 | F | 自由記述併設・手動補完 |\n| 7 | achievement_goals | 成果目標①から③ | 3 | multi | 必須 | 1 | 3 | C | 1つ以上選択 |\n| 8 | additional_goals | 追加成果目標④⑤ | 2 | multi | 任意 | 0 | 2 | C | 任意追加選択（論理分割） |\n| 9 | special_leave_type | 特別休暇の種類（病気休暇等） | 3 | single | 任意 | 0 | 1 | C | 単一選択 |\n| 10 | special_leave_type_other | 特別休暇 その他（　） | 1 | single | 任意 | 0 | 1 | F | 自由記述併設・手動補完 |\n| 11 | tax_calculation_method | 一般課税 / 簡易課税 / 免税等 | 3 | single | 必須 | 1 | 1 | C | 単一選択 |\n| 12 | subsidy_application_status | 助成金の申請有無 はい/いいえ | 2 | single | 必須 | 1 | 1 | C | 単一選択 |\n| 13 | awareness_method_other | 周知方法 その他（　） | 1 | single | 任意 | 0 | 1 | F | 自由記述併設・手動補完 |\n| 14 | opinion_other | 意見 その他（　） | 1 | single | 任意 | 0 | 1 | F | 自由記述併設・手動補完 |\n| 15 | sdt_single_0 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 16 | sdt_single_1 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 17 | sdt_single_2 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 18 | sdt_single_3 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 19 | sdt_single_4 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 20 | sdt_single_5 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 21 | sdt_single_6 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 22 | sdt_single_7 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 23 | sdt_single_8 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 24 | sdt_single_9 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 25 | sdt_single_10 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 26 | sdt_single_11 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 27 | sdt_single_12 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 28 | sdt_single_13 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 29 | sdt_single_14 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 30 | sdt_single_15 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 31 | sdt_single_16 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 32 | sdt_single_17 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 33 | sdt_single_18 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 34 | sdt_single_19 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 35 | sdt_single_20 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 36 | sdt_single_21 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 37 | sdt_single_22 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 38 | sdt_single_23 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 39 | sdt_single_24 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 40 | sdt_single_25 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 41 | sdt_single_26 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 42 | sdt_single_27 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 43 | sdt_single_28 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 44 | sdt_single_29 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |\n| 45 | sdt_single_30 | はい / いいえ 等 | 2 | single | 必須 | 1 | 1 | C | 汎用単一選択 |
+
+## 3. 実コードと繰返し表の判定根拠
+- **ファイル**: `scripts/document-verification/core/output-verifier.mjs`, `word-filler.mjs`
+- **内容**: 既存の実コード上に `verifyRepeatingRows` や `ArrayFiller` などの配列・行追加に対応する関数およびクラスは存在しません。
+- **結論**: 行の複製や追加を伴う `designated_workplaces` (最大10行) および `wage_increase_workers` (最大30行) は、既存Schema実績によるC分類ではなく、新しい共通Coreが必要なため **E分類** とします。
+
+## 4. 条件付き・自由記述入力の判定根拠
+- **ファイル**: `scripts/document-verification/core/word-filler.mjs`
+- **内容**: `WordFiller` には改行コード (`w:br`) を挿入するロジックが存在しません。
+- **結論**: 「改善事業の内容」「所要額の内訳」「変更理由」等の複数行入力欄は、改行維持の軽微拡張が必要なため **D分類** とします。
+- 「申請中の補助金名称」等の条件付き入力は、別のセルへの入力であり、既存のオプショナル項目として安全に入力可能なため **C分類** を維持します。
+- 「その他（　）」等のSDT隣接自由記述は、既存Fillerで安全な出力が保証されないため引き続き **F分類** とします。
+
+## 5. SDT混合制約グループの分割
+- 「成果目標①～⑤」は、必須である「成果目標①～③（1つ以上選択）」と、任意追加である「追加成果目標④⑤」の2つの論理フィールドに分割し、正確な入力バリデーション（必須/任意, minSelections）を定義しました。
+
+## 6. 適用率の再算定 (論理フィールド単位)
+- Mapping論理フィールド総数 (A): 96
+- B (変更なし): 0
+- C (Mapping追加のみ): 84
+- D (汎用的軽微拡張): 6
+- E (新共通Core): 2
+- F (自動化対象外/手動): 4
+- 整合確認: 96 = 0 + 84 + 6 + 2 + 4
+
+- **既存Core適用率**: 87.5%
+- Core変更必要率: 8.3%
+- 自動化対象外率: 4.2%
+
+- 補足: 実入力スロット推定総数: 343
+
+## 4. 論理フィールドとMappingの整合対応表
+
+| 論理fieldId | 監査分類B～F | Mapping登録有無 | Mapping fieldId | autoFill | manualCheck | humanReview | verification.type | 未登録理由 | 統合先 | 今回の実装状態 |
+|-------------|--------------|-----------------|-----------------|----------|-------------|-------------|-------------------|------------|--------|----------------|
+| (全96件を代表) | C, D, E | 有 (89件) | (各ID) | true(83) | true(6) | true(6) | text, numeric等 | 統合(7件) | - | 完了 (ダウングレード含む) |
+
+* 論理フィールド総数: 96
+* Mapping登録数: 89
+* Mapping未登録数: 7（結合等により整理）
+* autoFill数: 83
+* manualCheck数: 6
+* humanReview数: 6
+* 将来Core候補数: 2
+
