@@ -147,14 +147,16 @@ async function verifyTextField({ originalDom, outputDom, documentXmlStr, field, 
   const { FieldLocator } = await import('./field-locator.mjs');
 
   const escapedValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const count = documentXmlStr.split(escapedValue).length - 1;
-  if (count !== 1) {
-    throw new Error(`Input value "${value}" (${key}) appears ${count} times in whole document, expected 1.`);
+  if (field.inputMode !== 'multiline-text') {
+    const count = documentXmlStr.split(escapedValue).length - 1;
+    if (count !== 1) {
+      throw new Error(`Input value "${value}" (${key}) appears ${count} times in whole document, expected 1.`);
+    }
   }
 
   let targetCell;
   if (field.locator.type === 'adjacent-cell') {
-     targetCell = FieldLocator.locateAdjacentCell(outputDom, field.labelText);
+     targetCell = FieldLocator.locateAdjacentCell(outputDom, field.labelText, field.locator);
   } else if (field.locator.type === 'next-row-continuation-cell') {
      targetCell = FieldLocator.locateNextRowContinuationCell(outputDom, field.labelText);
   } else if (field.locator.type === 'same-cell') {
@@ -164,14 +166,32 @@ async function verifyTextField({ originalDom, outputDom, documentXmlStr, field, 
   }
 
   const cellText = FieldLocator.getCellText(targetCell);
-  if (!cellText.includes(value)) {
-    throw new Error(`${key} cell does not contain the value!`);
+  if (field.inputMode === 'multiline-text') {
+    const lines = value.replace(/\r\n/g, '\n').split('\n');
+    for (const line of lines) {
+      if (!cellText.includes(line)) {
+        throw new Error(`${key} cell does not contain the line: ${line}`);
+      }
+    }
+  } else {
+    if (!cellText.includes(value)) {
+      throw new Error(`${key} cell does not contain the value!`);
+    }
   }
 
   const runs = targetCell.getElementsByTagName('w:r');
   for (let r = 0; r < runs.length; r++) {
     const runText = Array.from(runs[r].getElementsByTagName('w:t')).map(t => t.textContent).join('');
-    if (runText.includes(value)) {
+    
+    let matchFound = false;
+    if (field.inputMode === 'multiline-text') {
+      const lines = value.replace(/\r\n/g, '\n').split('\n');
+      matchFound = lines.some(line => runText.includes(line) && line.trim() !== '');
+    } else {
+      matchFound = runText.includes(value);
+    }
+    
+    if (matchFound) {
        const rPr = runs[r].getElementsByTagName('w:rPr')[0];
        if (rPr) {
          if (rPr.getElementsByTagName('w:vanish').length > 0 || rPr.getElementsByTagName('w:webHidden').length > 0) {
@@ -203,7 +223,7 @@ async function verifyPrefixTextField(docDom, f, value, origDom) {
 
 async function verifyNumericField(docDom, origDom, field, value) {
   const { FieldLocator } = await import('./field-locator.mjs');
-  const targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText);
+  const targetCell = FieldLocator.locateAdjacentCell(docDom, field.labelText, field.locator);
   const cellText = FieldLocator.getCellText(targetCell);
 
   if (field.verification?.preserveAffix && field.affix) {
@@ -379,6 +399,33 @@ async function verifyDateField(docDom, origDom, f, value) {
   if (!cellText.includes(`${dayStr}${dayToken}`)) throw new Error(`Day missing in cell!`);
 }
 
+async function verifyFixedRowTable(docDom, origDom, field, value) {
+  const { FieldLocator } = await import('./field-locator.mjs');
+  const tables = docDom.getElementsByTagName('w:tbl');
+  const tableIdx = field.arrayConfig.tableIndex;
+  if (tableIdx >= tables.length) throw new Error(`Table index ${tableIdx} out of bounds`);
+  const targetTable = tables[tableIdx];
+  const rows = targetTable.getElementsByTagName('w:tr');
+  const startRowIndex = field.arrayConfig.startRowIndex || 1;
+
+  for (let i = 0; i < value.length; i++) {
+    const dataRow = value[i];
+    const tr = rows[startRowIndex + i];
+    const cells = tr.getElementsByTagName('w:tc');
+    
+    for (const col of field.arrayConfig.columns) {
+      if (col.key && dataRow[col.key] !== undefined && dataRow[col.key] !== null) {
+        if (col.cellIndex >= cells.length) throw new Error(`Cell index ${col.cellIndex} out of bounds`);
+        const cellText = FieldLocator.getCellText(cells[col.cellIndex]);
+        const valStr = String(dataRow[col.key]);
+        if (!cellText.includes(valStr)) {
+          throw new Error(`Row ${i} Col ${col.cellIndex} missing value "${valStr}", found "${cellText}"`);
+        }
+      }
+    }
+  }
+}
+
 export class OutputVerifier {
   static async verify(originalBuffer, outputPath, expectedSha256, inputs, mapping = null) {
     // Verify Original Hash unchanged
@@ -462,6 +509,11 @@ export class OutputVerifier {
 
       if (f && f.verification?.type === 'multi-row-distributed') {
         await verifyMultiRowDistributedField(docDom, origDom, f, value);
+        continue;
+      }
+
+      if (f && f.inputMode === 'fixed-row-table') {
+        await verifyFixedRowTable(docDom, origDom, f, value);
         continue;
       }
 

@@ -6,6 +6,7 @@ import { FieldLocator } from './core/field-locator.mjs';
 import { WordFiller } from './core/word-filler.mjs';
 import { OutputVerifier } from './core/output-verifier.mjs';
 import { DomSerializationVerifier } from './core/dom-serialization-verifier.mjs';
+import { ArrayFiller } from './core/array-filler.mjs';
 import { hatarakikataR8Form1Mapping } from './config/hatarakikata-r8-form1.mapping.mjs';
 
 const inputPath = process.env.INPUT_PATH || '/Users/to/Documents/practice-assistant-input/001687895.docx';
@@ -40,6 +41,8 @@ async function verify(scenario, outputsMap) {
       const { SdtCheckboxFiller } = await import('./core/sdt-checkbox-filler.mjs');
       const groupInfo = SdtCheckboxLocator.locateGroup(documentDom, config.locator, config.selection);
       SdtCheckboxFiller.fillGroup(groupInfo, val, config.selection, 'confirmed');
+    } else if (config.inputMode === 'fixed-row-table') {
+      ArrayFiller.fillFixedRowTable(documentDom, val, config);
     } else {
       let targetNode;
       if (config.locator.type === 'paragraph-exact-text') {
@@ -96,7 +99,7 @@ async function run() {
   }
 
   try {
-    const v3Data = {
+    const level4aData = {
       plan_start_date: '2026-07-15',
       capital: 10000000,
       employee_count: 25,
@@ -108,9 +111,19 @@ async function run() {
       bank_account_holder: 'カブシキガイシャテスト',
       sdt_group_14: ['①時間外労働の上限設定', '③時間単位年休及び特別休暇の導入'],
       cooperate_checkbox: '協力する',
+      designated_workplaces: [
+        { number: 1, name: '東京本社', address: '東京都新宿区', employee_count: 15 },
+        { number: 2, name: '大阪支社', address: '大阪府大阪市', employee_count: 10 }
+      ],
+      wage_increase_workers: [
+        { number: 1, name: '山田太郎', hire_date: '2020-04-01', current_wage: 1000, planned_wage: 1050, increase_date: '2026-08-01' },
+        { number: 2, name: '佐藤花子', hire_date: '2021-04-01', current_wage: 1100, planned_wage: 1150, increase_date: '2026-08-01' }
+      ],
+      bank_account_type: '普通',
+      field_16: 'これはテストです。\n改行もサポートします。\n\r\nさらに改行します。'
     };
     
-    await verify('level3_final_human_verification_v3', v3Data);
+    await verify('level4a_final_verification', level4aData);
 
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {

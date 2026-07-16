@@ -16,6 +16,9 @@ export default function SubsidyDeliveryPage() {
   
   const [isClient, setIsClient] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingWord, setIsGeneratingWord] = useState(false);
+  const [downloadId, setDownloadId] = useState<string | null>(null);
+  const [generationResult, setGenerationResult] = useState<any>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -75,6 +78,54 @@ export default function SubsidyDeliveryPage() {
       updateCase(caseId, { subsidyDeliveryItems: generated });
       setIsAnalyzing(false);
     }, 1500);
+  };
+
+  const handleGenerateWord = async () => {
+    setIsGeneratingWord(true);
+    setDownloadId(null);
+    setGenerationResult(null);
+    try {
+      const res = await fetch('/api/document/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(currentCase),
+      });
+
+      const data = await res.json();
+      setGenerationResult(data);
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.errors?.join(', ') || 'Word文書の生成に失敗しました');
+      }
+
+      setDownloadId(data.downloadId);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setIsGeneratingWord(false);
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    if (!downloadId) return;
+    try {
+      const res = await fetch(`/api/document/generate?downloadId=${downloadId}`);
+      if (!res.ok) throw new Error('ダウンロードに失敗しました');
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = generationResult?.outputFileName || `practice_assistant_${currentCase.id}_output.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
   const handleStatusChange = (itemId: string, newStatus: SubsidyDeliveryItem['completionStatus']) => {
@@ -255,6 +306,57 @@ export default function SubsidyDeliveryPage() {
                     </>
                   )}
                 </button>
+                <button
+                  onClick={handleGenerateWord}
+                  disabled={isGeneratingWord}
+                  className="w-full mt-3 py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-200 shadow-sm disabled:opacity-50"
+                >
+                  {isGeneratingWord ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Word文書を生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Word文書を生成
+                    </>
+                  )}
+                </button>
+                {downloadId && (
+                  <button
+                    onClick={handleDownloadWord}
+                    className="w-full mt-3 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border border-green-200 shadow-sm"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Word文書をダウンロード
+                  </button>
+                )}
+                {generationResult && (
+                  <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700">
+                    <p className="font-bold mb-1">生成結果:</p>
+                    <p>成功: {generationResult.success ? 'はい' : 'いいえ'}</p>
+                    {generationResult.manualCheck?.length > 0 && (
+                      <p className="text-yellow-600">Manual Check: {generationResult.manualCheck.length}件</p>
+                    )}
+                    {generationResult.humanReview?.length > 0 && (
+                      <p className="text-blue-600">Human Review: {generationResult.humanReview.length}件</p>
+                    )}
+                    {generationResult.warnings?.length > 0 && (
+                      <p className="text-orange-600">Warnings: {generationResult.warnings.length}件</p>
+                    )}
+                    {generationResult.errors?.length > 0 && (
+                      <p className="text-red-600">Errors: {generationResult.errors.join(', ')}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

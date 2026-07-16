@@ -223,18 +223,20 @@ export const hatarakikataR8Form1Mapping = {
         "locator": {
             "type": "sdt-checkbox-group",
             "groupContextText": "普通",
-            "optionContextMode": "adjacent-text"
+            "optionContextMode": "index-in-group"
         },
         "selection": {
             "mode": "single",
             "options": [
                 {
                     "value": "普通",
-                    "contextText": "普通"
+                    "contextText": "普通",
+                    "index": 0
                 },
                 {
                     "value": "当座",
-                    "contextText": "当座"
+                    "contextText": "当座",
+                    "index": 1
                 }
             ],
             "clearUnselected": true
@@ -1548,12 +1550,14 @@ export const hatarakikataR8Form1Mapping = {
     {
         "fieldId": "field_16",
         "labelText": "労働時間や年次有給休",
+        "inputMode": "multiline-text",
         "locator": {
             "type": "adjacent-cell",
-            "matchMode": "exact-cell-text"
+            "matchMode": "includes"
         },
         "validation": {
-            "required": false
+            "required": false,
+            "rejectInvalidChars": true
         },
         "verification": {
             "type": "text"
@@ -1591,13 +1595,26 @@ export const hatarakikataR8Form1Mapping = {
             "type": "text"
         },
         "manualCheck": false,
-        "humanReview": false
+        "humanReview": true
     },
     {
         "fieldId": "designated_workplaces",
+        "inputMode": "fixed-row-table",
+        "arrayConfig": {
+            "maxRows": 10,
+            "tableIndex": 14,
+            "startRowIndex": 2,
+            "clearUnused": true,
+            "columns": [
+                { "cellIndex": 0, "key": "number" },
+                { "cellIndex": 1, "key": "name" },
+                { "cellIndex": 2, "key": "address" },
+                { "cellIndex": 3, "key": "employee_count" }
+            ]
+        },
         "locator": {
             "type": "table-rows",
-            "tableIndex": 8
+            "tableIndex": 14
         },
         "manualCheck": true,
         "humanReview": true,
@@ -1987,10 +2004,25 @@ export const hatarakikataR8Form1Mapping = {
             "type": "text"
         },
         "manualCheck": false,
-        "humanReview": false
+        "humanReview": true
     },
     {
         "fieldId": "wage_increase_workers",
+        "inputMode": "fixed-row-table",
+        "arrayConfig": {
+            "maxRows": 30,
+            "tableIndex": 15,
+            "startRowIndex": 1,
+            "clearUnused": true,
+            "columns": [
+                { "cellIndex": 0, "key": "number" },
+                { "cellIndex": 1, "key": "name" },
+                { "cellIndex": 2, "key": "hire_date" },
+                { "cellIndex": 3, "key": "current_wage" },
+                { "cellIndex": 4, "key": "planned_wage" },
+                { "cellIndex": 5, "key": "start_date" }
+            ]
+        },
         "locator": {
             "type": "table-rows",
             "tableIndex": 15

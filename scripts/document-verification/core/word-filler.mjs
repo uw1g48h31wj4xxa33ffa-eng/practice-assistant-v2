@@ -187,6 +187,9 @@ export class WordFiller {
     if (fieldConfig.inputMode === 'date-preserve-tokens') {
       return this.fillDateFieldPreservingTokens(tcNode, value, fieldConfig);
     }
+    if (fieldConfig.inputMode === 'multiline-text') {
+      return this.fillMultilineText(tcNode, value, fieldConfig);
+    }
 
     if (fieldConfig.status !== 'confirmed') {
       throw new Error(`Cannot fill value. Status is not 'confirmed'`);
@@ -496,5 +499,82 @@ export class WordFiller {
     }
 
     targetP.insertBefore(newRun, suffixRun);
+  }
+
+  static fillMultilineText(tcNode, value, fieldConfig) {
+    if (fieldConfig.status !== 'confirmed') {
+      throw new Error(`Cannot fill value. Status is not 'confirmed'`);
+    }
+
+    const isEmpty = value === undefined || value === null || value === '';
+
+    if (isEmpty) {
+      if (fieldConfig.validation && fieldConfig.validation.rejectEmpty) {
+        throw new Error(`Value is empty`);
+      }
+      return;
+    }
+
+    if (typeof value !== 'string') {
+      throw new Error(`Value must be a string`);
+    }
+
+    if (fieldConfig.validation) {
+      const val = fieldConfig.validation;
+      if (val.rejectEmpty && value.trim() === '') {
+        throw new Error(`Value is empty`);
+      }
+      if (val.maxLength && value.length > val.maxLength) {
+        throw new Error(`Value exceeds max length of ${val.maxLength}`);
+      }
+      if (val.rejectInvalidChars) {
+        if (/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/.test(value)) throw new Error('Value contains control characters (excluding newline/carriage return)');
+        if (/<[^>]+>/.test(value)) throw new Error('Value contains HTML/XML tags');
+      }
+    }
+
+    const ps = tcNode.getElementsByTagName('w:p');
+    if (ps.length === 0) throw new Error('Target cell has no paragraph.');
+    const targetP = ps[0];
+
+    const doc = tcNode.ownerDocument;
+    const runs = targetP.getElementsByTagName('w:r');
+
+    let rPrClone = null;
+    if (runs.length > 0) {
+      const rPrs = runs[0].getElementsByTagName('w:rPr');
+      if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
+    }
+    if (!rPrClone) {
+      const pPrs = targetP.getElementsByTagName('w:pPr');
+      if (pPrs.length > 0) {
+        const rPrs = pPrs[0].getElementsByTagName('w:rPr');
+        if (rPrs.length > 0) rPrClone = rPrs[0].cloneNode(true);
+      }
+    }
+
+    const runsArray = Array.from(runs);
+    for (const run of runsArray) {
+      targetP.removeChild(run);
+    }
+
+    // Normalize \r\n to \n
+    const lines = value.replace(/\r\n/g, '\n').split('\n');
+
+    const newRun = tcNode.ownerDocument.createElement('w:r');
+    if (rPrClone) newRun.appendChild(rPrClone);
+
+    for (let i = 0; i < lines.length; i++) {
+      if (i > 0) {
+        const br = tcNode.ownerDocument.createElement('w:br');
+        newRun.appendChild(br);
+      }
+      const newText = tcNode.ownerDocument.createElement('w:t');
+      newText.setAttribute('xml:space', 'preserve');
+      newText.textContent = lines[i];
+      newRun.appendChild(newText);
+    }
+
+    targetP.appendChild(newRun);
   }
 }

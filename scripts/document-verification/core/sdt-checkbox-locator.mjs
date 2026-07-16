@@ -70,10 +70,38 @@ export class SdtCheckboxLocator {
               matchedCount++;
             }
           }
+        } else if (locatorConfig.optionContextMode === 'index-in-group') {
+          // Use the explicit index provided in the option mapping
+          if (option.index !== undefined && checkboxSdts[option.index] === sdt) {
+            let pNode = sdt.parentNode;
+            while (pNode && pNode.tagName !== 'w:p') {
+              pNode = pNode.parentNode;
+            }
+            if (pNode) {
+              const pText = pNode.textContent || '';
+              if (pText.includes(option.contextText)) {
+                matchedSdt = sdt;
+                matchedCount++;
+              } else {
+                throw new Error(`Option context text "${option.contextText}" not found near index ${option.index}`);
+              }
+            } else {
+               // If no parent paragraph, fallback to cell text
+               if (targetCell.textContent.includes(option.contextText)) {
+                 matchedSdt = sdt;
+                 matchedCount++;
+               } else {
+                 throw new Error(`Option context text "${option.contextText}" not found in cell`);
+               }
+            }
+          }
         }
       }
 
       if (matchedCount === 0) {
+        if (locatorConfig.optionContextMode === 'index-in-group') {
+           throw new Error(`Option index ${option.index} for value "${option.value}" is out of bounds`);
+        }
         throw new Error(`Option context text "${option.contextText}" did not match any SDT checkbox`);
       }
       if (matchedCount > 1) {

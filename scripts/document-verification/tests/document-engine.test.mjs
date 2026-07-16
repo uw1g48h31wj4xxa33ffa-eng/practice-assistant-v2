@@ -2069,7 +2069,7 @@ test('U. Hatarakikata R8 Form1 新様式検証', async (t) => {
     const field = hatarakikataR8Form1Mapping.fields.find(f => f.fieldId === 'designated_workplaces');
     assert.strictEqual(field.manualCheck, true);
     assert.strictEqual(field.humanReview, true);
-    // 理由はPhase L3-B監査結果の通り、既存Coreに行追加・行複製のロジックがないため
+    // 理由はLevel 4で固定行入力が実装されたがWord人間確認が終わるまで解除しないため
   });
   
   await t.test('3. OutputVerifier / DomSerializationVerifier モックテスト', async () => {

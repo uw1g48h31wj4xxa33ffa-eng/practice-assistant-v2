@@ -86,8 +86,40 @@ export class FieldLocator {
     return matches;
   }
 
-  static locateAdjacentCell(documentDom, exactLabelText) {
-    const matches = this.findCellByExactText(documentDom, exactLabelText);
+  static findCellByIncludesText(documentDom, textToInclude) {
+    const matches = [];
+    const tables = documentDom.getElementsByTagName('w:tbl');
+    for (let t = 0; t < tables.length; t++) {
+      const rows = tables[t].getElementsByTagName('w:tr');
+      for (let r = 0; r < rows.length; r++) {
+        const cells = rows[r].getElementsByTagName('w:tc');
+        for (let c = 0; c < cells.length; c++) {
+          const text = this.getCellText(cells[c]);
+          if (text.includes(textToInclude)) {
+            matches.push({
+              tableIndex: t,
+              rowIndex: r,
+              cellIndex: c,
+              tcNode: cells[c],
+              trNode: rows[r],
+              tblNode: tables[t],
+              cells: cells,
+              rows: rows
+            });
+          }
+        }
+      }
+    }
+    return matches;
+  }
+
+  static locateAdjacentCell(documentDom, exactLabelText, config = {}) {
+    let matches;
+    if (config.matchMode === 'includes') {
+      matches = this.findCellByIncludesText(documentDom, exactLabelText);
+    } else {
+      matches = this.findCellByExactText(documentDom, exactLabelText);
+    }
     if (matches.length === 0) throw new Error(`Label "${exactLabelText}" not found`);
     if (matches.length > 1) throw new Error(`Label "${exactLabelText}" found multiple times`);
 
