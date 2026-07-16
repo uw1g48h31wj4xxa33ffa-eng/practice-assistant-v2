@@ -6,7 +6,9 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ai:verify": "node scripts/ai-governance/verify-project-state.mjs",
+    "ai:precommit": "node scripts/ai-governance/validate-ai-package.mjs"
   },
   "dependencies": {
     "next": "16.2.9",

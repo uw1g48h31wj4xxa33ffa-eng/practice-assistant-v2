@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-07-16T12:24:55.898Z",
+  "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
+  "branch": "main",
+  "head": "ded206bff32b82a4c2e9243fe553cff747175f02",
+  "originHead": "ded206bff32b82a4c2e9243fe553cff747175f02",
+  "workingTree": "dirty",
+  "requiredGates": {
+    "node_test_scriptsdocumentverificationteststestmjs": {
+      "command": "node --test scripts/document-verification/tests/*.test.mjs",
+      "exitCode": 0,
+      "counts": {
+        "passed": 222,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "d8709b712f28f20f4aa3e0e5e29c9d5504bcc22d17d97637d223a1b55ae72e6e",
+      "evidenceTime": "2026-07-16T12:25:01.904Z"
+    },
+    "node_test_scriptsaigovernanceteststestmjs": {
+      "command": "node --test scripts/ai-governance/tests/*.test.mjs",
+      "exitCode": 0,
+      "counts": {
+        "passed": 3,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "db12a15d0fe0b9b130cf9214ffd0b42569415717017c6407958f513cf4e4e436",
+      "evidenceTime": "2026-07-16T12:25:01.973Z"
+    },
+    "node_scriptsdocumentverificationverifycareerupform1mjs": {
+      "command": "node scripts/document-verification/verify-career-up-form1.mjs",
+      "exitCode": 0,
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
+      "evidenceTime": "2026-07-16T12:25:08.694Z"
+    },
+    "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
+      "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
+      "exitCode": 0,
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
+      "evidenceTime": "2026-07-16T12:25:10.393Z"
+    },
+    "npm_run_build": {
+      "command": "npm run build",
+      "exitCode": 0,
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "849ff2c049597d23a422ea5c143c933d66aa711b32994453459810637f37a5a0",
+      "evidenceTime": "2026-07-16T12:25:21.016Z"
+    },
+    "changedFilesLint": {
+      "command": "npx eslint scripts/ai-governance/append-audit-event.mjs scripts/ai-governance/tests/validators.test.mjs scripts/ai-governance/validate-ai-package.mjs scripts/ai-governance/verify-project-state.mjs",
+      "exitCode": 0,
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "evidenceTime": "2026-07-16T12:25:24.065Z"
+    },
+    "sourceHash": {
+      "file": "001687895.docx",
+      "hash": "b87253adeb29b593913c97fe972a4bb3afb8c36bac6dbb66bd70d08146963da8",
+      "status": "Success"
+    }
+  },
+  "informationalGates": {
+    "fullRepositoryLint": {
+      "command": "npx eslint .",
+      "exitCode": 1,
+      "counts": {
+        "passed": 0,
+        "failed": 56,
+        "warnings": 23
+      },
+      "result": "Failed",
+      "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
+      "evidenceTime": "2026-07-16T12:25:28.126Z"
+    }
+  },
+  "preExistingIssues": {
+    "fullRepositoryLint": {
+      "status": "PreExistingFailed",
+      "errors": 56,
+      "warnings": 23,
+      "blocking": false
+    }
+  },
+  "outputVerifier": {
+    "status": "Success",
+    "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
+    "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
+    "verifiedAt": "2026-07-16T12:25:10.393Z"
+  },
+  "domSerializationVerifier": {
+    "status": "Success",
+    "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
+    "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
+    "verifiedAt": "2026-07-16T12:25:10.393Z"
+  },
+  "packageConsistency": {
+    "status": "Success"
+  },
+  "auditLogValidation": {
+    "status": "Success"
+  },
+  "repositoryDocxCheck": {
+    "status": "Success"
+  },
+  "overallResult": "Passed",
+  "resultHash": "30ac4b36b83a67d22030786115cd184645a96d285e7fe8e327833abe896f0787"
+}
