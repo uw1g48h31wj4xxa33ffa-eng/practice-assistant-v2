@@ -36,5 +36,79 @@
     "updatedAt": "2026-07-17T00:00:00Z",
     "formVersion": "r8",
     "templateReference": "hatarakikata-r8.docx"
+  },
+  {
+    "id": "mock-law",
+    "profileType": "law",
+    "schemaVersion": "1.0",
+    "version": "1.0",
+    "status": "active",
+    "effectiveFrom": "2026-01-01T00:00:00Z",
+    "createdAt": "2026-07-17T00:00:00Z",
+    "updatedAt": "2026-07-17T00:00:00Z",
+    "lawVersion": "1.0",
+    "jurisdiction": "JP"
+  },
+  {
+    "id": "mock-mapping",
+    "profileType": "mapping",
+    "schemaVersion": "1.0",
+    "version": "1.0",
+    "status": "active",
+    "effectiveFrom": "2026-01-01T00:00:00Z",
+    "createdAt": "2026-07-17T00:00:00Z",
+    "updatedAt": "2026-07-17T00:00:00Z",
+    "formProfileId": "career-up-r8-form",
+    "fieldDefinitions": {}
+  },
+  {
+    "id": "mock-rule",
+    "profileType": "verification-rule",
+    "schemaVersion": "1.0",
+    "version": "1.0",
+    "status": "active",
+    "effectiveFrom": "2026-01-01T00:00:00Z",
+    "createdAt": "2026-07-17T00:00:00Z",
+    "updatedAt": "2026-07-17T00:00:00Z",
+    "rules": {}
+  },
+  {
+    "id": "mock-doc-ver",
+    "profileType": "document-version",
+    "schemaVersion": "1.0",
+    "version": "1.0",
+    "status": "active",
+    "effectiveFrom": "2026-01-01T00:00:00Z",
+    "createdAt": "2026-07-17T00:00:00Z",
+    "updatedAt": "2026-07-17T00:00:00Z",
+    "documentId": "doc-1",
+    "caseId": "case-1",
+    "generatedAt": "2026-07-17T00:00:00Z",
+    "lawProfileId": "mock-law",
+    "formProfileId": "career-up-r8-form",
+    "mappingProfileId": "mock-mapping"
+  },
+  {
+    "id": "mock-workflow",
+    "profileType": "workflow",
+    "schemaVersion": "1.0",
+    "version": "1.0",
+    "status": "active",
+    "effectiveFrom": "2026-01-01T00:00:00Z",
+    "createdAt": "2026-07-17T00:00:00Z",
+    "updatedAt": "2026-07-17T00:00:00Z",
+    "steps": {}
+  },
+  {
+    "id": "mock-ai",
+    "profileType": "ai-capability",
+    "schemaVersion": "1.0",
+    "version": "1.0",
+    "status": "active",
+    "effectiveFrom": "2026-01-01T00:00:00Z",
+    "createdAt": "2026-07-17T00:00:00Z",
+    "updatedAt": "2026-07-17T00:00:00Z",
+    "provider": "Mock",
+    "model": "MockModel"
   }
 ]

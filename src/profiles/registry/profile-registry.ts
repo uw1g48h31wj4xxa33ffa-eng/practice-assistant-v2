@@ -7,7 +7,7 @@ export class ProfileRegistry {
 
   register(profile: unknown): void {
     ProfileValidator.validate(profile);
-    this.registry.register(profile as Profile);
+    this.registry.register(profile);
   }
 
   getExact(id: string, version: string): Profile | undefined {

@@ -13,10 +13,15 @@ const fixturesPath = path.resolve(__dirname, '../fixtures/synthetic-profiles.jso
 const fixtures = JSON.parse(fs.readFileSync(fixturesPath, 'utf8'));
 
 test('Profile Validator - Schema Validation', async (t) => {
-  await t.test('Validates a correct FormProfile', () => {
-    assert.doesNotThrow(() => {
-      ProfileValidator.validate(fixtures[0]);
-    });
+  await t.test('Validates all 7 Profile types successfully (base reference resolution)', () => {
+    // Tests that base-profile references resolve and one valid fixture per Profile type passes
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[0])); // form
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[3])); // law
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[4])); // mapping
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[5])); // verification-rule
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[6])); // document-version
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[7])); // workflow
+    assert.doesNotThrow(() => ProfileValidator.validate(fixtures[8])); // ai-capability
   });
 
   await t.test('Throws on missing required fields', () => {
@@ -60,6 +65,48 @@ test('Profile Registry - Registry Logic', async (t) => {
     assert.throws(() => registry.register(invalidProfile), /Profile validation failed/);
     assert.strictEqual(registry.listVersions('career-up-r8-form').length, 0);
   });
+  await t.test('Registry logic: Rejects overlapping unbounded active periods', () => {
+    const registry = new ProfileRegistry();
+    registry.register(fixtures[0]); // active, unbounded
+    const overlapProfile = { ...fixtures[0], version: '1.2' };
+    assert.throws(() => registry.register(overlapProfile), /Profile overlap detected/);
+    assert.strictEqual(registry.listVersions('career-up-r8-form').length, 1); // State unchanged
+  });
+
+  await t.test('Registry logic: Rejects overlapping bounded active periods', () => {
+    const registry = new ProfileRegistry();
+    registry.register(fixtures[2]); // active, bounded 2026-01-01 to 2026-12-31T23:59:59Z
+    const overlapProfile = { ...fixtures[2], version: '1.1', effectiveFrom: '2026-06-01T00:00:00Z', effectiveTo: '2027-06-01T00:00:00Z' };
+    assert.throws(() => registry.register(overlapProfile), /Profile overlap detected/);
+  });
+
+  await t.test('Registry logic: Accepts adjacent periods', () => {
+    const registry = new ProfileRegistry();
+    registry.register(fixtures[2]); // active, bounded 2026-01-01 to 2026-12-31T23:59:59Z
+    const adjacentProfile = { ...fixtures[2], version: '1.1', effectiveFrom: '2026-12-31T23:59:59Z', effectiveTo: '2027-12-31T23:59:59Z' };
+    assert.doesNotThrow(() => registry.register(adjacentProfile));
+  });
+
+  await t.test('Registry logic: Rejects unbounded active period and a later active period', () => {
+    const registry = new ProfileRegistry();
+    registry.register(fixtures[0]); // active, unbounded from 2026-01-01
+    const laterProfile = { ...fixtures[0], version: '1.1', effectiveFrom: '2027-01-01T00:00:00Z' };
+    assert.throws(() => registry.register(laterProfile), /Profile overlap detected/);
+  });
+
+  await t.test('Registry logic: Different Profile IDs do not conflict', () => {
+    const registry = new ProfileRegistry();
+    registry.register(fixtures[0]); // career-up-r8-form, unbounded
+    const otherProfile = { ...fixtures[0], id: 'different-form', version: '1.1' };
+    assert.doesNotThrow(() => registry.register(otherProfile));
+  });
+
+  await t.test('Registry logic: Non-active statuses do not create false conflicts', () => {
+    const registry = new ProfileRegistry();
+    registry.register(fixtures[0]); // active, unbounded
+    const draftProfile = { ...fixtures[0], version: '1.1', status: 'draft' };
+    assert.doesNotThrow(() => registry.register(draftProfile));
+  });
 });
 
 test('Version Registry - Resolution Logic', async (t) => {
@@ -92,20 +139,5 @@ test('Version Registry - Resolution Logic', async (t) => {
     registry.register(fixtures[1]); // draft, from 2027-01-01
     
     assert.throws(() => registry.resolveActive('career-up-r8-form', new Date('2027-02-01T00:00:00Z')), /No applicable active version found/);
-  });
-
-  await t.test('Rejects overlapping active versions', () => {
-    const registry = new ProfileRegistry();
-    registry.register(fixtures[0]); // active, from 2026-01-01, no effectiveTo
-    
-    const overlapProfile = {
-      ...fixtures[0],
-      version: '1.1',
-      effectiveFrom: '2026-06-01T00:00:00Z'
-    };
-    registry.register(overlapProfile);
-    
-    // On 2026-07-01, both 1.0 and 1.1 are active
-    assert.throws(() => registry.resolveActive('career-up-r8-form', new Date('2026-07-01T00:00:00Z')), /Ambiguous active versions found/);
   });
 });

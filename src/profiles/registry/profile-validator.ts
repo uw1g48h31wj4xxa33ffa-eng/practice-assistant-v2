@@ -24,20 +24,19 @@ ajv.addSchema(workflowSchema);
 ajv.addSchema(aiCapabilitySchema);
 
 export class ProfileValidator {
-  static validate(profile: unknown): profile is Profile {
+  static validate(profile: unknown): asserts profile is Profile {
     if (!profile || typeof profile !== 'object') {
       throw new Error('Profile must be an object');
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const p = profile as any;
-    if (typeof p.profileType !== 'string') {
+    const candidate = profile as Record<string, unknown>;
+    if (typeof candidate.profileType !== 'string') {
       throw new Error('Profile must have a valid profileType');
     }
-    const schemaId = `https://practice-assistant.local/schemas/${p.profileType}-profile.schema.json`;
+    const schemaId = `https://practice-assistant.local/schemas/${candidate.profileType}-profile.schema.json`;
     const validate = ajv.getSchema(schemaId);
     
     if (!validate) {
-      throw new Error(`Unknown profile type: ${p.profileType}`);
+      throw new Error(`Unknown profile type: ${candidate.profileType}`);
     }
     
     const valid = validate(profile);
@@ -45,7 +44,5 @@ export class ProfileValidator {
       const errors = ajv.errorsText(validate.errors);
       throw new Error(`Profile validation failed: ${errors}`);
     }
-    
-    return true;
   }
 }
