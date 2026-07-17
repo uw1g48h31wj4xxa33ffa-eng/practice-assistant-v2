@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://practice-assistant.local/schemas/workflow-profile.schema.json",
+  "title": "Workflow Profile",
+  "type": "object",
+  "allOf": [
+    { "$ref": "base-profile.schema.json" }
+  ],
+  "properties": {
+    "profileType": { "const": "workflow" },
+    "steps": { "type": "object" }
+  },
+  "required": [
+    "steps"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://practice-assistant.local/schemas/form-profile.schema.json",
+  "title": "Form Profile",
+  "type": "object",
+  "allOf": [
+    { "$ref": "base-profile.schema.json" }
+  ],
+  "properties": {
+    "profileType": { "const": "form" },
+    "formVersion": { "type": "string" },
+    "templateReference": { "type": "string" },
+    "templateHash": { "type": "string" },
+    "mappingId": { "type": "string" },
+    "verifierConfigId": { "type": "string" }
+  },
+  "required": [
+    "formVersion",
+    "templateReference"
+  ]
+}

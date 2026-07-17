@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://practice-assistant.local/schemas/document-version-profile.schema.json",
+  "title": "Document Version Profile",
+  "type": "object",
+  "allOf": [
+    { "$ref": "base-profile.schema.json" }
+  ],
+  "properties": {
+    "profileType": { "const": "document-version" },
+    "documentId": { "type": "string" },
+    "caseId": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "lawProfileId": { "type": "string" },
+    "formProfileId": { "type": "string" },
+    "mappingProfileId": { "type": "string" },
+    "verificationResultHash": { "type": "string" },
+    "outputHash": { "type": "string" },
+    "approvedBy": { "type": "string" },
+    "approvedAt": { "type": "string", "format": "date-time" },
+    "correctionReason": { "type": "string" }
+  },
+  "required": [
+    "documentId",
+    "caseId",
+    "generatedAt",
+    "lawProfileId",
+    "formProfileId",
+    "mappingProfileId"
+  ]
+}

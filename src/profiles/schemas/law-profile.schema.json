@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://practice-assistant.local/schemas/law-profile.schema.json",
+  "title": "Law Profile",
+  "type": "object",
+  "allOf": [
+    { "$ref": "base-profile.schema.json" }
+  ],
+  "properties": {
+    "profileType": { "const": "law" },
+    "lawVersion": { "type": "string" },
+    "transitionRules": { "type": "object" },
+    "jurisdiction": { "type": "string" },
+    "requiredFacts": { "type": "object" },
+    "validationRules": { "type": "object" }
+  },
+  "required": [
+    "lawVersion",
+    "jurisdiction"
+  ]
+}
