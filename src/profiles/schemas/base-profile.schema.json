@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://practice-assistant.local/schemas/base-profile.schema.json",
+  "title": "Base Profile",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "profileType": { "type": "string" },
+    "schemaVersion": { "type": "string" },
+    "version": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "deprecated", "archived"]
+    },
+    "effectiveFrom": { "type": "string", "format": "date-time" },
+    "effectiveTo": { "type": "string", "format": "date-time" },
+    "supersedes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sourceReferences": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "sourceHashes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "id",
+    "profileType",
+    "schemaVersion",
+    "version",
+    "status",
+    "effectiveFrom",
+    "createdAt",
+    "updatedAt"
+  ]
+}

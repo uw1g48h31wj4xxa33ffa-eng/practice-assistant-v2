@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://practice-assistant.local/schemas/mapping-profile.schema.json",
+  "title": "Mapping Profile",
+  "type": "object",
+  "allOf": [
+    { "$ref": "base-profile.schema.json" }
+  ],
+  "properties": {
+    "profileType": { "const": "mapping" },
+    "formProfileId": { "type": "string" },
+    "fieldDefinitions": { "type": "object" },
+    "inputModes": { "type": "object" },
+    "locators": { "type": "object" },
+    "manualCheckRules": { "type": "object" },
+    "humanReviewRules": { "type": "object" },
+    "compatibility": { "type": "object" }
+  },
+  "required": [
+    "formProfileId",
+    "fieldDefinitions"
+  ]
+}
