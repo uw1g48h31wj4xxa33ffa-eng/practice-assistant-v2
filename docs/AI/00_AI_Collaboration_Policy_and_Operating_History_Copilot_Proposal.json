@@ -1,0 +1,46 @@
+{
+  "proposal_version": "1.0",
+  "change_type": "structural_and_wording_only",
+  "preserves_meaning": true,
+  "preserves_governance": true,
+  "optimized_structure": {
+    "sections": [
+      "1. Purpose",
+      "2. Background and Historical Context",
+      "3. Core Principles",
+      "4. Source-of-Truth Hierarchy",
+      "5. Repository-First Rule",
+      "6. Roles and Responsibilities",
+      "7. Standard Workflow",
+      "8. Instruction Architecture",
+      "9. Public Disclosure Rule",
+      "10. Conflict Resolution Priority",
+      "11. Completion Rule",
+      "12. Standard Role Model",
+      "13. Preservation Rule"
+    ]
+  },
+  "improvements": {
+    "duplication_removed": [
+      "Repository-first workflow references consolidated under Section 5.",
+      "Public disclosure rule referenced instead of repeated in multiple areas."
+    ],
+    "clarity_improved": [
+      "Role boundaries clarified with consistent phrasing.",
+      "Source-of-truth hierarchy rewritten into a more scannable structure."
+    ],
+    "structure_improved": [
+      "Reordered sections to follow logical workflow from policy → roles → execution → governance.",
+      "Separated stable rules from historical explanation for readability."
+    ]
+  },
+  "unchanged_elements": [
+    "Human final authority",
+    "Governance boundaries",
+    "Stop conditions",
+    "Verification requirements",
+    "AI role separation",
+    "Public disclosure constraints"
+  ],
+  "notes": "This proposal does not alter architecture, scope, governance, or approval boundaries. All changes are structural or wording-only, preserving original meaning and intent."
+}

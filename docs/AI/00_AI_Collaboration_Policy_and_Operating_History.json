@@ -1,0 +1,279 @@
+{
+  "document": {
+    "title": "Practice Assistant V2 AI Collaboration Policy and Operating History",
+    "version": "1.0",
+    "status": "active",
+    "role": "project_wide_source_of_truth",
+    "final_decision_authority": "human_project_owner"
+  },
+  "purpose": [
+    "prevent instruction drift",
+    "reduce duplicated and overlong AI instructions",
+    "preserve implementation quality and governance",
+    "make AI-to-AI handoffs reproducible without long chat histories",
+    "ensure the human project owner remains the final decision-maker"
+  ],
+  "background": {
+    "previous_model": "long self-contained AI instruction documents",
+    "benefits": [
+      "reduced defects",
+      "reduced ambiguity",
+      "preserved compatibility",
+      "defined stop conditions",
+      "controlled Git operations",
+      "required verification evidence"
+    ],
+    "problems": [
+      "repeated governance rules",
+      "increasing document length",
+      "harder task-difference identification",
+      "higher maintenance cost",
+      "excessive dependence on chat history"
+    ],
+    "current_model": "Markdown-first and repository-based AI collaboration, with JSON permitted when required by a tool"
+  },
+  "core_principles": [
+    "correctness",
+    "safety",
+    "compatibility",
+    "maintainability",
+    "reproducibility",
+    "traceability",
+    "governance",
+    "efficient AI-to-AI handoff",
+    "minimal unnecessary user interaction",
+    "explicit human control"
+  ],
+  "source_of_truth_hierarchy": [
+    {
+      "level": 1,
+      "name": "project_wide_policy",
+      "contains": [
+        "AI roles",
+        "human authority",
+        "repository-first workflow",
+        "public disclosure rules",
+        "governance",
+        "instruction modularity"
+      ]
+    },
+    {
+      "level": 2,
+      "name": "stable_master_instructions",
+      "contains": [
+        "Git workflow",
+        "verification requirements",
+        "reporting format",
+        "evidence requirements",
+        "common stop conditions"
+      ]
+    },
+    {
+      "level": 3,
+      "name": "phase_specific_design",
+      "contains": [
+        "phase objectives",
+        "architecture",
+        "scope",
+        "out_of_scope",
+        "phase stop conditions",
+        "completion criteria"
+      ]
+    },
+    {
+      "level": 4,
+      "name": "task_specific_diff",
+      "contains": [
+        "exact files",
+        "exact changes",
+        "exact tests",
+        "task risks",
+        "task completion requirements"
+      ]
+    },
+    {
+      "level": 5,
+      "name": "reports_and_evidence",
+      "contains": [
+        "implementation report",
+        "verification result",
+        "review result",
+        "human approval",
+        "merge result",
+        "final commit state"
+      ]
+    }
+  ],
+  "repository_first_rule": {
+    "primary_medium": "repository files",
+    "preferred_formats": [
+      "md",
+      "json",
+      "jsonl"
+    ],
+    "chat_role": "orchestration_only",
+    "rule": "Important decisions, instructions, reviews, approvals, and evidence must be stored in repository files."
+  },
+  "roles": {
+    "ChatGPT": {
+      "responsibilities": [
+        "architecture",
+        "system design",
+        "milestone planning",
+        "requirements structuring",
+        "governance",
+        "risk analysis",
+        "stop conditions",
+        "acceptance criteria",
+        "compatibility requirements",
+        "quality gates",
+        "cross-AI consistency"
+      ],
+      "must_not": [
+        "treat its own output as final approval",
+        "repeat stable rules unnecessarily"
+      ]
+    },
+    "Copilot": {
+      "responsibilities": [
+        "simplify and normalize instruction documents",
+        "remove duplication",
+        "identify contradictions",
+        "improve implementation readability",
+        "separate reusable rules from task-specific differences",
+        "review code and evidence",
+        "preserve meaning while reducing length"
+      ],
+      "must_not": [
+        "change architecture",
+        "change scope",
+        "weaken governance",
+        "delete stop conditions",
+        "remove verification requirements",
+        "reinterpret user decisions",
+        "authorize implementation",
+        "authorize merge",
+        "declare public disclosure safe"
+      ],
+      "change_classification": [
+        "wording-only",
+        "structural",
+        "semantic",
+        "scope-affecting",
+        "governance-affecting"
+      ],
+      "human_approval_required_for": [
+        "semantic",
+        "scope-affecting",
+        "governance-affecting"
+      ]
+    },
+    "Gemini": {
+      "responsibilities": [
+        "repository investigation",
+        "implementation",
+        "testing",
+        "verification",
+        "evidence generation",
+        "repository reporting",
+        "controlled Git operations when authorized"
+      ],
+      "must_not": [
+        "invent requirements",
+        "change architecture without approval",
+        "expand scope",
+        "suppress errors",
+        "skip verification",
+        "merge without explicit human approval"
+      ],
+      "mandatory_instruction": "身勝手な推測や独断は絶対にしないでください。指示書を忠実に守ってください。"
+    },
+    "Claude": {
+      "primary_use": [
+        "major architecture audit",
+        "complex abstraction review",
+        "high-risk design alternatives",
+        "independent second opinion"
+      ]
+    },
+    "Perplexity": {
+      "primary_use": [
+        "external research",
+        "current standards",
+        "technology comparison",
+        "source collection",
+        "factual verification"
+      ]
+    },
+    "Human": {
+      "final_authority_over": [
+        "scope",
+        "architecture",
+        "milestone approval",
+        "risk acceptance",
+        "review disposition",
+        "publication",
+        "merge",
+        "completion declaration"
+      ]
+    }
+  },
+  "standard_workflow": [
+    "ChatGPT defines architecture, scope, constraints, and stop conditions",
+    "The result is stored in repository files",
+    "Copilot reviews for duplication, clarity, and contradictions",
+    "Copilot returns an optimized proposal without changing meaning",
+    "The human approves or rejects material changes",
+    "Gemini implements the approved instruction",
+    "Gemini records detailed results in repository files",
+    "Copilot reviews implementation and evidence",
+    "Findings are dispositioned",
+    "Gemini corrects approved findings",
+    "The human authorizes merge",
+    "Gemini merges and performs final verification",
+    "The final state is recorded in repository files and Git history"
+  ],
+  "instruction_architecture": {
+    "layers": [
+      "stable_master_instruction",
+      "phase_instruction",
+      "task_diff"
+    ],
+    "rule": "Task instructions should normally contain only task-specific differences and references to canonical rules."
+  },
+  "public_disclosure_rule": {
+    "internal_material_must_not_be_published_as_is": true,
+    "required_process": [
+      "create a separate public-facing file",
+      "remove or abstract confidential information",
+      "remove client-identifying information",
+      "remove security-sensitive information",
+      "preserve internal source documents unchanged",
+      "mark the public version as sanitized",
+      "perform human confidentiality review",
+      "obtain human publication approval"
+    ]
+  },
+  "conflict_resolution_priority": [
+    "explicit current human decision",
+    "project-wide mandatory policy",
+    "approved stable master instruction",
+    "approved phase design",
+    "approved task diff",
+    "AI recommendation",
+    "implementation convenience"
+  ],
+  "completion_rule": [
+    "implementation finished",
+    "required verification complete",
+    "evidence recorded",
+    "review findings resolved or explicitly deferred",
+    "human approval recorded",
+    "merge complete",
+    "final verification complete",
+    "repository synchronized",
+    "no unresolved blocking issue"
+  ],
+  "standard_role_model": "ChatGPT designs. Copilot optimizes and reviews. Gemini implements and verifies. The human decides and approves.",
+  "preservation_rule": "Shortening is valid only when quality, governance, reproducibility, verification, stop conditions, and human control remain intact."
+}
