@@ -1,0 +1,151 @@
+{
+  "metadata": {
+    "taskId": "Milestone5B_Phase2A_PreCommit_Review",
+    "reviewer": "Copilot",
+    "mode": "review_only",
+    "version": "3.0",
+    "outputLanguage": "Japanese"
+  },
+  "objective": "Milestone 5-B Phase 2-Aの実装について、Commit前の最終レビューを実施し、Commit可否およびPhase 2-B開始可否をJSONで判定する。",
+  "repositoryAssumption": {
+    "repositoryAccessible": true,
+    "instruction": "現在開いているリポジトリ内の実装、差分、テスト、検証結果を直接確認すること。Review Context JSONの記載だけを鵜呑みにせず、可能な範囲で実ファイルおよびGit差分と照合すること。"
+  },
+  "primaryInput": {
+    "reviewContext": "docs/AI/16_Milestone5B_Phase2A_Review_Context.json",
+    "qualityFixReport": "docs/AI/18_Gemini_Milestone5B_Phase2A_Quality_Fix_Report.md"
+  },
+  "referenceDocuments": [
+    "docs/AI/00_AI_Collaboration_Policy_and_Operating_History.json",
+    "docs/AI/12_Milestone5B_Phase2_Design_Scope_Stop_Conditions.md",
+    "docs/AI/13_Milestone5B_Phase2_PreImplementation_Research.md",
+    "docs/AI/15_Gemini_Milestone5B_Phase2A_Profile_Loader_Implementation_Instruction.md",
+    "docs/AI/15_Gemini_Milestone5B_Phase2A_Profile_Loader_Implementation_Report.md"
+  ],
+  "reviewScope": {
+    "include": [
+      "Phase 2-Aの変更ファイル",
+      "Profile Loaderの責務",
+      "参照検証",
+      "型安全性",
+      "RegistryおよびVersion Registry整合性",
+      "後方互換性",
+      "テスト内容と網羅性",
+      "build結果",
+      "npm run ai:verify結果",
+      "changed-files lint結果",
+      "git diff --check結果",
+      "Review Context JSONと実差分の整合性",
+      "Commit readiness",
+      "Phase 2-B readiness"
+    ],
+    "exclude": [
+      "Phase 2-Bの実装",
+      "機能追加",
+      "仕様変更",
+      "無関係なリファクタリング",
+      "コード修正",
+      "Commit",
+      "Push",
+      "PR作成"
+    ]
+  },
+  "reviewRules": [
+    "コードおよびファイルを変更しないこと。",
+    "Commit、Push、PR作成、stageを行わないこと。",
+    "身勝手な推測や独断は絶対にしないこと。",
+    "指示書、設計文書、Review Context JSON、実ファイル、Git差分を相互照合すること。",
+    "Review Context JSONの自己申告と実際の差分が不一致の場合はBLOCKERとすること。",
+    "実行していない検証を成功扱いしないこと。",
+    "既存の無関係なLint問題と今回変更由来の問題を混同しないこと。",
+    "指摘には必ず対象ファイル、根拠、影響、推奨対応を含めること。"
+  ],
+  "severityDefinitions": {
+    "BLOCKER": "Commit不可。仕様逸脱、破壊的変更、検証不整合、重大な欠陥、レビュー不能。",
+    "MAJOR": "Commit前修正必須。機能・安全性・互換性・検証に重大な問題。",
+    "MINOR": "Commit可否を直ちに阻害しないが、改善または明確化が必要。",
+    "SUGGESTION": "任意改善。今回のCommitを阻害しない。",
+    "NO_ISSUE": "問題なし。"
+  },
+  "decisionRules": {
+    "commitApprove": [
+      "BLOCKERが0件",
+      "MAJORが0件",
+      "Review Context JSONと実差分が整合",
+      "Phase 2-AのScope内",
+      "必須テスト成功",
+      "build成功",
+      "npm run ai:verify成功",
+      "changed-files lint成功",
+      "git diff --check成功",
+      "新規Lintエラーなし",
+      "重大な後方互換性問題なし",
+      "Stop Condition非該当"
+    ],
+    "commitReject": [
+      "BLOCKERが1件以上",
+      "MAJORが1件以上",
+      "必須検証失敗",
+      "Scope逸脱",
+      "Review Context JSONと実差分の不一致",
+      "未確認事項を推測しなければ判定できない"
+    ],
+    "phase2BApprove": [
+      "Commit APPROVE",
+      "Phase 2-Aの責務が完結",
+      "Resolver責務の先行実装なし",
+      "未解決BLOCKERまたはMAJORなし"
+    ]
+  },
+  "requiredOutput": {
+    "format": "json_only",
+    "outputPath": "docs/AI/19_Milestone5B_Phase2A_Copilot_PreCommit_Review_Result.json",
+    "schema": {
+      "metadata": {},
+      "inputStatus": {
+        "status": "COMPLETE | INCOMPLETE",
+        "checkedFiles": [],
+        "missingFiles": [],
+        "consistency": "CONSISTENT | INCONSISTENT | NOT_VERIFIABLE"
+      },
+      "reviewSummary": "",
+      "findings": [
+        {
+          "id": "",
+          "severity": "BLOCKER | MAJOR | MINOR | SUGGESTION | NO_ISSUE",
+          "area": "",
+          "file": "",
+          "title": "",
+          "evidence": "",
+          "impact": "",
+          "recommendation": ""
+        }
+      ],
+      "counts": {
+        "blocker": 0,
+        "major": 0,
+        "minor": 0,
+        "suggestion": 0
+      },
+      "verificationAssessment": {
+        "tests": "PASS | FAIL | NOT_VERIFIABLE",
+        "build": "PASS | FAIL | NOT_VERIFIABLE",
+        "aiVerify": "PASS | FAIL | NOT_VERIFIABLE",
+        "changedFilesLint": "PASS | FAIL | NOT_VERIFIABLE",
+        "diffCheck": "PASS | FAIL | NOT_VERIFIABLE"
+      },
+      "commitDecision": {
+        "status": "APPROVE | REJECT",
+        "reason": "",
+        "conditions": []
+      },
+      "phase2BDecision": {
+        "status": "READY | NOT_READY | CONDITIONAL",
+        "reason": "",
+        "conditions": []
+      },
+      "nextAction": []
+    }
+  },
+  "finalInstruction": "Review Context JSONを読み、現在のリポジトリ内の実ファイルおよびGit差分と照合した上で、指定スキーマのJSONのみを出力すること。コードやファイルは変更しないこと。"
+}
