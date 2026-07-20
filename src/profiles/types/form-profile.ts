@@ -5,6 +5,6 @@ export interface FormProfile extends BaseProfile {
   formVersion: string;
   templateReference: string;
   templateHash?: string;
-  mappingId?: string;
-  verifierConfigId?: string;
+  mappingProfileId?: string;
+  verificationRuleProfileId?: string;
 }

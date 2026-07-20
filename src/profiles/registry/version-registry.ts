@@ -36,6 +36,10 @@ export class VersionRegistry {
     return Array.from(this.versions.values()).filter(p => p.id === id);
   }
 
+  listAll(): Profile[] {
+    return Array.from(this.versions.values());
+  }
+
   resolveActive(id: string, effectiveDate: Date): Profile {
     const versions = this.listVersions(id);
     const time = effectiveDate.getTime();

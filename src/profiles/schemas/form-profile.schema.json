@@ -11,8 +11,8 @@
     "formVersion": { "type": "string" },
     "templateReference": { "type": "string" },
     "templateHash": { "type": "string" },
-    "mappingId": { "type": "string" },
-    "verifierConfigId": { "type": "string" }
+    "mappingProfileId": { "type": "string" },
+    "verificationRuleProfileId": { "type": "string" }
   },
   "required": [
     "formVersion",

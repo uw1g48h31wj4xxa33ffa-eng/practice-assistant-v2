@@ -18,6 +18,10 @@ export class ProfileRegistry {
     return this.registry.listVersions(id);
   }
 
+  listAll(): Profile[] {
+    return this.registry.listAll();
+  }
+
   resolveActive(id: string, effectiveDate: Date): Profile {
     return this.registry.resolveActive(id, effectiveDate);
   }

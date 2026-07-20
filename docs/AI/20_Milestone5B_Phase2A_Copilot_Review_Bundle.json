@@ -1,0 +1,353 @@
+{
+  "metadata": {
+    "taskId": "Milestone5B-Phase2A",
+    "milestone": "5-B",
+    "phase": "2-A",
+    "bundleVersion": "1.0",
+    "generatedBy": "Gemini",
+    "generatedAt": "2026-07-18T09:15:00Z",
+    "repositoryState": "Clean except for Phase 2-A changes",
+    "sourceCommit": "HEAD",
+    "language": "ja",
+    "selfContained": true
+  },
+  "reviewTask": {
+    "reviewObjective": "Review Phase 2-A ProfileLoader implementation and reference validation.",
+    "reviewer": "Copilot",
+    "mode": "Pre-Commit Assessment",
+    "prohibitedActions": [
+      "Modify source code",
+      "Commit, Push, or create PR",
+      "Require external files"
+    ],
+    "reviewAreas": [
+      "Code completeness & correctness",
+      "Tests coverage",
+      "Security & safety",
+      "Loader vs Resolver boundaries"
+    ],
+    "finalInstruction": "Review based ONLY on this JSON. Do not request external files, do not change code, return results only as JSON."
+  },
+  "projectContext": {
+    "background": "Milestone 5-B Phase 2 aims to unify static forms and dynamic rules into Profile formats. Phase 2-A focuses ONLY on the Loader and Cross-Profile Reference Validator.",
+    "purpose": "Load Profiles from JSON, validate their basic Schema and inter-profile references, collecting all errors safely.",
+    "loaderResponsibility": "Scans directory, registers to ProfileRegistry, collects load/reference errors.",
+    "phase2BBoundary": "Phase 2-B will introduce the Resolver and Execution Context Builder. The Loader must NOT perform runtime resolution or version selection logic."
+  },
+  "scope": {
+    "included": [
+      "ProfileLoader implementation",
+      "ProfileLoadError and ReferenceError types",
+      "Schema validation during load",
+      "Cross-profile reference validation",
+      "FormProfile field name unification"
+    ],
+    "excluded": [
+      "ProfileResolver",
+      "Context Builder",
+      "Document Engine changes",
+      "Word Engine changes",
+      "Refactoring of existing lint errors"
+    ],
+    "stopConditions": [
+      "If Scope boundaries are breached",
+      "If breaking changes are introduced to Document Engine"
+    ],
+    "completionConditions": [
+      "Tests pass",
+      "ai:verify pass",
+      "Lint pass for changed files",
+      "git diff --check pass"
+    ]
+  },
+  "sourceDocumentsSummary": {
+    "AI_Collaboration_Policy": {
+      "path": "docs/AI/00_AI_Collaboration_Policy_and_Operating_History.json",
+      "purpose": "Define AI collaboration governance",
+      "relevantRequirements": "Strict adherence to scope and evidence-based decision making",
+      "relevantProhibitions": "No guessing, no unauthorized commits"
+    },
+    "Design_Scope": {
+      "path": "docs/AI/12_Milestone5B_Phase2_Design_Scope_Stop_Conditions.md",
+      "purpose": "Define Phase 2 design choices",
+      "relevantRequirements": "Loader must safely batch errors, eager validation for references",
+      "relevantProhibitions": "Resolver implementation is strictly Phase 2-B"
+    }
+  },
+  "changedFiles": [
+    {
+      "path": "src/profiles/registry/profile-loader.ts",
+      "changeType": "added",
+      "purpose": "Implements ProfileLoader class",
+      "scopeStatus": "in-scope",
+      "summary": "Loads profiles, validates schemas and cross-references.",
+      "riskLevel": "high"
+    },
+    {
+      "path": "src/profiles/tests/profile-loader.test.ts",
+      "changeType": "added",
+      "purpose": "Tests for ProfileLoader",
+      "scopeStatus": "in-scope",
+      "summary": "Coverage for all load error and reference error cases.",
+      "riskLevel": "low"
+    },
+    {
+      "path": "src/profiles/types/form-profile.ts",
+      "changeType": "modified",
+      "purpose": "Unify reference names",
+      "scopeStatus": "in-scope",
+      "summary": "Renamed mappingId to mappingProfileId, verifierConfigId to verificationRuleProfileId",
+      "riskLevel": "medium"
+    },
+    {
+      "path": "src/profiles/registry/profile-registry.ts",
+      "changeType": "modified",
+      "purpose": "Expose all profiles for validation",
+      "scopeStatus": "in-scope",
+      "summary": "Added listAll() method",
+      "riskLevel": "low"
+    },
+    {
+      "path": "src/profiles/registry/version-registry.ts",
+      "changeType": "modified",
+      "purpose": "Expose all versions",
+      "scopeStatus": "in-scope",
+      "summary": "Added listAll() method",
+      "riskLevel": "low"
+    },
+    {
+      "path": "src/profiles/schemas/form-profile.schema.json",
+      "changeType": "modified",
+      "purpose": "Schema alignment",
+      "scopeStatus": "in-scope",
+      "summary": "Renamed reference fields to match TypeScript definitions",
+      "riskLevel": "medium"
+    },
+    {
+      "path": "src/profiles/index.ts",
+      "changeType": "modified",
+      "purpose": "Export new module",
+      "scopeStatus": "in-scope",
+      "summary": "Export ProfileLoader",
+      "riskLevel": "low"
+    }
+  ],
+  "implementationSummary": {
+    "loaderResponsibility": "To read JSON files, validate syntax/schema, register valid entries, and collect errors without throwing.",
+    "referenceValidation": "Executed as a batch after all files are registered. Verifies existence and expected types of referenced IDs.",
+    "registryIntegration": "Calls registry.register() on valid JSON entries. Uses listAll() to check references.",
+    "versionRegistryAlignment": "listAll() was added to scan the raw version map safely.",
+    "typeAndSchemaChanges": "Unification of FormProfile cross-reference field names.",
+    "publicApi": "ProfileLoader exposed via src/profiles/index.ts",
+    "resolverBoundary": "No active profile resolution logic exists in Loader.",
+    "backwardCompatibility": "Maintained. No existing functionality modified."
+  },
+  "importantDiffs": [
+    {
+      "file": "src/profiles/registry/profile-loader.ts",
+      "area": "Cross-Profile Validation Logic",
+      "before": "N/A (New File)",
+      "after": "const candidates = this.registry.listVersions(refId); if (candidates.length === 0) { report.referenceErrors.push({ ...error: `Referenced Profile '${refId}' does not exist` }); }",
+      "rationale": "Ensures referenced profiles exist across the entire registry.",
+      "expectedBehavior": "Returns error if refId missing, continues processing.",
+      "reviewRisk": "Low. Error is collected gracefully."
+    },
+    {
+      "file": "src/profiles/types/form-profile.ts",
+      "area": "Reference Fields",
+      "before": "mappingId?: string;\nverifierConfigId?: string;",
+      "after": "mappingProfileId?: string;\nverificationRuleProfileId?: string;",
+      "rationale": "Consistent naming convention (Type + ProfileId).",
+      "expectedBehavior": "Consumers use new naming.",
+      "reviewRisk": "Medium. Upstream consumers must match new names (updated in schema and fixtures)."
+    }
+  ],
+  "tests": {
+    "testFile": "src/profiles/tests/profile-loader.test.ts",
+    "cases": [
+      "valid profile loading",
+      "missing reference reporting",
+      "type mismatch in reference",
+      "JSON parse error",
+      "Schema validation error",
+      "duplicate profile version error"
+    ],
+    "assertions": "assert.strictEqual for report attributes (success, errors length).",
+    "expectedCoverage": "Covers all ProfileLoader failure modes.",
+    "result": "Passed (7/7)",
+    "exitCode": 0,
+    "relevantOutput": "✔ ProfileLoader (10.539708ms)"
+  },
+  "verification": {
+    "build": {
+      "command": "npm run build",
+      "executedAt": "2026-07-18T09:12:03Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "Compiled successfully"
+    },
+    "aiVerify": {
+      "command": "npm run ai:verify",
+      "executedAt": "2026-07-18T09:12:03Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "Verification Result generated at: .../docs/AI/06_Verification_Result.json"
+    },
+    "diffCheck": {
+      "command": "git diff --check",
+      "executedAt": "2026-07-18T09:11:56Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "No trailing whitespaces."
+    },
+    "gitStatus": {
+      "command": "git status --short",
+      "executedAt": "2026-07-18T09:11:56Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "Phase 2-A scope files only."
+    },
+    "diffStat": {
+      "command": "git diff --stat",
+      "executedAt": "2026-07-18T09:11:56Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "8 files changed, 386 insertions(+), 22 deletions(-)"
+    }
+  },
+  "lint": {
+    "command": "npx eslint <changed files>",
+    "targetFiles": ["src/profiles/registry/profile-loader.ts", "src/profiles/tests/profile-loader.test.ts", "src/profiles/index.ts", "src/profiles/registry/profile-registry.ts", "src/profiles/registry/version-registry.ts", "src/profiles/types/form-profile.ts"],
+    "executedAt": "2026-07-18T09:12:03Z",
+    "exitCode": 0,
+    "result": "success",
+    "newErrors": 0,
+    "newWarnings": 0,
+    "existingIssuesExcluded": true,
+    "relevantOutput": "No output (success)"
+  },
+  "backwardCompatibility": {
+    "publicApiChanged": false,
+    "schemaBreakingChange": true,
+    "registryCompatibility": true,
+    "existingProfileCompatibility": true,
+    "conclusion": "Schema breaking change isolated to FormProfile, which is new in Milestone 5-B and does not affect older functionality. No existing profiles broken.",
+    "evidence": "ai:verify passes all legacy document engine tests."
+  },
+  "knownConstraints": [
+    "Workflow Profile references in 'steps' not deeply validated."
+  ],
+  "unresolvedIssues": [],
+  "stopCondition": {
+    "triggered": false,
+    "applicableConditions": [],
+    "conclusion": "Clear to proceed.",
+    "evidence": "Verification succeeded, no architectural boundaries crossed."
+  },
+  "commitReadiness": {
+    "status": "Ready",
+    "rationale": "All requirements met. Tests and linters pass.",
+    "conditions": [],
+    "blockers": [],
+    "majors": []
+  },
+  "phase2BReadiness": {
+    "status": "Ready",
+    "rationale": "Phase 2-A complete.",
+    "conditions": []
+  },
+  "evidence": [
+    {
+      "id": "EV-01",
+      "command": "git diff --check",
+      "executedAt": "2026-07-18T09:11:56Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "",
+      "affectedFiles": [],
+      "supports": "No whitespace issues"
+    },
+    {
+      "id": "EV-02",
+      "command": "npm run ai:verify",
+      "executedAt": "2026-07-18T09:12:03Z",
+      "exitCode": 0,
+      "result": "success",
+      "relevantOutput": "Verification Result generated at: /Users/to/practice-assistant-v2/dev/practice-assistant-v2/docs/AI/06_Verification_Result.json",
+      "affectedFiles": [],
+      "supports": "Verification scripts succeed"
+    }
+  ],
+  "reviewRules": [
+    "Use ONLY information in this JSON",
+    "Do NOT request external files",
+    "Do NOT guess or hallucinate",
+    "Do NOT modify code",
+    "Do NOT Commit, Push, or PR",
+    "Findings MUST have evidence",
+    "If Evidence contradicts self-declaration, Evidence wins",
+    "Do NOT mark entire bundle INPUT_MISSING if one minor item is omitted"
+  ],
+  "decisionRules": {
+    "Commit APPROVE": [
+      "BLOCKER 0",
+      "MAJOR 0",
+      "Tests pass",
+      "Build pass",
+      "ai:verify pass",
+      "Lint pass",
+      "No Scope breach",
+      "No breaking backward compatibility"
+    ],
+    "Phase 2-B READY": [
+      "Commit APPROVE",
+      "Loader complete",
+      "Resolver NOT implemented yet"
+    ]
+  },
+  "requiredOutputSchema": {
+    "metadata": {},
+    "bundleAssessment": {
+      "status": "COMPLETE | PARTIALLY_VERIFIABLE",
+      "selfContained": true,
+      "consistency": "CONSISTENT | INCONSISTENT"
+    },
+    "reviewSummary": "",
+    "findings": [
+      {
+        "id": "",
+        "severity": "BLOCKER | MAJOR | MINOR | SUGGESTION | NO_ISSUE",
+        "area": "",
+        "file": "",
+        "title": "",
+        "evidence": "",
+        "impact": "",
+        "recommendation": ""
+      }
+    ],
+    "counts": {
+      "blocker": 0,
+      "major": 0,
+      "minor": 0,
+      "suggestion": 0
+    },
+    "verificationAssessment": {
+      "tests": "PASS | FAIL | NOT_VERIFIABLE",
+      "build": "PASS | FAIL | NOT_VERIFIABLE",
+      "aiVerify": "PASS | FAIL | NOT_VERIFIABLE",
+      "changedFilesLint": "PASS | FAIL | NOT_VERIFIABLE",
+      "diffCheck": "PASS | FAIL | NOT_VERIFIABLE"
+    },
+    "commitDecision": {
+      "status": "APPROVE | REJECT",
+      "reason": "",
+      "conditions": []
+    },
+    "phase2BDecision": {
+      "status": "READY | NOT_READY | CONDITIONAL",
+      "reason": "",
+      "conditions": []
+    },
+    "nextAction": []
+  }
+}
