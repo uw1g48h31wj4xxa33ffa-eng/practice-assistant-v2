@@ -13,38 +13,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const careerUpFieldsPath = path.resolve(__dirname, '../../../scripts/document-verification/config/career-up-r8-form1-fields.json');
 const careerUpFields = JSON.parse(fs.readFileSync(careerUpFieldsPath, 'utf8'));
 
+import { JsonProfileAdapter } from '../resolution/json-profile-adapter.js';
+
 function setupRegistry() {
   const registry = new ProfileRegistry();
+  const adapter = new JsonProfileAdapter();
+  const { formProfile, mappingProfile } = adapter.adapt(careerUpFields as any);
 
-  registry.register({
-    id: 'career-up-r8-form1',
-    profileType: 'form',
-    schemaVersion: '1.0',
-    version: 'R8.4.8',
-    status: 'active',
-    effectiveFrom: '2026-01-01T00:00:00Z',
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    formVersion: 'R8.4.8',
-    templateReference: '001688046.docx',
-    templateHash: 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092',
-    mappingProfileId: 'career-up-map1'
-  });
-
-  registry.register({
-    id: 'career-up-map1',
-    profileType: 'mapping',
-    schemaVersion: '1.0',
-    version: '1.0',
-    status: 'active',
-    effectiveFrom: '2026-01-01T00:00:00Z',
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    formProfileId: 'career-up-r8-form1',
-    fieldDefinitions: {
-      fields: careerUpFields
-    }
-  });
+  registry.register(formProfile);
+  registry.register(mappingProfile);
 
   // For testing missing dependencies
   registry.register({
@@ -98,8 +75,8 @@ test('Profile-Driven Career-Up Integration (Phase 2-C)', async (t) => {
     assert.strictEqual(mapping.template.expectedSha256, 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092');
 
     // Test 2 を「Profile定義 vs legacy定義の比較テスト」として整理（ドリフト検出）
-    assert.deepStrictEqual(careerUpFields, legacyMapping.fields, 'careerUpFields JSON must strictly match legacyMapping.fields');
-    assert.deepStrictEqual(mapping.fields, careerUpFields, 'Adapter output fields must strictly match careerUpFields');
+    assert.deepStrictEqual((careerUpFields as any).fields, legacyMapping.fields, 'careerUpFields JSON must strictly match legacyMapping.fields');
+    assert.deepStrictEqual(mapping.fields, (careerUpFields as any).fields, 'Adapter output fields must strictly match careerUpFields');
   });
 
   await t.test('6 & 9. Profile不足時にWord生成へ進まない / 自動fallbackが発生しない', async () => {

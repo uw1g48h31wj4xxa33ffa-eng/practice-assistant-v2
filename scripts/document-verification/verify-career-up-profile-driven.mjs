@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const careerUpFieldsPath = path.join(__dirname, 'config', 'career-up-r8-form1-fields.json');
 const careerUpFields = JSON.parse(fs.readFileSync(careerUpFieldsPath, 'utf8'));
 
-// Profile-driven imports (will be executed via tsx)
+import { JsonProfileAdapter } from '../../src/profiles/resolution/json-profile-adapter.js';
 import { ProfileRegistry } from '../../src/profiles/registry/profile-registry.js';
 import { CareerUpAdapter } from '../../src/profiles/resolution/adapter.js';
 
@@ -21,37 +21,10 @@ const outputDir = process.env.OUTPUT_DIR || '/Users/to/Documents/practice-assist
 
 function setupRegistry() {
   const registry = new ProfileRegistry();
-
-  registry.register({
-    id: 'career-up-r8-form1',
-    profileType: 'form',
-    schemaVersion: '1.0',
-    version: 'R8.4.8',
-    status: 'active',
-    effectiveFrom: '2026-01-01T00:00:00Z',
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    formVersion: 'R8.4.8',
-    templateReference: '001688046.docx',
-    templateHash: 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092',
-    mappingProfileId: 'career-up-map1'
-  });
-
-  registry.register({
-    id: 'career-up-map1',
-    profileType: 'mapping',
-    schemaVersion: '1.0',
-    version: '1.0',
-    status: 'active',
-    effectiveFrom: '2026-01-01T00:00:00Z',
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    formProfileId: 'career-up-r8-form1',
-    fieldDefinitions: {
-      fields: careerUpFields
-    }
-  });
-
+  const adapter = new JsonProfileAdapter();
+  const { formProfile, mappingProfile } = adapter.adapt(careerUpFields);
+  registry.register(formProfile);
+  registry.register(mappingProfile);
   return registry;
 }
 
