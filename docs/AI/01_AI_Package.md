@@ -2,55 +2,80 @@
 schema_version: "1.0"
 package_version: "1.0"
 project: "Practice Assistant V2"
-phase: "Milestone 5-B / Phase 2-C"
+phase: "Milestone 5-B / Phase 2-D"
 status: "完了"
-updated_at: "2026-07-16T17:50:00+09:00"
+updated_at: "2026-07-21T12:00:00+09:00"
 updated_by: "Gemini"
 repository: "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2"
 branch: "feature/milestone-5b-phase2c-career-up-integration"
-head: "080cd435b99f413ee3df031ab6c440bc2d5f9338"
-origin_head: "ded206bff32b82a4c2e9243fe553cff747175f02"
-working_tree: "staged-only (31 staged, 0 unstaged, 0 untracked)"
-request_id: "milestone-5a"
+head: "d30da808d2acb59539a1a9137b0b7a7a765a2c97"
+origin_head: "d30da808d2acb59539a1a9137b0b7a7a765a2c97"
+working_tree: "clean"
+request_id: "milestone-5b-phase2d"
 verification_result_path: "docs/AI/06_Verification_Result.json"
 verification_result_hash: "3fce1e86c59bed561012109e98f1ee75b437fbdd24201f63dbc3ee43009a4e0d"
 audit_log_path: "docs/AI/05_Audit_Log.jsonl"
-next_action: "Gemini to execute commit/push after explicit human approval"
-blocking_issues: "Human review pending"
+next_action: "Human approval / proceed to next phase"
+blocking_issues: "None"
 human_review_status: "pending"
 ---
 # 01 AI Package
 
 ## 0. AI Resume
 Project: Practice Assistant V2
-Phase: Milestone 5-A
-Status: Governance Automation Implemented
-Current HEAD: ded206bff32b82a4c2e9243fe553cff747175f02
-Working Tree: staged-only (31 staged, 0 unstaged, 0 untracked)
-Blocking Issues: Human review pending
-Next Action: Gemini to execute commit/push after explicit human approval
-Primary Request: Milestone 5A Request v1.0
-Last Updated: 2026-07-16
+Phase: Milestone 5-B / Phase 2-D
+Status: 完了
+Current HEAD: d30da808d2acb59539a1a9137b0b7a7a765a2c97
+Working Tree: clean
+Blocking Issues: None
+Next Action: Human approval / proceed to next phase
+Last Updated: 2026-07-21
 Updated By: Gemini
 
 ## 1. Project
 - プロジェクト名: Practice Assistant V2
 - リポジトリ: uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2
-- ブランチ: main
-- 対象フェーズ: Milestone 5-A
-- 対象機能: AI Document Numbering, Automated Verification (ai:verify, ai:precommit), Audit Log Schema
+- ブランチ: feature/milestone-5b-phase2c-career-up-integration
+- 対象フェーズ: Milestone 5-B / Phase 2-D
 
 ## 2. Current Status
-- 現在のフェーズ: Milestone 5-B / Phase 2-C
+- 現在のフェーズ: Milestone 5-B / Phase 2-D
+- 実装済み範囲 (Phase 2-D): Profile-driven用field定義を独立した単一JSONファイルへ分離、RunnerとIntegration Testが同一JSONを参照、Profile-driven RunnerからlegacyMapping直接依存を削除、legacy経路は変更せず維持、legacy定義とProfile定義の差異を比較テストで検出。
 - 実装済み範囲 (Phase 2-C): Profile-driven verification pathの追加、Profile解決成功後にのみWord生成へ進むオーケストレーションの導入、エラー伝播、実運用経路に対する統合テストの追加
-- 現在のフェーズ: Milestone 5-A (human review pending)
-- 実装済み範囲: Numbering移行完了、AI_Packageスキーマ化、JSON生成・Audit Logユーティリティ、`ai:verify`・`ai:precommit`スクリプトの実装およびテスト完了。
-- 未実装範囲: 本番監査ログ基盤等、今回の対象外スコープ。
-- commit / push状態: 未コミット
-- HEAD / origin/main: ded206bff32b82a4c2e9243fe553cff747175f02
-- working tree状態: 全ファイルの実装とstageが完了し、コミット待ち。
+- commit / push状態: プッシュ済み
+- HEAD / origin/head: d30da808d2acb59539a1a9137b0b7a7a765a2c97
+- working tree状態: clean
 
 ## 3. Latest Changes
+### Milestone 5-B Phase 2-D
+- 採用設計: Option A2
+- Profile-driven用field定義を独立した単一JSONファイルへ分離
+- RunnerとIntegration Testが同一JSONを参照
+- Profile-driven Runnerから`legacyMapping`直接依存を削除
+- legacy経路は変更せず維持
+- legacy定義とProfile定義の差異を比較テストで検出
+- JSON読み込み方式: fs.readFileSync + JSON.parse (Node.jsネイティブ実行、tsx、ESLint、Next.js buildの構文差異を避けるため)
+
+**新規・変更ファイル**
+- 新規: `scripts/document-verification/config/career-up-r8-form1-fields.json`
+- 変更: `scripts/document-verification/verify-career-up-profile-driven.mjs`
+- 変更: `src/profiles/tests/profile-driven-career-up-integration.test.ts`
+
+**変更していない重要領域**
+- `scripts/document-verification/verify-career-up-form1.mjs`
+- `scripts/document-verification/config/career-up-r8-form1.mapping.mjs`
+- `src/profiles/registry/profile-registry.ts`
+- `src/profiles/resolution/profile-resolver.ts`
+- `src/profiles/resolution/adapter.ts`
+- `src/profiles/resolution/execution-context-builder.ts`
+- `src/profiles/types/mapping-profile.ts`
+
+**Git情報**
+- commit: d30da80
+- message: feat: decouple profile fields from legacy mapping
+- push: origin/feature/milestone-5b-phase2c-career-up-integration へ完了
+- working tree: clean
+
 ### Milestone 5-B Phase 2-C
 - Profile-driven verification pathを追加
 - `scripts/document-verification/verify-career-up-profile-driven.mjs` を追加
@@ -60,22 +85,6 @@ Updated By: Gemini
 - 既存legacy検証スクリプトは変更しない
 - 実運用経路に対する統合テストを追加
 - Word生成未呼出しおよびlegacy fallback未呼出しをspyで検証
-
-**主な対象ファイル**
-- `scripts/document-verification/verify-career-up-profile-driven.mjs`
-- `src/profiles/tests/profile-driven-career-up-integration.test.ts`
-
-**実装commit**
-- 46b3be3bb080057bc3119ab1a328a6c4b7fa04a8 (feat: add profile-driven career-up verification path)
-
-**文書commit**
-- 080cd435b99f413ee3df031ab6c440bc2d5f9338 (docs: add Phase 2-C commit instructions)
-
-- 既存のMarkdownファイルをNumberingされた形式へ移動（00_, 01_, 03_, 04_, 09_ 等）
-- 過去の不要なファイルを `99_Archive/` へ退避
-- `01_AI_Package.md` にYAMLフロントマターを追加し、バリデーションスクリプトを導入
-- `06_Verification_Result.json` を生成する `npm run ai:verify` コマンドを追加
-- `05_Audit_Log.jsonl` に追記するユーティリティを追加
 
 ## 4. Architecture Summary
 ```text
@@ -94,8 +103,24 @@ Practice Assistant V2
 - AIによる検証結果は機械生成JSON (`06_Verification_Result.json`) を正とする
 - `docs/AI/` のファイルは規約に基づくNumberingを必須とする
 
+### Decisions Log
+Decision: Phase 2-DではOption A2を採用し、Profile-driven field definitionを独立JSONへ分離する。
+Reason: Runner/Testへの直接複製による3重管理を避けながら、Profile-driven経路の配線独立性を確立するため。
+Constraint: legacy経路は変更しない。自動fallbackは追加しない。二重管理の根本解消は将来フェーズへ送る。
+
 ## 6. Verification Evidence References
 See `docs/AI/06_Verification_Result.json`
+
+### Phase 2-D 検証結果
+- JSON round-trip: PASS (31 fields, 情報欠落なし)
+- Profile tests: 48 / 48 PASS
+- Legacy verification: PASS
+- Profile-driven verification: PASS
+- ai:verify: PASS
+- build: PASS
+- 対象Lint: 新規error 0, 新規warning 0
+- 全体Lint: 56 errors, 23 warnings (既存ベースライン維持)
+- git diff --check: PASS
 
 ### Phase 2-C 検証結果
 以下は成功済みです。
@@ -115,28 +140,31 @@ See `docs/AI/06_Verification_Result.json`
 今回対象の新規2ファイルには、個別ESLintでエラー・警告はありません。
 
 ## 7. Git Status
-- HEAD: ded206bff32b82a4c2e9243fe553cff747175f02
-- origin/main: ded206bff32b82a4c2e9243fe553cff747175f02
-- working tree: staged-only (31 staged, 0 unstaged, 0 untracked)
-  - staged: 31
-  - unstaged: 0
-  - untracked: 0
+- HEAD: d30da808d2acb59539a1a9137b0b7a7a765a2c97
+- origin/head: d30da808d2acb59539a1a9137b0b7a7a765a2c97
+- working tree: clean
 
-## 8. Known Issues
+## 8. Known Issues / Risks
+### Milestone 5-B Phase 2-D
+- legacyMappingとcareer-up-r8-form1-fields.jsonは、現時点では2系統の正本として残る。
+- Integration TestのdeepStrictEqual比較によりドリフトを検出する。
+- いずれかのfield定義変更時は両ファイルの更新が必要。
+- 根本的な単一正本化は将来フェーズへ送る。
+
 ### Milestone 5-B Phase 2-C
-- Registryは現時点で `legacyMapping.fields` を利用している
 - 現段階の互換性テストは、完全なProfile独立性の証明ではなく配線互換性の確認に相当する
 - Phase 2-Cの完了を妨げる問題ではない
-- 次工程以降でProfile独立性を高める場合は別スコープとして扱う
 - 全体Lintの既存79件は今回スコープ外であり、別課題として管理する
 
-- 既存のE2Eテストファイル群 (`tests/e2e/*.js`) 側やReactフック実装において `npm run lint` コマンドで警告またはエラー（`require()` style import is forbidden など）が発生しますが、これらは今回の変更由来の課題ではなく対象外のため残存しています。
-
 ## 9. Human Review
-- Pending review of Milestone 5-A implementation (pre-commit check).
+- Pending human review of Milestone 5-B Phase 2-D changes.
 
-## 10. Next Action
-- Geminiによるコミット・プッシュの実行（人間承認後）。
+## 10. Next Action (次フェーズ候補)
+未着手：
+- 共通Profile Verification Runner
+- Mapping Definition Registry
+- legacyMappingとProfile JSONの単一正本化
+- 新規Wordテンプレート追加コストの削減
 
 ## 11. Required Source Files
 ```text
@@ -147,20 +175,13 @@ docs/AI/20_Practice_Assistant_V2_Milestone_5A_Request_v1.0.md
 docs/AI/21_Milestone_5A_Implementation_Plan.md
 ```
 
-## 12. AI Confidence
-- Confidence: High
-- Grounds: All automated tests pass, ai:verify/ai:precommit succeeded, audit log appended, no repository docx found.
-- Remaining Uncertainty:
-  Human review of the numbered document migration, Audit Log, Verification Result, and Git diff is pending.
-
-## 13. Human Summary
-■ 実施
-Milestone 5-Aに基づき、自動化スクリプト群（ai:verify, ai:precommit）の開発とテスト、およびファイル採番ルール・YAMLフロントマターの実装を完了しました。
-■ 結果
-Required Gatesはすべて通過し、全体lintの既存課題はInformational Gateとして記録しました。機械的な結果ファイル（06_Verification_Result.json）と監査ログ（05_Audit_Log.jsonl）が正常に出力されました。
-■ 要確認
-コミット前の差分および新しいAI文書構成をご確認ください。
-■ 判断事項
-特になし。
-■ 次工程
-Geminiにコミット・プッシュの実行を指示してください。
+## 12. Evidence Log
+- branch: feature/milestone-5b-phase2c-career-up-integration
+- commit hash: d30da808d2acb59539a1a9137b0b7a7a765a2c97
+- commit message: feat: decouple profile fields from legacy mapping
+- test command: npx tsx --test src/profiles/tests/*.test.ts
+- test result: 48 / 48 PASS
+- build result: PASS
+- ai:verify result: PASS
+- lint baseline: 56 errors, 23 warnings
+- git status: clean
