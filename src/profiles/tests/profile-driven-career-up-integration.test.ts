@@ -13,12 +13,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const careerUpFieldsPath = path.resolve(__dirname, '../../../scripts/document-verification/config/career-up-r8-form1-fields.json');
 const careerUpFields = JSON.parse(fs.readFileSync(careerUpFieldsPath, 'utf8'));
 
-import { JsonProfileAdapter } from '../resolution/json-profile-adapter.js';
+import { JsonProfileAdapter, JsonProfileSource } from '../resolution/json-profile-adapter.js';
 
 function setupRegistry() {
   const registry = new ProfileRegistry();
   const adapter = new JsonProfileAdapter();
-  const { formProfile, mappingProfile } = adapter.adapt(careerUpFields as any);
+  const { formProfile, mappingProfile } = adapter.adapt(careerUpFields);
 
   registry.register(formProfile);
   registry.register(mappingProfile);
@@ -75,8 +75,28 @@ test('Profile-Driven Career-Up Integration (Phase 2-C)', async (t) => {
     assert.strictEqual(mapping.template.expectedSha256, 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092');
 
     // Test 2 を「Profile定義 vs legacy定義の比較テスト」として整理（ドリフト検出）
-    assert.deepStrictEqual((careerUpFields as any).fields, legacyMapping.fields, 'careerUpFields JSON must strictly match legacyMapping.fields');
-    assert.deepStrictEqual(mapping.fields, (careerUpFields as any).fields, 'Adapter output fields must strictly match careerUpFields');
+    const jsonSource = careerUpFields as unknown as JsonProfileSource;
+    assert.deepStrictEqual(jsonSource.fields, legacyMapping.fields, 'careerUpFields JSON must strictly match legacyMapping.fields');
+    assert.deepStrictEqual(mapping.fields, jsonSource.fields, 'Adapter output fields must strictly match careerUpFields');
+  });
+
+  await t.test('3. JSONとProfile定義のfield数一致', () => {
+    const jsonSource = careerUpFields as unknown as JsonProfileSource;
+    assert.strictEqual(jsonSource.fields.length, legacyMapping.fields.length);
+  });
+
+  await t.test('4. JSONとProfile定義のfield ID集合一致', () => {
+    const jsonSource = careerUpFields as unknown as JsonProfileSource;
+    const jsonIds = jsonSource.fields.map((f: unknown) => (f as { fieldId: string }).fieldId).sort();
+    const legacyIds = legacyMapping.fields.map((f: unknown) => (f as { fieldId: string }).fieldId).sort();
+    assert.deepStrictEqual(jsonIds, legacyIds);
+  });
+
+  await t.test('5. JSONとProfile定義のfield順序一致', () => {
+    const jsonSource = careerUpFields as unknown as JsonProfileSource;
+    const jsonIds = jsonSource.fields.map((f: unknown) => (f as { fieldId: string }).fieldId);
+    const legacyIds = legacyMapping.fields.map((f: unknown) => (f as { fieldId: string }).fieldId);
+    assert.deepStrictEqual(jsonIds, legacyIds);
   });
 
   await t.test('6 & 9. Profile不足時にWord生成へ進まない / 自動fallbackが発生しない', async () => {
