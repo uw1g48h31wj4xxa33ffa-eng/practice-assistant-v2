@@ -104,77 +104,68 @@ test('Profile-Driven Career-Up Integration (Phase 2-C)', async (t) => {
 
   await t.test('6 & 9. Profile不足時にWord生成へ進まない / 自動fallbackが発生しない', async () => {
     const registry = setupRegistry();
-    const factory = new ProfileDrivenContextFactory(registry);
-
     const mockWordGeneration = t.mock.fn();
-    const mockLegacyFallback = t.mock.fn();
+    const mockRunVerifier = t.mock.fn();
 
-    const resolveMapping = () => {
-      const ctx = factory.createContext({
-        profileId: 'missing-form',
-        profileType: 'form',
-        effectiveDate: new Date('2026-06-01T00:00:00Z')
-      });
-      return new CareerUpAdapter().adapt(ctx, 'missing-form', 'career-up-map1');
+    const config = {
+      formProfileId: 'missing-form',
+      mappingProfileId: 'career-up-map1',
+      effectiveDate: new Date('2026-06-01T00:00:00Z'),
+      inputData: {},
+      outputPath: 'out.docx'
     };
 
     await assert.rejects(
-      orchestrateProfileGeneration(resolveMapping, mockWordGeneration, mockLegacyFallback),
-      /Cannot build ExecutionContext with failed resolution results/
+      orchestrateProfileGeneration(registry, config, mockWordGeneration, mockRunVerifier),
+      (err) => err.code === 'ADAPTER_RESOLUTION_FAILED'
     );
 
     assert.strictEqual(mockWordGeneration.mock.callCount(), 0, 'Word生成開始関数は呼ばれるべきではない');
-    assert.strictEqual(mockLegacyFallback.mock.callCount(), 0, 'legacy fallback処理は呼ばれるべきではない');
+    assert.strictEqual(mockRunVerifier.mock.callCount(), 0, 'Verifierは呼ばれるべきではない');
   });
 
   await t.test('7. 型不一致時にWord生成へ進まない', async () => {
     const registry = setupRegistry();
-    const factory = new ProfileDrivenContextFactory(registry);
-
     const mockWordGeneration = t.mock.fn();
-    const mockLegacyFallback = t.mock.fn();
+    const mockRunVerifier = t.mock.fn();
 
-    const resolveMapping = () => {
-      const ctx = factory.createContext({
-        profileId: 'career-up-map1', // This is a mapping
-        profileType: 'form',         // But we ask for 'form'
-        effectiveDate: new Date('2026-06-01T00:00:00Z')
-      });
-      return new CareerUpAdapter().adapt(ctx, 'career-up-map1', 'career-up-map1');
+    const config = {
+      formProfileId: 'career-up-map1', // This is a mapping, not a form
+      mappingProfileId: 'career-up-map1',
+      effectiveDate: new Date('2026-06-01T00:00:00Z'),
+      inputData: {},
+      outputPath: 'out.docx'
     };
 
     await assert.rejects(
-      orchestrateProfileGeneration(resolveMapping, mockWordGeneration, mockLegacyFallback),
-      /Cannot build ExecutionContext with failed resolution results/
+      orchestrateProfileGeneration(registry, config, mockWordGeneration, mockRunVerifier),
+      (err) => err.code === 'ADAPTER_RESOLUTION_FAILED'
     );
 
     assert.strictEqual(mockWordGeneration.mock.callCount(), 0, 'Word生成開始関数は呼ばれるべきではない');
-    assert.strictEqual(mockLegacyFallback.mock.callCount(), 0, 'legacy fallback処理は呼ばれるべきではない');
+    assert.strictEqual(mockRunVerifier.mock.callCount(), 0, 'Verifierは呼ばれるべきではない');
   });
 
   await t.test('8. dependency失敗が上位へ伝播する', async () => {
     const registry = setupRegistry();
-    const factory = new ProfileDrivenContextFactory(registry);
-
     const mockWordGeneration = t.mock.fn();
-    const mockLegacyFallback = t.mock.fn();
+    const mockRunVerifier = t.mock.fn();
 
-    const resolveMapping = () => {
-      const ctx = factory.createContext({
-        profileId: 'broken-form1',
-        profileType: 'form',
-        effectiveDate: new Date('2026-06-01T00:00:00Z')
-      });
-      return new CareerUpAdapter().adapt(ctx, 'broken-form1', 'missing-map');
+    const config = {
+      formProfileId: 'broken-form1', // broken-form1 depends on missing-map
+      mappingProfileId: 'missing-map',
+      effectiveDate: new Date('2026-06-01T00:00:00Z'),
+      inputData: {},
+      outputPath: 'out.docx'
     };
 
     await assert.rejects(
-      orchestrateProfileGeneration(resolveMapping, mockWordGeneration, mockLegacyFallback),
-      /Cannot build ExecutionContext with failed resolution results/
+      orchestrateProfileGeneration(registry, config, mockWordGeneration, mockRunVerifier),
+      (err) => err.code === 'ADAPTER_RESOLUTION_FAILED'
     );
 
     assert.strictEqual(mockWordGeneration.mock.callCount(), 0, 'Word生成開始関数は呼ばれるべきではない');
-    assert.strictEqual(mockLegacyFallback.mock.callCount(), 0, 'legacy fallback処理は呼ばれるべきではない');
+    assert.strictEqual(mockRunVerifier.mock.callCount(), 0, 'Verifierは呼ばれるべきではない');
   });
 
   await t.test('11. 同一入力で同一versionとMappingが得られる', () => {
