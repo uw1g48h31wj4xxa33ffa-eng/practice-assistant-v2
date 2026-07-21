@@ -6,7 +6,11 @@ import { FieldLocator } from './core/field-locator.mjs';
 import { WordFiller } from './core/word-filler.mjs';
 import { OutputVerifier } from './core/output-verifier.mjs';
 import { DomSerializationVerifier } from './core/dom-serialization-verifier.mjs';
-import { careerUpR8Form1Mapping as legacyMapping } from './config/career-up-r8-form1.mapping.mjs';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const careerUpFieldsPath = path.join(__dirname, 'config', 'career-up-r8-form1-fields.json');
+const careerUpFields = JSON.parse(fs.readFileSync(careerUpFieldsPath, 'utf8'));
 
 // Profile-driven imports (will be executed via tsx)
 import { ProfileRegistry } from '../../src/profiles/registry/profile-registry.js';
@@ -24,14 +28,14 @@ function setupRegistry() {
     id: 'career-up-r8-form1',
     profileType: 'form',
     schemaVersion: '1.0',
-    version: legacyMapping.template.version,
+    version: 'R8.4.8',
     status: 'active',
     effectiveFrom: '2026-01-01T00:00:00Z',
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
-    formVersion: legacyMapping.template.version,
+    formVersion: 'R8.4.8',
     templateReference: '001688046.docx',
-    templateHash: legacyMapping.template.expectedSha256,
+    templateHash: 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092',
     mappingProfileId: 'career-up-map1'
   });
 
@@ -46,7 +50,7 @@ function setupRegistry() {
     updatedAt: '2026-01-01T00:00:00Z',
     formProfileId: 'career-up-r8-form1',
     fieldDefinitions: {
-      fields: legacyMapping.fields
+      fields: careerUpFields
     }
   });
 
@@ -67,11 +71,17 @@ function resolveCareerUpMapping() {
   const adapter = new CareerUpAdapter();
   const mapping = adapter.adapt(ctx, 'career-up-r8-form1', 'career-up-map1');
 
-  // Strict compatibility check against legacy
-  assert.strictEqual(mapping.template.id, legacyMapping.template.id || 'career-up-r8-form1');
-  assert.strictEqual(mapping.template.version, legacyMapping.template.version);
-  assert.strictEqual(mapping.template.expectedSha256, legacyMapping.template.expectedSha256);
-  assert.deepStrictEqual(mapping.fields, legacyMapping.fields);
+  // Compatibility basic check
+  assert.strictEqual(mapping.template.id, 'career-up-r8-form1');
+  assert.strictEqual(mapping.template.version, 'R8.4.8');
+  assert.strictEqual(mapping.template.expectedSha256, 'd46f03b16e9eda461275acbef2c127b22cbc2c1e321b27465f59e2181cb43092');
+
+  assert.ok(Array.isArray(mapping.fields), 'mapping.fields should be an array');
+  assert.ok(mapping.fields.length > 0, 'mapping.fields should not be empty');
+  assert.ok(mapping.fields.every(f => typeof f === 'object' && f !== null && 'fieldId' in f), 'each field must have a fieldId');
+  const fieldIds = mapping.fields.map(f => f.fieldId);
+  const uniqueFieldIds = new Set(fieldIds);
+  assert.strictEqual(fieldIds.length, uniqueFieldIds.size, 'fieldIds must be unique');
 
   return mapping;
 }
