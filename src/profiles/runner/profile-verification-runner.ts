@@ -5,6 +5,7 @@ import { ProfileDrivenContextFactory } from '../resolution/feature-activation.js
 
 export type ProfileVerificationErrorCode =
   | "FORM_PROFILE_NOT_FOUND"
+  | "FORM_PROFILE_INVALID"
   | "MAPPING_PROFILE_NOT_FOUND"
   | "PROFILE_VALIDATION_FAILED"
   | "ADAPTER_RESOLUTION_FAILED"
@@ -105,7 +106,7 @@ export class ProfileVerificationRunner {
 
     // 9. template存在・hash検証
     if (!formProfile.templateHash) {
-      throw new ProfileVerificationError("TEMPLATE_HASH_MISMATCH", "Form profile missing templateHash");
+      throw new ProfileVerificationError("FORM_PROFILE_INVALID", "Form profile missing templateHash");
     }
 
     // 10~11. Word生成, inputsToFill取得
@@ -113,6 +114,9 @@ export class ProfileVerificationRunner {
     try {
       wordGenResult = await this.dependencies.startWordGeneration(context, config.inputData, config.outputPath);
     } catch (e: unknown) {
+      if (e instanceof Error && e.message.includes('Hash mismatch')) {
+        throw new ProfileVerificationError("TEMPLATE_HASH_MISMATCH", "Template hash mismatch", e);
+      }
       throw new ProfileVerificationError("WORD_GENERATION_FAILED", "Word generation failed", e);
     }
 
@@ -137,7 +141,7 @@ export class ProfileVerificationRunner {
     let requiresManualCheck = false;
     let requiresHumanReview = false;
 
-    // We assume fieldDefinitions contains 'fields' array as per current legacy/career-up format
+    // fieldDefinitions.fields が配列であることを前提とする
     const fields = (mappingProfile.fieldDefinitions as Record<string, unknown>)?.fields as Record<string, unknown>[] || [];
     for (const key of Object.keys(wordGenResult.inputsToFill)) {
       const fieldDef = fields.find((f: Record<string, unknown>) => f.fieldId === key);

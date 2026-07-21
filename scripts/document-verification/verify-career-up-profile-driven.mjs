@@ -234,7 +234,7 @@ async function verify(scenario, outputsMap) {
   const runVerifierCb = async (context, outPath, inputsToFill) => {
     const adapter = new CareerUpAdapter();
     const mapping = adapter.adapt(context, config.formProfileId, config.mappingProfileId);
-    
+
     const originalBuffer = fs.readFileSync(inputPath);
     await OutputVerifier.verify(originalBuffer, outPath, mapping.template.expectedSha256, inputsToFill);
     console.log(`Output verification passed for ${scenario}`);

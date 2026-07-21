@@ -87,21 +87,20 @@ test('ProfileVerificationRunner Unit Tests', async (t) => {
       runVerifier: async () => { verifierCount++; return { passed: true }; }
     });
 
-        await assert.rejects(
+    await assert.rejects(
       runner.run({
-        formProfileId: 'test-form',
-        mappingProfileId: 'missing-map',
+        formProfileId: 'missing-form',
+        mappingProfileId: 'test-map',
         effectiveDate: new Date('2026-06-01T00:00:00Z'),
         inputData: {},
         outputPath: 'out.docx'
       }),
-      (err: unknown) => (err as ProfileVerificationError).code === 'MAPPING_PROFILE_NOT_FOUND'
+      (err: unknown) => (err as ProfileVerificationError).code === 'ADAPTER_RESOLUTION_FAILED'
     );
     assert.strictEqual(wordGenCount, 0);
     assert.strictEqual(verifierCount, 0);
   });
 
-  
   await t.test('P0-3: MappingProfile未登録', async () => {
     const registry = setupBaseRegistry();
     let wordGenCount = 0;
@@ -127,7 +126,7 @@ test('ProfileVerificationRunner Unit Tests', async (t) => {
     assert.strictEqual(verifierCount, 0);
   });
 
-  await t.test('P0-8: template hash不一致', async () => {
+  await t.test('P0-8-1: template hash未定義', async () => {
     const registry = new ProfileRegistry();
     registry.register({
       id: 'test-form2', profileType: 'form', schemaVersion: '1.0', version: '1.0', status: 'active',
@@ -158,9 +157,32 @@ test('ProfileVerificationRunner Unit Tests', async (t) => {
         inputData: {},
         outputPath: 'out.docx'
       }),
-      (err: unknown) => (err as ProfileVerificationError).code === 'TEMPLATE_HASH_MISMATCH'
+      (err: unknown) => (err as ProfileVerificationError).code === 'FORM_PROFILE_INVALID'
     );
     assert.strictEqual(wordGenCount, 0);
+    assert.strictEqual(verifierCount, 0);
+  });
+
+  await t.test('P0-8-2: 実際のtemplate hash不一致', async () => {
+    const registry = setupBaseRegistry();
+    let verifierCount = 0;
+
+    const runner = new ProfileVerificationRunner({
+      registry,
+      startWordGeneration: async () => { throw new Error('Hash mismatch. Expected: abc, Actual: xyz'); },
+      runVerifier: async () => { verifierCount++; return { passed: true }; }
+    });
+
+    await assert.rejects(
+      runner.run({
+        formProfileId: 'test-form',
+        mappingProfileId: 'test-map',
+        effectiveDate: new Date('2026-06-01T00:00:00Z'),
+        inputData: {},
+        outputPath: 'out.docx'
+      }),
+      (err: unknown) => (err as ProfileVerificationError).code === 'TEMPLATE_HASH_MISMATCH'
+    );
     assert.strictEqual(verifierCount, 0);
   });
 
@@ -212,4 +234,32 @@ test('ProfileVerificationRunner Unit Tests', async (t) => {
     assert.strictEqual(verifierCount, 1);
   });
 
+  await t.test('P0-11: flags false伝播 (全field false)', async () => {
+    const registry = setupBaseRegistry();
+    let wordGenCount = 0;
+    let verifierCount = 0;
+
+    const runner = new ProfileVerificationRunner({
+      registry,
+      startWordGeneration: async () => {
+        wordGenCount++;
+        return { inputsToFill: { field1: 'val1' } }; // field1 in test-map has manualCheck: false, humanReview: false
+      },
+      runVerifier: async () => { verifierCount++; return { passed: true }; }
+    });
+
+    const result = await runner.run({
+      formProfileId: 'test-form',
+      mappingProfileId: 'test-map',
+      effectiveDate: new Date('2026-06-01T00:00:00Z'),
+      inputData: {},
+      outputPath: 'out.docx'
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(wordGenCount, 1);
+    assert.strictEqual(verifierCount, 1);
+    assert.strictEqual(result.manualCheck, false);
+    assert.strictEqual(result.humanReview, false);
+  });
 });
