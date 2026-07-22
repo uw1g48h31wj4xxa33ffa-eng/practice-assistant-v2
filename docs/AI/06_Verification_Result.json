@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-07-22T01:45:39.637Z",
+  "generatedAt": "2026-07-22T03:58:03.375Z",
   "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
   "branch": "feature/milestone-5b-phase2c-career-up-integration",
-  "head": "dcdd108dca4afcddca8c5977b1569df853521b8a",
+  "head": "f3adedb4d4f3dec21f70a2299cc6460d8632539f",
   "originHead": "a6d766f250b6f3dd8385f51eeeb4111ba289d590",
   "workingTree": "dirty",
   "requiredGates": {
@@ -16,8 +16,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "8f73f6a2404653f929dc4c8a82fb481cec0159e2c52bb2ecd88f179d5daf6d08",
-      "evidenceTime": "2026-07-22T01:45:43.700Z"
+      "digest": "1743ac45acdf11279a3745ab36a4e6eefeb5bfb6f95f59ee9d78ab237bafa844",
+      "evidenceTime": "2026-07-22T03:58:07.470Z"
     },
     "node_test_scriptsaigovernanceteststestmjs": {
       "command": "node --test scripts/ai-governance/tests/*.test.mjs",
@@ -28,8 +28,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "faaef44049df565ee721f20bbe2633e39fb12dfedf21fc99f5802f089ebc1a39",
-      "evidenceTime": "2026-07-22T01:45:43.765Z"
+      "digest": "85604d40ccff9727dc0484915ff0eaa85203caa7635f1b9adc262527e21f5a1f",
+      "evidenceTime": "2026-07-22T03:58:07.531Z"
     },
     "node_scriptsdocumentverificationverifycareerupform1mjs": {
       "command": "node scripts/document-verification/verify-career-up-form1.mjs",
@@ -41,7 +41,7 @@
       },
       "result": "Success",
       "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
-      "evidenceTime": "2026-07-22T01:45:49.534Z"
+      "evidenceTime": "2026-07-22T03:58:13.226Z"
     },
     "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
       "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
@@ -53,7 +53,7 @@
       },
       "result": "Success",
       "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-      "evidenceTime": "2026-07-22T01:45:50.200Z"
+      "evidenceTime": "2026-07-22T03:58:14.081Z"
     },
     "npm_run_build": {
       "command": "npm run build",
@@ -64,20 +64,16 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "bb91a9bb784ac853c73a83691780eb73a0ad606cffb5973cbe78426ba6d9451b",
-      "evidenceTime": "2026-07-22T01:45:56.057Z"
+      "digest": "d4f84d9290690cc8ff09e38479f6b460f08f93f6e773491c55e17fcb578ed1f5",
+      "evidenceTime": "2026-07-22T03:58:19.522Z"
     },
     "changedFilesLint": {
-      "command": "npx eslint src/profiles/resolution/json-profile-adapter.ts src/profiles/tests/profile-driven-career-up-integration.test.ts",
-      "exitCode": 0,
+      "status": "Success",
       "counts": {
-        "passed": 0,
-        "failed": 0,
+        "errors": 0,
         "warnings": 0
       },
-      "result": "Success",
-      "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "evidenceTime": "2026-07-22T01:45:57.661Z"
+      "skipped": true
     },
     "sourceHash": {
       "file": "001687895.docx",
@@ -96,7 +92,7 @@
       },
       "result": "Failed",
       "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
-      "evidenceTime": "2026-07-22T01:46:01.575Z"
+      "evidenceTime": "2026-07-22T03:58:23.783Z"
     }
   },
   "preExistingIssues": {
@@ -111,13 +107,13 @@
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-22T01:45:50.200Z"
+    "verifiedAt": "2026-07-22T03:58:14.081Z"
   },
   "domSerializationVerifier": {
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-22T01:45:50.200Z"
+    "verifiedAt": "2026-07-22T03:58:14.081Z"
   },
   "packageConsistency": {
     "status": "Success"
@@ -129,5 +125,5 @@
     "status": "Success"
   },
   "overallResult": "Passed",
-  "resultHash": "cf6a67b2e761cf849b13cd6337ef013398fff8a20b697ef326fa248c292785cc"
+  "resultHash": "2a8ae1cd8ca44743ab91e83c30942e47dc2b8c4f37b570b20dcd274d9aa007e2"
 }
