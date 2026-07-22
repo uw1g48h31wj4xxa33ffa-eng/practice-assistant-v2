@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-07-20T13:08:41.495Z",
+  "generatedAt": "2026-07-22T03:58:03.375Z",
   "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
-  "branch": "feature/milestone-5b-phase2-profile-resolution",
-  "head": "f850acbb8e6a645ca3ce87dd4764fe1f2e6796b7",
-  "originHead": "f850acbb8e6a645ca3ce87dd4764fe1f2e6796b7",
+  "branch": "feature/milestone-5b-phase2c-career-up-integration",
+  "head": "f3adedb4d4f3dec21f70a2299cc6460d8632539f",
+  "originHead": "a6d766f250b6f3dd8385f51eeeb4111ba289d590",
   "workingTree": "dirty",
   "requiredGates": {
     "node_test_scriptsdocumentverificationteststestmjs": {
@@ -16,8 +16,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "4f355916e117d8308e6318d861e6a35972f42a3feaa828a282d9fa70a330a3c6",
-      "evidenceTime": "2026-07-20T13:08:45.812Z"
+      "digest": "1743ac45acdf11279a3745ab36a4e6eefeb5bfb6f95f59ee9d78ab237bafa844",
+      "evidenceTime": "2026-07-22T03:58:07.470Z"
     },
     "node_test_scriptsaigovernanceteststestmjs": {
       "command": "node --test scripts/ai-governance/tests/*.test.mjs",
@@ -28,8 +28,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "63781412a7efe4ce3196ec95fca6c1baa0eeba34728e2f3783f9519439c3baa0",
-      "evidenceTime": "2026-07-20T13:08:45.884Z"
+      "digest": "85604d40ccff9727dc0484915ff0eaa85203caa7635f1b9adc262527e21f5a1f",
+      "evidenceTime": "2026-07-22T03:58:07.531Z"
     },
     "node_scriptsdocumentverificationverifycareerupform1mjs": {
       "command": "node scripts/document-verification/verify-career-up-form1.mjs",
@@ -41,7 +41,7 @@
       },
       "result": "Success",
       "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
-      "evidenceTime": "2026-07-20T13:08:53.258Z"
+      "evidenceTime": "2026-07-22T03:58:13.226Z"
     },
     "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
       "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
@@ -53,7 +53,7 @@
       },
       "result": "Success",
       "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-      "evidenceTime": "2026-07-20T13:08:54.051Z"
+      "evidenceTime": "2026-07-22T03:58:14.081Z"
     },
     "npm_run_build": {
       "command": "npm run build",
@@ -64,20 +64,16 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "6a25b8a696b85d0c5c0ac18c84101b51d98f39e088f94d74409500fc58d1f5d3",
-      "evidenceTime": "2026-07-20T13:08:59.628Z"
+      "digest": "d4f84d9290690cc8ff09e38479f6b460f08f93f6e773491c55e17fcb578ed1f5",
+      "evidenceTime": "2026-07-22T03:58:19.522Z"
     },
     "changedFilesLint": {
-      "command": "npx eslint src/profiles/index.ts src/profiles/resolution/adapter.ts src/profiles/resolution/execution-context-builder.ts src/profiles/resolution/feature-activation.ts src/profiles/resolution/index.ts src/profiles/resolution/profile-resolver.ts src/profiles/resolution/types.ts src/profiles/tests/profile-resolver.test.ts",
-      "exitCode": 0,
+      "status": "Success",
       "counts": {
-        "passed": 0,
-        "failed": 0,
+        "errors": 0,
         "warnings": 0
       },
-      "result": "Success",
-      "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "evidenceTime": "2026-07-20T13:09:01.292Z"
+      "skipped": true
     },
     "sourceHash": {
       "file": "001687895.docx",
@@ -96,7 +92,7 @@
       },
       "result": "Failed",
       "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
-      "evidenceTime": "2026-07-20T13:09:04.762Z"
+      "evidenceTime": "2026-07-22T03:58:23.783Z"
     }
   },
   "preExistingIssues": {
@@ -111,13 +107,13 @@
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-20T13:08:54.051Z"
+    "verifiedAt": "2026-07-22T03:58:14.081Z"
   },
   "domSerializationVerifier": {
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-20T13:08:54.051Z"
+    "verifiedAt": "2026-07-22T03:58:14.081Z"
   },
   "packageConsistency": {
     "status": "Success"
@@ -129,5 +125,5 @@
     "status": "Success"
   },
   "overallResult": "Passed",
-  "resultHash": "70d8793c0a3eda761a3506dec60f793605f4ffbff7b47ceb9af588282b8791d1"
+  "resultHash": "2a8ae1cd8ca44743ab91e83c30942e47dc2b8c4f37b570b20dcd274d9aa007e2"
 }
