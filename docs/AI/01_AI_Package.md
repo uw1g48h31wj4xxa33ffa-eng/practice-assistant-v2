@@ -2,16 +2,16 @@
 schema_version: "1.0"
 package_version: "1.0"
 project: "Practice Assistant V2"
-phase: "Milestone 5-B / Phase 2-F2"
+phase: "Milestone 5-B / Phase 2"
 status: "完了"
-updated_at: "2026-07-21T12:00:00+09:00"
+updated_at: "2026-07-22T14:45:00+09:00"
 updated_by: "Gemini"
 repository: "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2"
-branch: "feature/milestone-5b-phase2c-career-up-integration"
-head: "c23e50434470f53a4f2bef0aa3d575b4696cc507"
-origin_head: "c23e50434470f53a4f2bef0aa3d575b4696cc507"
+branch: "main"
+head: "e1cd207c9b496e04f6d113518591bc51c734ff5f"
+origin_head: "e1cd207c9b496e04f6d113518591bc51c734ff5f"
 working_tree: "clean"
-request_id: "milestone-5b-phase2e"
+request_id: "milestone-5b-phase2"
 verification_result_path: "docs/AI/06_Verification_Result.json"
 verification_result_hash: "3fce1e86c59bed561012109e98f1ee75b437fbdd24201f63dbc3ee43009a4e0d"
 audit_log_path: "docs/AI/05_Audit_Log.jsonl"
@@ -23,9 +23,9 @@ human_review_status: "pending"
 
 ## 0. AI Resume
 Project: Practice Assistant V2
-Phase: Milestone 5-B / Phase 2-F2
+Phase: Milestone 5-B / Phase 2
 Status: Merged / Completed
-Current HEAD: fca05674780151d379462081c9b833b66bf8990f
+Current HEAD: e1cd207c9b496e04f6d113518591bc51c734ff5f
 Working Tree: clean
 Blocking Issues: None
 Next Action: Phase 3 開始
@@ -36,15 +36,15 @@ Updated By: Gemini
 - プロジェクト名: Practice Assistant V2
 - リポジトリ: uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2
 - ブランチ: main
-- 対象フェーズ: Milestone 5-B / Phase 2-E
+- 対象フェーズ: Milestone 5-B / Phase 2
 
 ## 2. Current Status
-- 現在のフェーズ: Milestone 5-B / Phase 2-E
-- 実装済み範囲 (Phase 2-E): 共通Profile Verification Runnerの実装、Verifier必須性の確保、inputsToFill伝播、manualCheck/humanReview処理、レガシー依存の分離。
-- Phase 2-E: 完了
-- Phase 2-F: 未着手
+- 現在のフェーズ: Milestone 5-B / Phase 2
+- 実装済み範囲 (Phase 2): 共通Runner実装、Verifier必須性確保、JSON Single Source導入、実行時Runtime Validation実装。
+- Phase 2: 完了
+- Phase 3: 未着手
 - commit / push状態: プッシュ済み
-- HEAD / origin/head: c23e50434470f53a4f2bef0aa3d575b4696cc507
+- HEAD / origin/head: e1cd207c9b496e04f6d113518591bc51c734ff5f
 - working tree状態: clean
 
 ## 3. Latest Changes
@@ -112,8 +112,8 @@ See `docs/AI/06_Verification_Result.json`
 - push: 成功
 
 ## 7. Git Status
-- HEAD: fca05674780151d379462081c9b833b66bf8990f
-- origin/head: fca05674780151d379462081c9b833b66bf8990f
+- HEAD: e1cd207c9b496e04f6d113518591bc51c734ff5f
+- origin/head: e1cd207c9b496e04f6d113518591bc51c734ff5f
 - working tree: clean
 
 ## 8. Known Issues / Risks
@@ -140,8 +140,8 @@ docs/AI/21_Milestone_5A_Implementation_Plan.md
 
 ## 12. Evidence Log
 - branch: main
-- commit hash: fca05674780151d379462081c9b833b66bf8990f
-- commit message: Merge pull request #3
+- commit hash: e1cd207c9b496e04f6d113518591bc51c734ff5f
+- commit message: docs(ai): Phase 2 post-merge finalization on main
 - test command: npx tsx --test src/profiles/tests/*.test.ts
 - test result: 66 / 66 PASS
 - build result: PASS
