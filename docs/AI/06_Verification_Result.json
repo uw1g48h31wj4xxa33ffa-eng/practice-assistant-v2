@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-07-22T03:58:03.375Z",
+  "generatedAt": "2026-07-22T05:28:23.701Z",
   "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
-  "branch": "feature/milestone-5b-phase2c-career-up-integration",
-  "head": "f3adedb4d4f3dec21f70a2299cc6460d8632539f",
-  "originHead": "a6d766f250b6f3dd8385f51eeeb4111ba289d590",
+  "branch": "main",
+  "head": "fca05674780151d379462081c9b833b66bf8990f",
+  "originHead": "fca05674780151d379462081c9b833b66bf8990f",
   "workingTree": "dirty",
   "requiredGates": {
     "node_test_scriptsdocumentverificationteststestmjs": {
@@ -16,8 +16,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "1743ac45acdf11279a3745ab36a4e6eefeb5bfb6f95f59ee9d78ab237bafa844",
-      "evidenceTime": "2026-07-22T03:58:07.470Z"
+      "digest": "95523734f6b6a4a7190adfdbb1cde2db6817ac94b31586760f47dc03ab141227",
+      "evidenceTime": "2026-07-22T05:28:28.049Z"
     },
     "node_test_scriptsaigovernanceteststestmjs": {
       "command": "node --test scripts/ai-governance/tests/*.test.mjs",
@@ -28,8 +28,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "85604d40ccff9727dc0484915ff0eaa85203caa7635f1b9adc262527e21f5a1f",
-      "evidenceTime": "2026-07-22T03:58:07.531Z"
+      "digest": "270c647117e8ecd88310cbbf7be3eae92deaef4825b64c53eece7372389d0fd4",
+      "evidenceTime": "2026-07-22T05:28:28.124Z"
     },
     "node_scriptsdocumentverificationverifycareerupform1mjs": {
       "command": "node scripts/document-verification/verify-career-up-form1.mjs",
@@ -41,7 +41,7 @@
       },
       "result": "Success",
       "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
-      "evidenceTime": "2026-07-22T03:58:13.226Z"
+      "evidenceTime": "2026-07-22T05:28:34.076Z"
     },
     "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
       "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
@@ -53,7 +53,7 @@
       },
       "result": "Success",
       "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-      "evidenceTime": "2026-07-22T03:58:14.081Z"
+      "evidenceTime": "2026-07-22T05:28:34.582Z"
     },
     "npm_run_build": {
       "command": "npm run build",
@@ -64,8 +64,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "d4f84d9290690cc8ff09e38479f6b460f08f93f6e773491c55e17fcb578ed1f5",
-      "evidenceTime": "2026-07-22T03:58:19.522Z"
+      "digest": "1e6054673f3881d131fd2230e8216f614cd2207b3ddf0bc35e25f3035b75d21f",
+      "evidenceTime": "2026-07-22T05:28:39.854Z"
     },
     "changedFilesLint": {
       "status": "Success",
@@ -92,7 +92,7 @@
       },
       "result": "Failed",
       "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
-      "evidenceTime": "2026-07-22T03:58:23.783Z"
+      "evidenceTime": "2026-07-22T05:28:46.745Z"
     }
   },
   "preExistingIssues": {
@@ -107,13 +107,13 @@
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-22T03:58:14.081Z"
+    "verifiedAt": "2026-07-22T05:28:34.582Z"
   },
   "domSerializationVerifier": {
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-22T03:58:14.081Z"
+    "verifiedAt": "2026-07-22T05:28:34.582Z"
   },
   "packageConsistency": {
     "status": "Success"
@@ -125,5 +125,5 @@
     "status": "Success"
   },
   "overallResult": "Passed",
-  "resultHash": "2a8ae1cd8ca44743ab91e83c30942e47dc2b8c4f37b570b20dcd274d9aa007e2"
+  "resultHash": "3e606a90f1d820d09cd55b6e10a0e17f7606128f3e0c7361115414550536684d"
 }
