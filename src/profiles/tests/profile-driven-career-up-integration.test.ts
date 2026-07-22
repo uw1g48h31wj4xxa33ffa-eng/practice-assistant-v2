@@ -99,6 +99,45 @@ test('Profile-Driven Career-Up Integration (Phase 2-C)', async (t) => {
     assert.deepStrictEqual(jsonIds, legacyIds);
   });
 
+  await t.test('F2-2. null入力を拒否する', () => {
+    const adapter = new JsonProfileAdapter();
+    assert.throws(() => adapter.adapt(null), /root must be an object/);
+  });
+
+  await t.test('F2-3. array入力を拒否する', () => {
+    const adapter = new JsonProfileAdapter();
+    assert.throws(() => adapter.adapt([]), /root must be an object/);
+  });
+
+  await t.test('F2-4. template欠落を拒否する', () => {
+    const adapter = new JsonProfileAdapter();
+    assert.throws(() => adapter.adapt({ fields: [] }), /"template" is missing or not an object/);
+  });
+
+  await t.test('F2-5. mappingProfileId欠落または不正を拒否する', () => {
+    const adapter = new JsonProfileAdapter();
+    const source = JSON.parse(JSON.stringify(careerUpFields));
+    delete source.template.mappingProfileId;
+    assert.throws(() => adapter.adapt(source), /"template.mappingProfileId" is required/);
+  });
+
+  await t.test('F2-6. fields欠落または非arrayを拒否する', () => {
+    const adapter = new JsonProfileAdapter();
+    const source = JSON.parse(JSON.stringify(careerUpFields));
+    delete source.fields;
+    assert.throws(() => adapter.adapt(source), /"fields" must be an array/);
+
+    source.fields = {};
+    assert.throws(() => adapter.adapt(source), /"fields" must be an array/);
+  });
+
+  await t.test('F2-7 & F2-8. 不正なfield entryをadapt前に拒否し、不正なプロパティパスを示す', () => {
+    const adapter = new JsonProfileAdapter();
+    const source = JSON.parse(JSON.stringify(careerUpFields));
+    source.fields[1] = null; // Inject invalid field at index 1
+    assert.throws(() => adapter.adapt(source), /"fields\[1\]" must be an object/);
+  });
+
   await t.test('6 & 9. Profile不足時にWord生成へ進まない / 自動fallbackが発生しない', async () => {
     const registry = setupRegistry();
     const mockWordGeneration = t.mock.fn();

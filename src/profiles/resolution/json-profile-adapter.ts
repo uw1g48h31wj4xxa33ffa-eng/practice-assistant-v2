@@ -17,19 +17,60 @@ export interface JsonProfileSource {
   fields: unknown[];
 }
 
+export function assertJsonProfileSource(value: unknown): asserts value is JsonProfileSource {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Invalid JSON Profile Source: root must be an object');
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  if (!obj.template || typeof obj.template !== 'object') {
+    throw new Error('Invalid JSON Profile Source: "template" is missing or not an object');
+  }
+
+  const template = obj.template as Record<string, unknown>;
+
+  if (typeof template.id !== 'string' || !template.id) {
+    throw new Error('Invalid JSON Profile Source: "template.id" is required and must be a non-empty string');
+  }
+  if (typeof template.version !== 'string' || !template.version) {
+    throw new Error('Invalid JSON Profile Source: "template.version" is required and must be a non-empty string');
+  }
+  if (typeof template.expectedSha256 !== 'string' || !template.expectedSha256) {
+    throw new Error('Invalid JSON Profile Source: "template.expectedSha256" is required and must be a non-empty string');
+  }
+  if (typeof template.templateReference !== 'string' || !template.templateReference) {
+    throw new Error('Invalid JSON Profile Source: "template.templateReference" is required and must be a non-empty string');
+  }
+  if (typeof template.mappingProfileId !== 'string' || !template.mappingProfileId) {
+    throw new Error('Invalid JSON Profile Source: "template.mappingProfileId" is required and must be a non-empty string');
+  }
+
+  // Ensure fields is an array
+  if (!Array.isArray(obj.fields)) {
+    throw new Error('Invalid JSON Profile Source: "fields" must be an array');
+  }
+
+  // Minimal validation for each field (e.g., must be object)
+  obj.fields.forEach((field, index) => {
+    if (!field || typeof field !== 'object') {
+      throw new Error(`Invalid JSON Profile Source: "fields[${index}]" must be an object`);
+    }
+  });
+}
+
+
 export class JsonProfileAdapter {
   /**
    * Adapts a JSON source into FormProfile and MappingProfile.
    * This acts as the Single Source of Truth adapter for Profile-driven paths.
    */
   adapt(json: unknown): { formProfile: FormProfile; mappingProfile: MappingProfile } {
+    assertJsonProfileSource(json);
+
     const src = json as JsonProfileSource;
     const formProfileId = src.template.id;
     const mappingProfileId = src.template.mappingProfileId;
-
-    if (!mappingProfileId) {
-      throw new Error('mappingProfileId is required in JSON template');
-    }
 
     const formProfile: FormProfile = {
       id: formProfileId,

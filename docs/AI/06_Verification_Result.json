@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-07-21T04:41:46.379Z",
+  "generatedAt": "2026-07-22T01:45:39.637Z",
   "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
   "branch": "feature/milestone-5b-phase2c-career-up-integration",
-  "head": "0d30ffee7fd9f87e00390fbde818a403c1925427",
+  "head": "dcdd108dca4afcddca8c5977b1569df853521b8a",
   "originHead": "a6d766f250b6f3dd8385f51eeeb4111ba289d590",
   "workingTree": "dirty",
   "requiredGates": {
@@ -16,8 +16,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "96ea7f9ad03364496b0ea196f5c70219aab00a711279e8de8a6efef9387d126b",
-      "evidenceTime": "2026-07-21T04:41:50.514Z"
+      "digest": "8f73f6a2404653f929dc4c8a82fb481cec0159e2c52bb2ecd88f179d5daf6d08",
+      "evidenceTime": "2026-07-22T01:45:43.700Z"
     },
     "node_test_scriptsaigovernanceteststestmjs": {
       "command": "node --test scripts/ai-governance/tests/*.test.mjs",
@@ -28,8 +28,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "d52cd750abf40b13aa4352fdca9520eb9a061e4c37fb25bce6a04ee1c9efd5cb",
-      "evidenceTime": "2026-07-21T04:41:50.576Z"
+      "digest": "faaef44049df565ee721f20bbe2633e39fb12dfedf21fc99f5802f089ebc1a39",
+      "evidenceTime": "2026-07-22T01:45:43.765Z"
     },
     "node_scriptsdocumentverificationverifycareerupform1mjs": {
       "command": "node scripts/document-verification/verify-career-up-form1.mjs",
@@ -41,7 +41,7 @@
       },
       "result": "Success",
       "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
-      "evidenceTime": "2026-07-21T04:41:56.671Z"
+      "evidenceTime": "2026-07-22T01:45:49.534Z"
     },
     "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
       "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
@@ -53,7 +53,7 @@
       },
       "result": "Success",
       "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-      "evidenceTime": "2026-07-21T04:41:57.301Z"
+      "evidenceTime": "2026-07-22T01:45:50.200Z"
     },
     "npm_run_build": {
       "command": "npm run build",
@@ -64,11 +64,11 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "c896b3b1db9fdd4e49441da83a2b170d52af00fed0126d2fc8232d902369feab",
-      "evidenceTime": "2026-07-21T04:42:03.766Z"
+      "digest": "bb91a9bb784ac853c73a83691780eb73a0ad606cffb5973cbe78426ba6d9451b",
+      "evidenceTime": "2026-07-22T01:45:56.057Z"
     },
     "changedFilesLint": {
-      "command": "npx eslint scripts/document-verification/verify-career-up-profile-driven.mjs src/profiles/tests/profile-driven-career-up-integration.test.ts src/profiles/runner/profile-verification-runner.ts src/profiles/tests/profile-verification-runner.test.ts",
+      "command": "npx eslint src/profiles/resolution/json-profile-adapter.ts src/profiles/tests/profile-driven-career-up-integration.test.ts",
       "exitCode": 0,
       "counts": {
         "passed": 0,
@@ -77,7 +77,7 @@
       },
       "result": "Success",
       "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "evidenceTime": "2026-07-21T04:42:05.794Z"
+      "evidenceTime": "2026-07-22T01:45:57.661Z"
     },
     "sourceHash": {
       "file": "001687895.docx",
@@ -96,7 +96,7 @@
       },
       "result": "Failed",
       "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
-      "evidenceTime": "2026-07-21T04:42:10.354Z"
+      "evidenceTime": "2026-07-22T01:46:01.575Z"
     }
   },
   "preExistingIssues": {
@@ -111,13 +111,13 @@
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-21T04:41:57.301Z"
+    "verifiedAt": "2026-07-22T01:45:50.200Z"
   },
   "domSerializationVerifier": {
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-21T04:41:57.301Z"
+    "verifiedAt": "2026-07-22T01:45:50.200Z"
   },
   "packageConsistency": {
     "status": "Success"
@@ -129,5 +129,5 @@
     "status": "Success"
   },
   "overallResult": "Passed",
-  "resultHash": "dfbd6fb8ca370d324ece3cdf83fe8928ded91c7686f151aeb4c20bef4ba98876"
+  "resultHash": "cf6a67b2e761cf849b13cd6337ef013398fff8a20b697ef326fa248c292785cc"
 }

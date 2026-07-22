@@ -2,7 +2,7 @@
 schema_version: "1.0"
 package_version: "1.0"
 project: "Practice Assistant V2"
-phase: "Milestone 5-B / Phase 2-E"
+phase: "Milestone 5-B / Phase 2-F2"
 status: "完了"
 updated_at: "2026-07-21T12:00:00+09:00"
 updated_by: "Gemini"
@@ -15,7 +15,7 @@ request_id: "milestone-5b-phase2e"
 verification_result_path: "docs/AI/06_Verification_Result.json"
 verification_result_hash: "3fce1e86c59bed561012109e98f1ee75b437fbdd24201f63dbc3ee43009a4e0d"
 audit_log_path: "docs/AI/05_Audit_Log.jsonl"
-next_action: "Phase 2-F開始準備"
+next_action: "次のPhaseの開始準備"
 blocking_issues: "None"
 human_review_status: "pending"
 ---
@@ -23,12 +23,12 @@ human_review_status: "pending"
 
 ## 0. AI Resume
 Project: Practice Assistant V2
-Phase: Milestone 5-B / Phase 2-E
+Phase: Milestone 5-B / Phase 2-F2
 Status: 完了
-Current HEAD: c23e50434470f53a4f2bef0aa3d575b4696cc507
+Current HEAD: 9926892e5d12bd98c9d2401f63794a36a2fd2c22
 Working Tree: clean
 Blocking Issues: None
-Next Action: Phase 2-F開始準備
+Next Action: 次のPhaseの開始準備
 Last Updated: 2026-07-21
 Updated By: Gemini
 
@@ -65,21 +65,15 @@ Updated By: Gemini
   - Career-up固有wrapperは共通Runnerを呼ぶ薄い構造
   - legacy runnerは変更なし
 
-**Claude監査結果とF1〜F6修正履歴**
-- Claude監査結果: 条件付き承認 (Critical: 0, High: 0, Medium: 2, Low: 4)
-- F1〜F6解消内容:
-  - FormProfile未登録テストとMappingProfile未登録テストを分離
-  - `templateHash`未定義時に`FORM_PROFILE_INVALID`
-  - 実hash不一致時のみ`TEMPLATE_HASH_MISMATCH`
-  - trailing whitespace除去
-  - `manualCheck=false` / `humanReview=false`テスト追加
-  - 共通Runner内コメントを汎用化
+### Milestone 5-B Phase 2-F1
+- 目的: JSON Single Sourceの実装
+- 結果: 人間承認済み
+- Claude再監査結果: 承認 (dcdd108dca4afcddca8c5977b1569df853521b8a)
 
-**実装履歴**
-- `0d30ffe`: docs: audit phase 2e profile verification architecture
-- `9e4cd5d`: feat(ai-package): implement ProfileVerificationRunner Core for Milestone 5B Phase 2-E
-- `ceb74c01c4d636c080cc92fc6edee849f2e5efc7`: docs: audit phase 2e common runner implementation
-- `c23e50434470f53a4f2bef0aa3d575b4696cc507`: fix: resolve phase 2e audit findings
+### Milestone 5-B Phase 2-F2
+- 目的: JsonProfileAdapterに実行時入力検証を追加し、不正入力を決定論的に失敗させる
+- 対象範囲: `json-profile-adapter.ts` における `assertJsonProfileSource` の実装、および統合テストへのF2系テスト追加
+- 実施結果: 実装完了・テストPASS。`as any`の追加や推測ロジックの再導入なし。
 
 ## 4. Architecture Summary
 ```text
@@ -102,10 +96,10 @@ Practice Assistant V2
 ## 6. Verification Evidence References
 See `docs/AI/06_Verification_Result.json`
 
-### Phase 2-E 最終検証結果
+### Phase 2-F2 最終検証結果
 - Runner単体テスト: 9件 PASS
-- Career-up統合テスト: 7件 PASS
-- Profile全テスト: 57件 PASS
+- Career-up統合テスト: 16件 PASS (F2系テスト追加)
+- Profile全テスト: 60件 PASS
 - legacy verification: PASS（18シナリオ）
 - profile-driven verification: PASS（18シナリオ）
 - ai:verify: PASS
@@ -128,10 +122,10 @@ See `docs/AI/06_Verification_Result.json`
 - 全体Lintの既存79件は今回スコープ外であり、別課題として管理する
 
 ## 9. Human Review
-- Pending human review of Milestone 5-B Phase 2-E changes.
+- Pending human review of Milestone 5-B Phase 2-F2 changes.
 
 ## 10. Next Action (次フェーズ候補)
-- Phase 2-F開始準備
+- 次Phaseの開始準備
 
 ## 11. Required Source Files
 ```text
@@ -144,10 +138,10 @@ docs/AI/21_Milestone_5A_Implementation_Plan.md
 
 ## 12. Evidence Log
 - branch: feature/milestone-5b-phase2c-career-up-integration
-- commit hash: c23e50434470f53a4f2bef0aa3d575b4696cc507
-- commit message: fix: resolve phase 2e audit findings
+- commit hash: 9926892e5d12bd98c9d2401f63794a36a2fd2c22
+- commit message: feat(ai-package): implement Phase 2-F2 runtime validation
 - test command: npx tsx --test src/profiles/tests/*.test.ts
-- test result: 57 / 57 PASS
+- test result: 60 / 60 PASS
 - build result: PASS
 - ai:verify result: PASS
 - lint baseline: 56 errors, 23 warnings
