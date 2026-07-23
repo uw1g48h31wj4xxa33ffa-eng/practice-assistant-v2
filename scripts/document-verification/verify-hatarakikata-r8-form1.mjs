@@ -82,6 +82,7 @@ async function verify(scenario, outputsMap) {
   }
 
   DomSerializationVerifier.verify(originalDomClone, documentDom);
+  console.log('[Legacy Hatarakikata] Dom serialization passed');
 
   if (fs.existsSync(outputPath)) {
     fs.unlinkSync(outputPath);

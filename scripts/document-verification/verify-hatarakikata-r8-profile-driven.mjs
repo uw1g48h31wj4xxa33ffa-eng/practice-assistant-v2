@@ -128,6 +128,7 @@ async function verify(scenario, outputsMap) {
     }
 
     DomSerializationVerifier.verify(originalDomClone, documentDom);
+    console.log('[Profile Hatarakikata] Dom serialization passed');
 
     if (fs.existsSync(outPath)) {
       fs.unlinkSync(outPath);

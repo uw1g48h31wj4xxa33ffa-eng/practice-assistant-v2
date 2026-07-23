@@ -59,9 +59,13 @@ export async function generateVerificationResult() {
     requiredGates: {},
     informationalGates: {},
     preExistingIssues: {},
-    outputVerifier: { status: "Failed", sourceCommand: "", evidenceDigest: "", verifiedAt: "" },
-    domSerializationVerifier: { status: "Failed", sourceCommand: "", evidenceDigest: "", verifiedAt: "" },
-    packageConsistency: { status: "Failed" },
+    outputVerifiers: [],
+    domSerializationVerifiers: [],
+    packageConsistency: {
+      status: "NotRun",
+      blocking: false,
+      reason: "Validated by pre-commit only; not executed in this verification run"
+    },
     auditLogValidation: { status: "Failed" },
     repositoryDocxCheck: { status: "Failed" },
     overallResult: ""
@@ -74,6 +78,7 @@ export async function generateVerificationResult() {
   const aiGovernanceTestsCmd = 'node --test scripts/ai-governance/tests/*.test.mjs';
   const verifyCareerUpCmd = 'node scripts/document-verification/verify-career-up-form1.mjs';
   const verifyHatarakikataCmd = 'node scripts/document-verification/verify-hatarakikata-r8-form1.mjs';
+  const verifyHatarakikataProfileCmd = 'npx tsx scripts/document-verification/verify-hatarakikata-r8-profile-driven.mjs';
   const buildCmd = 'npm run build';
   
   const requiredCommands = [
@@ -81,6 +86,7 @@ export async function generateVerificationResult() {
     aiGovernanceTestsCmd,
     verifyCareerUpCmd,
     verifyHatarakikataCmd,
+    verifyHatarakikataProfileCmd,
     buildCmd
   ];
 
@@ -102,23 +108,21 @@ export async function generateVerificationResult() {
 
     if (cmd.includes('verify-')) {
       if (cmdResult._stdout.includes('Output verification passed') || cmdResult._stdout.includes('Success: true')) {
-        results.outputVerifier = {
+        results.outputVerifiers.push({
           status: 'Success',
           sourceCommand: cmd,
           evidenceDigest: cmdResult.digest,
           verifiedAt: cmdResult.evidenceTime
-        };
+        });
       }
-      // Depending on the test, the stdout might vary for domSerialization
-      if (cmdResult._stdout.includes('Dom serialization passed') || cmdResult._stdout.includes('Success: true') || cmdResult._stdout.includes('Output verification passed')) {
-         // Assuming if the script succeeds, Dom serialization also passed as part of the pipeline.
-         // In real tests, outputVerifier usually wraps domSerializationVerifier.
-         results.domSerializationVerifier = {
+      
+      if (cmdResult._stdout.includes('Dom serialization passed')) {
+         results.domSerializationVerifiers.push({
           status: 'Success',
           sourceCommand: cmd,
           evidenceDigest: cmdResult.digest,
           verifiedAt: cmdResult.evidenceTime
-        };
+        });
       }
     }
   }
@@ -155,7 +159,7 @@ export async function generateVerificationResult() {
   // Repository DOCX check
   console.log(`\n=== Running: DOCX Check ===`);
   try {
-    const docxFiles = execSync('find . -type f -name "*.docx" -not -path "./node_modules/*" -not -name "ChatGPT_Constitution_Suite_v5.0.docx" -not -name "ChatGPT_Constitution_v4.0_Enterprise.docx" -not -name "ChatGPT_Core_Constitution_Master_v10.0.docx"', { cwd: REPO_ROOT }).toString().trim();
+    const docxFiles = execSync('find . -type f -name "*.docx" -not -path "./node_modules/*" -not -path "./docs/AI/ChatGPT_Constitution_Suite_v5.0.docx" -not -path "./docs/AI/ChatGPT_Constitution_v4.0_Enterprise.docx" -not -path "./docs/AI/ChatGPT_Core_Constitution_Master_v10.0.docx"', { cwd: REPO_ROOT }).toString().trim();
     if (docxFiles) {
        results.repositoryDocxCheck.status = "Failed";
        requiredGatesPassed = false;
@@ -195,7 +199,7 @@ export async function generateVerificationResult() {
 
   // AI Package consistency checking will be performed by validate-ai-package, 
   // but we assume success at this generation step (pre-commit handles the actual gate).
-  results.packageConsistency.status = "Success";
+  // Package consistency is fixed as NotRun above.
 
   results.overallResult = requiredGatesPassed ? "Passed" : "Failed";
 
