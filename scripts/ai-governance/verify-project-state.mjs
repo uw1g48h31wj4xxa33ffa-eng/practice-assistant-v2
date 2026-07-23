@@ -155,7 +155,7 @@ export async function generateVerificationResult() {
   // Repository DOCX check
   console.log(`\n=== Running: DOCX Check ===`);
   try {
-    const docxFiles = execSync('find . -type f -name "*.docx" -not -path "./node_modules/*" -not -path "./docs/AI/*"', { cwd: REPO_ROOT }).toString().trim();
+    const docxFiles = execSync('find . -type f -name "*.docx" -not -path "./node_modules/*" -not -name "ChatGPT_Constitution_Suite_v5.0.docx" -not -name "ChatGPT_Constitution_v4.0_Enterprise.docx" -not -name "ChatGPT_Core_Constitution_Master_v10.0.docx"', { cwd: REPO_ROOT }).toString().trim();
     if (docxFiles) {
        results.repositoryDocxCheck.status = "Failed";
        requiredGatesPassed = false;
