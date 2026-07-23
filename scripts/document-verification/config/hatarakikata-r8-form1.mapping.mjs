@@ -2020,7 +2020,7 @@ export const hatarakikataR8Form1Mapping = {
                 { "cellIndex": 2, "key": "hire_date" },
                 { "cellIndex": 3, "key": "current_wage" },
                 { "cellIndex": 4, "key": "planned_wage" },
-                { "cellIndex": 5, "key": "start_date" }
+                { "cellIndex": 5, "key": "increase_date" }
             ]
         },
         "locator": {

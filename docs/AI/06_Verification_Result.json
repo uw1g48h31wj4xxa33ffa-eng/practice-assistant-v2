@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-07-23T00:51:50.199Z",
+  "generatedAt": "2026-07-23T01:40:36.971Z",
   "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
   "branch": "main",
-  "head": "ad2bbf86e53fa2b977ff320d1c024ebc5fba7383",
+  "head": "5c32d4e98ed1b1d227ff5f1e8990c19a766a2242",
   "originHead": "ad2bbf86e53fa2b977ff320d1c024ebc5fba7383",
   "workingTree": "dirty",
   "requiredGates": {
@@ -16,8 +16,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "0eab2caceb5825b2ef912dcb150fb6f90a4275075437edaadf2d92ad453d77c5",
-      "evidenceTime": "2026-07-23T00:51:54.446Z"
+      "digest": "ead75e9c62aa56f73c9c64fc8c36ab4154ab6c2be4ae8be8e8f7a3ac994d6cd7",
+      "evidenceTime": "2026-07-23T01:40:41.061Z"
     },
     "node_test_scriptsaigovernanceteststestmjs": {
       "command": "node --test scripts/ai-governance/tests/*.test.mjs",
@@ -28,8 +28,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "6f4a5f72cb5f21c04b41da17eb3b10f2aae400f16c151601c0d344becea02499",
-      "evidenceTime": "2026-07-23T00:51:54.511Z"
+      "digest": "96f12ca987819bc8ddf2336c50dea76f90d514ffa15aad00ce2c5a7cb73476e3",
+      "evidenceTime": "2026-07-23T01:40:41.123Z"
     },
     "node_scriptsdocumentverificationverifycareerupform1mjs": {
       "command": "node scripts/document-verification/verify-career-up-form1.mjs",
@@ -41,7 +41,7 @@
       },
       "result": "Success",
       "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
-      "evidenceTime": "2026-07-23T00:52:02.749Z"
+      "evidenceTime": "2026-07-23T01:40:47.476Z"
     },
     "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
       "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
@@ -53,7 +53,7 @@
       },
       "result": "Success",
       "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-      "evidenceTime": "2026-07-23T00:52:03.372Z"
+      "evidenceTime": "2026-07-23T01:40:48.022Z"
     },
     "npm_run_build": {
       "command": "npm run build",
@@ -64,11 +64,11 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "c7ea8b7e40c212add4be7e4bc9bc6eb7da2780f26b78cb46bee60566b2074a29",
-      "evidenceTime": "2026-07-23T00:52:09.733Z"
+      "digest": "ab637cfd7708da4e11e8f1d65eac5c13ea722744d1e86210afbc87d1727bb409",
+      "evidenceTime": "2026-07-23T01:40:54.069Z"
     },
     "changedFilesLint": {
-      "command": "npx eslint scratch/gen_hatarakikata_json.mjs scripts/document-verification/verify-hatarakikata-r8-profile-driven.mjs",
+      "command": "npx eslint scripts/ai-governance/verify-project-state.mjs scripts/document-verification/config/hatarakikata-r8-form1.mapping.mjs scratch/gen_hatarakikata_json.mjs",
       "exitCode": 0,
       "counts": {
         "passed": 0,
@@ -77,7 +77,7 @@
       },
       "result": "Success",
       "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "evidenceTime": "2026-07-23T00:52:11.290Z"
+      "evidenceTime": "2026-07-23T01:40:55.738Z"
     },
     "sourceHash": {
       "file": "001687895.docx",
@@ -96,7 +96,7 @@
       },
       "result": "Failed",
       "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
-      "evidenceTime": "2026-07-23T00:52:15.279Z"
+      "evidenceTime": "2026-07-23T01:40:59.891Z"
     }
   },
   "preExistingIssues": {
@@ -111,13 +111,13 @@
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-23T00:52:03.372Z"
+    "verifiedAt": "2026-07-23T01:40:48.022Z"
   },
   "domSerializationVerifier": {
     "status": "Success",
     "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
     "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-23T00:52:03.372Z"
+    "verifiedAt": "2026-07-23T01:40:48.022Z"
   },
   "packageConsistency": {
     "status": "Success"
@@ -129,5 +129,5 @@
     "status": "Success"
   },
   "overallResult": "Passed",
-  "resultHash": "ea39b0c4310b61eb4b240414adcb51f6a3137eb0c1535350672dad0bce2fd856"
+  "resultHash": "afd1ba1c29476c2b936a882e96df5d6406aff60b4c460fa0443554b149ffe790"
 }
