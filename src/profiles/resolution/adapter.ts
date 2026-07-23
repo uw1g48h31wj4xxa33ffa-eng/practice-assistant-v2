@@ -1,5 +1,5 @@
-import { FormProfile, MappingProfile } from '../types/index.js';
-import { ExecutionContext } from './types.js';
+import { FormProfile, MappingProfile } from '../types/index';
+import { ExecutionContext } from './types';
 
 export interface LegacyMappingFormat {
   template: {

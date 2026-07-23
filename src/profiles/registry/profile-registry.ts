@@ -1,6 +1,6 @@
-import { Profile } from '../types/index.js';
-import { ProfileValidator } from './profile-validator.js';
-import { VersionRegistry } from './version-registry.js';
+import { Profile } from '../types/index';
+import { ProfileValidator } from './profile-validator';
+import { VersionRegistry } from './version-registry';
 
 export class ProfileRegistry {
   private registry = new VersionRegistry();

@@ -1,11 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { WordDocument } from './core/word-document.mjs';
 import { VersionGuard } from './core/version-guard.mjs';
-import { FieldLocator } from './core/field-locator.mjs';
-import { WordFiller } from './core/word-filler.mjs';
-import { OutputVerifier } from './core/output-verifier.mjs';
-import { DomSerializationVerifier } from './core/dom-serialization-verifier.mjs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,7 +9,7 @@ const careerUpFields = JSON.parse(fs.readFileSync(careerUpFieldsPath, 'utf8'));
 
 import { JsonProfileAdapter } from '../../src/profiles/resolution/json-profile-adapter.js';
 import { ProfileRegistry } from '../../src/profiles/registry/profile-registry.js';
-import { CareerUpAdapter } from '../../src/profiles/resolution/adapter.js';
+import { ProfileWordGenerator } from '../../src/lib/document-generation/profile-word-generator.js';
 
 const inputPath = process.env.INPUT_PATH || '/Users/to/Documents/practice-assistant-input/001688046.docx';
 const outputDir = process.env.OUTPUT_DIR || '/Users/to/Documents/practice-assistant-output/';
@@ -55,165 +50,8 @@ async function verify(scenario, outputsMap) {
     outputPath: outputPath
   };
 
-  const startWordGenerationCb = async (context, inputData, outPath) => {
-    const adapter = new CareerUpAdapter();
-    const mapping = adapter.adapt(context, config.formProfileId, config.mappingProfileId);
-
-    const doc = WordDocument.fromFile(inputPath);
-    const originalBuffer = doc.getOriginalBuffer();
-
-    VersionGuard.verifyHash(originalBuffer, mapping.template.expectedSha256);
-    VersionGuard.verifyVersionString(doc, mapping.template.version);
-
-    const documentDom = doc.getDocumentDom();
-    const originalDomClone = documentDom.cloneNode(true);
-
-    const inputsToFill = {};
-
-    if (inputData.owner) {
-      const ownerField = mapping.fields.find(f => f.fieldId === 'business_owner_name');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, ownerField.labelText);
-      WordFiller.fillField(targetCell, inputData.owner, { ...ownerField, status: 'confirmed' });
-      inputsToFill.owner = inputData.owner;
-    }
-
-    if (inputData.address) {
-      const addrField = mapping.fields.find(f => f.fieldId === 'business_address');
-      const targetCell = FieldLocator.locateNextRowContinuationCell(documentDom, addrField.labelText);
-      WordFiller.fillField(targetCell, inputData.address, { ...addrField, status: 'confirmed' });
-      inputsToFill.address = inputData.address;
-    }
-
-    if (inputData.phone) {
-      const phoneField = mapping.fields.find(f => f.fieldId === 'business_phone_number');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, phoneField.labelText);
-      WordFiller.fillField(targetCell, inputData.phone, { ...phoneField, status: 'confirmed' });
-      inputsToFill.phone = inputData.phone;
-    }
-
-    if (inputData.contact) {
-      const contactField = mapping.fields.find(f => f.fieldId === 'business_contact_name');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, contactField.labelText);
-      WordFiller.fillField(targetCell, inputData.contact, { ...contactField, status: 'confirmed' });
-      inputsToFill.contact = inputData.contact;
-    }
-
-    if (inputData.employment_insurance_office_number) {
-      const empField = mapping.fields.find(f => f.fieldId === 'employment_insurance_office_number');
-      const result = FieldLocator.locateDistributedCells(documentDom, empField.labelText, empField.locator.pattern);
-      WordFiller.fillDistributedField(result, inputData.employment_insurance_office_number, { ...empField, status: 'confirmed' });
-      inputsToFill.employment_insurance_office_number = inputData.employment_insurance_office_number;
-    }
-
-    if (inputData.labor_insurance_number) {
-      const laborField = mapping.fields.find(f => f.fieldId === 'labor_insurance_number');
-      const result = FieldLocator.locateMultiRowDistributedCells(documentDom, laborField.labelText, laborField.locator);
-      WordFiller.fillDistributedField(result, inputData.labor_insurance_number, { ...laborField, status: 'confirmed' });
-      inputsToFill.labor_insurance_number = inputData.labor_insurance_number;
-    }
-
-    if (inputData.main_business) {
-      const mainBusField = mapping.fields.find(f => f.fieldId === 'main_business');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, mainBusField.labelText);
-      WordFiller.fillField(targetCell, inputData.main_business, { ...mainBusField, status: 'confirmed' });
-      inputsToFill.main_business = inputData.main_business;
-    }
-
-    if (inputData.employee_count) {
-      const empField = mapping.fields.find(f => f.fieldId === 'employee_count');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, empField.labelText);
-      WordFiller.fillNumericFieldPreservingAffix(targetCell, inputData.employee_count, { ...empField, status: 'confirmed' });
-      inputsToFill.employee_count = inputData.employee_count;
-    }
-
-    if (inputData.agent_name) {
-      const agentField = mapping.fields.find(f => f.fieldId === 'agent_name');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, agentField.labelText);
-      WordFiller.fillField(targetCell, inputData.agent_name, { ...agentField, status: 'confirmed' });
-      inputsToFill.agent_name = inputData.agent_name;
-    }
-
-    if (inputData.agent_address) {
-      const agentAddrField = mapping.fields.find(f => f.fieldId === 'agent_address');
-      const targetCell = FieldLocator.locateNextRowContinuationCell(documentDom, agentAddrField.labelText);
-      WordFiller.fillField(targetCell, inputData.agent_address, { ...agentAddrField, status: 'confirmed' });
-      inputsToFill.agent_address = inputData.agent_address;
-    }
-
-    if (inputData.agent_phone) {
-      const agentPhoneField = mapping.fields.find(f => f.fieldId === 'agent_phone_number');
-      const targetCell = FieldLocator.locateAdjacentCell(documentDom, agentPhoneField.labelText);
-      WordFiller.fillField(targetCell, inputData.agent_phone, { ...agentPhoneField, status: 'confirmed' });
-      inputsToFill.agent_phone = inputData.agent_phone;
-    }
-
-    if (inputData.manager_name) {
-      const f = mapping.fields.find(f => f.fieldId === 'manager_name');
-      const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
-      const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
-      const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
-      WordFiller.fillField(targetCell, inputData.manager_name, { ...f, status: 'confirmed' });
-      inputsToFill.manager_name = inputData.manager_name;
-    }
-
-    if (inputData.manager_assigned_date) {
-      const f = mapping.fields.find(f => f.fieldId === 'manager_assigned_date');
-      const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
-      const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
-      const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
-      WordFiller.fillField(targetCell, inputData.manager_assigned_date, { ...f, status: 'confirmed' });
-      inputsToFill.manager_assigned_date = inputData.manager_assigned_date;
-    }
-
-    if (inputData.plan_start_date) {
-      const f = mapping.fields.find(f => f.fieldId === 'plan_start_date');
-      const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
-      const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
-      const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
-      WordFiller.fillField(targetCell, inputData.plan_start_date, { ...f, status: 'confirmed' });
-      inputsToFill.plan_start_date = inputData.plan_start_date;
-    }
-
-    if (inputData.plan_end_date) {
-      const f = mapping.fields.find(f => f.fieldId === 'plan_end_date');
-      const origCell = FieldLocator.locateSameCellByExactText(originalDomClone, f.labelText, f.locator);
-      const origIndex = Array.from(originalDomClone.getElementsByTagName('w:tc')).indexOf(origCell);
-      const targetCell = documentDom.getElementsByTagName('w:tc')[origIndex];
-      WordFiller.fillField(targetCell, inputData.plan_end_date, { ...f, status: 'confirmed' });
-      inputsToFill.plan_end_date = inputData.plan_end_date;
-    }
-
-    const sdtFields = mapping.fields.filter(f => f.inputMode === 'sdt-checkbox');
-    for (const f of sdtFields) {
-      if (inputData[f.fieldId]) {
-        const { SdtCheckboxLocator } = await import('./core/sdt-checkbox-locator.mjs');
-        const { SdtCheckboxFiller } = await import('./core/sdt-checkbox-filler.mjs');
-        const groupInfo = SdtCheckboxLocator.locateGroup(documentDom, f.locator, f.selection);
-        SdtCheckboxFiller.fillGroup(groupInfo, inputData[f.fieldId], f.selection, 'confirmed');
-        inputsToFill[f.fieldId] = inputData[f.fieldId];
-      }
-    }
-
-    DomSerializationVerifier.verify(originalDomClone, documentDom);
-    console.log('[Profile CareerUp] Dom serialization passed');
-
-    if (fs.existsSync(outPath)) {
-      fs.unlinkSync(outPath);
-    }
-    doc.save(outPath);
-    console.log(`Saved output to ${outPath}`);
-    return { inputsToFill };
-  };
-
-  const runVerifierCb = async (context, outPath, inputsToFill) => {
-    const adapter = new CareerUpAdapter();
-    const mapping = adapter.adapt(context, config.formProfileId, config.mappingProfileId);
-
-    const originalBuffer = fs.readFileSync(inputPath);
-    await OutputVerifier.verify(originalBuffer, outPath, mapping.template.expectedSha256, inputsToFill);
-    console.log(`Output verification passed for ${scenario}`);
-    return { passed: true };
-  };
+  const startWordGenerationCb = ProfileWordGenerator.createStartWordGenerationCallback(inputPath);
+  const runVerifierCb = ProfileWordGenerator.createRunVerifierCallback(inputPath);
 
   try {
     const result = await orchestrateProfileGeneration(registry, config, startWordGenerationCb, runVerifierCb);
@@ -304,7 +142,7 @@ async function run() {
 
     console.log('\nAll scenarios completed successfully.');
   } catch (err) {
-    console.error('\nVerification failed:', err.message);
+    console.error('\nVerification failed:', err.message, err.cause);
     process.exit(1);
   }
 }

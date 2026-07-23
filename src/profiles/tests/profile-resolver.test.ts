@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { ProfileResolver } from '../resolution/profile-resolver.js';
-import { DefaultExecutionContextBuilder } from '../resolution/execution-context-builder.js';
-import { CareerUpAdapter } from '../resolution/adapter.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { ProfileResolver } from '../resolution/profile-resolver';
+import { DefaultExecutionContextBuilder } from '../resolution/execution-context-builder';
+import { CareerUpAdapter } from '../resolution/adapter';
 import { careerUpR8Form1Mapping } from '../../../scripts/document-verification/config/career-up-r8-form1.mapping.mjs';
 
 test('ProfileResolver and ExecutionContextBuilder', async (t) => {

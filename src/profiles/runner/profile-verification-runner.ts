@@ -1,7 +1,7 @@
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { ExecutionContext } from '../resolution/types.js';
-import { FormProfile, MappingProfile } from '../types/index.js';
-import { ProfileDrivenContextFactory } from '../resolution/feature-activation.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { ExecutionContext } from '../resolution/types';
+import { FormProfile, MappingProfile } from '../types/index';
+import { ProfileDrivenContextFactory } from '../resolution/feature-activation';
 
 export type ProfileVerificationErrorCode =
   | "FORM_PROFILE_NOT_FOUND"

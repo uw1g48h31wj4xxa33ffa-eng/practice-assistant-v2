@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { ProfileVerificationRunner, ProfileVerificationError } from '../runner/profile-verification-runner.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { ProfileVerificationRunner, ProfileVerificationError } from '../runner/profile-verification-runner';
 
 function setupBaseRegistry() {
   const registry = new ProfileRegistry();

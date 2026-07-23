@@ -1,6 +1,6 @@
-import Ajv2020 from 'ajv/dist/2020.js';
+import Ajv2020 from 'ajv/dist/2020';
 import addFormats from 'ajv-formats';
-import { Profile } from '../types/index.js';
+import { Profile } from '../types/index';
 
 import baseSchema from '../schemas/base-profile.schema.json' assert { type: 'json' };
 import lawSchema from '../schemas/law-profile.schema.json' assert { type: 'json' };

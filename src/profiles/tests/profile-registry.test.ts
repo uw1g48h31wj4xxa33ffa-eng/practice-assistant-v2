@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { ProfileValidator } from '../registry/profile-validator.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { ProfileValidator } from '../registry/profile-validator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -1,4 +1,4 @@
-import { Profile } from '../types/index.js';
+import { Profile } from '../types/index';
 
 export class VersionRegistry {
   private versions: Map<string, Profile> = new Map();

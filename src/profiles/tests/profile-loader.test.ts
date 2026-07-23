@@ -3,8 +3,8 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { ProfileLoader } from '../registry/profile-loader.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { ProfileLoader } from '../registry/profile-loader';
 
 test('ProfileLoader', async (t) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'profile-loader-test-'));

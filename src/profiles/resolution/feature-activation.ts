@@ -1,8 +1,8 @@
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { ProfileResolver } from './profile-resolver.js';
-import { DefaultExecutionContextBuilder } from './execution-context-builder.js';
-import { ExecutionContext, ResolveRequest, ResolveResult } from './types.js';
-import { Profile } from '../types/index.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { ProfileResolver } from './profile-resolver';
+import { DefaultExecutionContextBuilder } from './execution-context-builder';
+import { ExecutionContext, ResolveRequest, ResolveResult } from './types';
+import { Profile } from '../types/index';
 
 export class ProfileDrivenContextFactory {
   constructor(private registry: ProfileRegistry) {}

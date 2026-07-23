@@ -1,4 +1,4 @@
-import { FormProfile, MappingProfile } from '../types/index.js';
+import { FormProfile, MappingProfile } from '../types/index';
 
 export interface JsonProfileSource {
   template: {

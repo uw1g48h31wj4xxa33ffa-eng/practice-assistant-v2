@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { CareerUpAdapter } from '../resolution/adapter.js';
-import { ProfileDrivenContextFactory } from '../resolution/feature-activation.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { CareerUpAdapter } from '../resolution/adapter';
+import { ProfileDrivenContextFactory } from '../resolution/feature-activation';
 import { careerUpR8Form1Mapping as legacyMapping } from '../../../scripts/document-verification/config/career-up-r8-form1.mapping.mjs';
 import { orchestrateProfileGeneration } from '../../../scripts/document-verification/verify-career-up-profile-driven.mjs';
 import fs from 'node:fs';
@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const careerUpFieldsPath = path.resolve(__dirname, '../../../scripts/document-verification/config/career-up-r8-form1-fields.json');
 const careerUpFields = JSON.parse(fs.readFileSync(careerUpFieldsPath, 'utf8'));
 
-import { JsonProfileAdapter, JsonProfileSource } from '../resolution/json-profile-adapter.js';
+import { JsonProfileAdapter, JsonProfileSource } from '../resolution/json-profile-adapter';
 
 function setupRegistry() {
   const registry = new ProfileRegistry();

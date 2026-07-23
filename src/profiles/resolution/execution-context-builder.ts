@@ -1,5 +1,5 @@
-import { Profile } from '../types/index.js';
-import { ExecutionContext, ExecutionContextBuilder, ResolveResult } from './types.js';
+import { Profile } from '../types/index';
+import { ExecutionContext, ExecutionContextBuilder, ResolveResult } from './types';
 
 function deepFreeze<T>(obj: T): T {
   if (obj === null || typeof obj !== 'object') {

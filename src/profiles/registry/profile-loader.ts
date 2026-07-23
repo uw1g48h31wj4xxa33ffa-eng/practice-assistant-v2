@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ProfileRegistry } from './profile-registry.js';
-import { Profile } from '../types/index.js';
+import { ProfileRegistry } from './profile-registry';
+import { Profile } from '../types/index';
 
 export interface ProfileLoadError {
   filePath: string;

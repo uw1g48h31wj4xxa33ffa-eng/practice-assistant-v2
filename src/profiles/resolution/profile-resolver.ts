@@ -1,11 +1,11 @@
-import { ProfileRegistry } from '../registry/profile-registry.js';
-import { Profile } from '../types/index.js';
+import { ProfileRegistry } from '../registry/profile-registry';
+import { Profile } from '../types/index';
 import {
   ResolveRequest,
   ResolveResult,
   ResolveEvidence,
   ProfileType
-} from './types.js';
+} from './types';
 
 
 export class ProfileResolver {
