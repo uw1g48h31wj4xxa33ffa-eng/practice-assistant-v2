@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-07-23T02:00:03.854Z",
+  "generatedAt": "2026-07-23T02:16:48.688Z",
   "repository": "uw1g48h31wj4xxa33ffa-eng/practice-assistant-v2",
   "branch": "main",
-  "head": "ecd2a58ff2ab04528b67936660e297da83c4ff8f",
+  "head": "85fbe83e9465687be4408b1c63189dd92b138337",
   "originHead": "ad2bbf86e53fa2b977ff320d1c024ebc5fba7383",
   "workingTree": "dirty",
   "requiredGates": {
@@ -16,8 +16,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "0f73ad4f5e0dbc04678ccc4a6a9f0f9bb664be4dbd7f2bd3a26ff16c4485e68f",
-      "evidenceTime": "2026-07-23T02:00:08.114Z"
+      "digest": "930780b732a04a4a1497f57807174e33b6f47ce8489671bfdb05d6725862aee6",
+      "evidenceTime": "2026-07-23T02:16:52.766Z"
     },
     "node_test_scriptsaigovernanceteststestmjs": {
       "command": "node --test scripts/ai-governance/tests/*.test.mjs",
@@ -28,8 +28,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "0123cf6d55bb185b4714529aa015f81e73a9d3b5899e7ccbcda1704e5b7cd863",
-      "evidenceTime": "2026-07-23T02:00:08.183Z"
+      "digest": "7eddd63f5028dfea87a98728669bac90fe602c91bfc01476cd84f1b09fade7e4",
+      "evidenceTime": "2026-07-23T02:16:52.827Z"
     },
     "node_scriptsdocumentverificationverifycareerupform1mjs": {
       "command": "node scripts/document-verification/verify-career-up-form1.mjs",
@@ -40,8 +40,8 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "c9e0b2c1907b23475b03f9a9dd899b64982597b7b34aa1715dbca09e6b6fe89b",
-      "evidenceTime": "2026-07-23T02:00:14.334Z"
+      "digest": "c8dcb4d0fa92e5e8503676e0631936d9837ebe57e6675bc53dd84b837d0663c1",
+      "evidenceTime": "2026-07-23T02:16:58.773Z"
     },
     "node_scriptsdocumentverificationverifyhatarakikatar8form1mjs": {
       "command": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
@@ -52,8 +52,20 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-      "evidenceTime": "2026-07-23T02:00:14.912Z"
+      "digest": "83addba766eac61b1d3f2da61acb2d5062f928c5e078f3314a1401641f3645fa",
+      "evidenceTime": "2026-07-23T02:16:59.430Z"
+    },
+    "npx_tsx_scriptsdocumentverificationverifyhatarakikatar8profiledrivenmjs": {
+      "command": "npx tsx scripts/document-verification/verify-hatarakikata-r8-profile-driven.mjs",
+      "exitCode": 0,
+      "counts": {
+        "passed": 0,
+        "failed": 0,
+        "warnings": 0
+      },
+      "result": "Success",
+      "digest": "240f6a3cccac3cd07c6c1227f75471c306b3f042f2f2213684b3cca52a805473",
+      "evidenceTime": "2026-07-23T02:17:00.563Z"
     },
     "npm_run_build": {
       "command": "npm run build",
@@ -64,11 +76,11 @@
         "warnings": 0
       },
       "result": "Success",
-      "digest": "c382e3d6ca58436ac3b2edfc8b2f2394d0e16ca1ac497f19d9d44c2d87fc7c7a",
-      "evidenceTime": "2026-07-23T02:00:24.013Z"
+      "digest": "5806e00c06fd6d415c3ff8c1fe0b44d3ec1cd3615e39a27fbf86210fd3b9fdc8",
+      "evidenceTime": "2026-07-23T02:17:07.006Z"
     },
     "changedFilesLint": {
-      "command": "npx eslint scripts/ai-governance/verify-project-state.mjs scratch/gen_hatarakikata_json.mjs",
+      "command": "npx eslint scratch/gen_hatarakikata_json.mjs",
       "exitCode": 0,
       "counts": {
         "passed": 0,
@@ -77,7 +89,7 @@
       },
       "result": "Success",
       "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "evidenceTime": "2026-07-23T02:00:25.808Z"
+      "evidenceTime": "2026-07-23T02:17:08.615Z"
     },
     "sourceHash": {
       "file": "001687895.docx",
@@ -96,7 +108,7 @@
       },
       "result": "Failed",
       "digest": "7c513da53146406d0091ff11550c60db7089075f071cd143336e9074c5cf6345",
-      "evidenceTime": "2026-07-23T02:00:30.098Z"
+      "evidenceTime": "2026-07-23T02:17:12.641Z"
     }
   },
   "preExistingIssues": {
@@ -107,20 +119,50 @@
       "blocking": false
     }
   },
-  "outputVerifier": {
-    "status": "Success",
-    "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
-    "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-23T02:00:14.912Z"
-  },
-  "domSerializationVerifier": {
-    "status": "Success",
-    "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
-    "evidenceDigest": "16eed4b839411f6344be015a9058b597e1e2c120ccc36b347882576fb195a93e",
-    "verifiedAt": "2026-07-23T02:00:14.912Z"
-  },
+  "outputVerifiers": [
+    {
+      "status": "Success",
+      "sourceCommand": "node scripts/document-verification/verify-career-up-form1.mjs",
+      "evidenceDigest": "c8dcb4d0fa92e5e8503676e0631936d9837ebe57e6675bc53dd84b837d0663c1",
+      "verifiedAt": "2026-07-23T02:16:58.773Z"
+    },
+    {
+      "status": "Success",
+      "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
+      "evidenceDigest": "83addba766eac61b1d3f2da61acb2d5062f928c5e078f3314a1401641f3645fa",
+      "verifiedAt": "2026-07-23T02:16:59.430Z"
+    },
+    {
+      "status": "Success",
+      "sourceCommand": "npx tsx scripts/document-verification/verify-hatarakikata-r8-profile-driven.mjs",
+      "evidenceDigest": "240f6a3cccac3cd07c6c1227f75471c306b3f042f2f2213684b3cca52a805473",
+      "verifiedAt": "2026-07-23T02:17:00.563Z"
+    }
+  ],
+  "domSerializationVerifiers": [
+    {
+      "status": "Success",
+      "sourceCommand": "node scripts/document-verification/verify-career-up-form1.mjs",
+      "evidenceDigest": "c8dcb4d0fa92e5e8503676e0631936d9837ebe57e6675bc53dd84b837d0663c1",
+      "verifiedAt": "2026-07-23T02:16:58.773Z"
+    },
+    {
+      "status": "Success",
+      "sourceCommand": "node scripts/document-verification/verify-hatarakikata-r8-form1.mjs",
+      "evidenceDigest": "83addba766eac61b1d3f2da61acb2d5062f928c5e078f3314a1401641f3645fa",
+      "verifiedAt": "2026-07-23T02:16:59.430Z"
+    },
+    {
+      "status": "Success",
+      "sourceCommand": "npx tsx scripts/document-verification/verify-hatarakikata-r8-profile-driven.mjs",
+      "evidenceDigest": "240f6a3cccac3cd07c6c1227f75471c306b3f042f2f2213684b3cca52a805473",
+      "verifiedAt": "2026-07-23T02:17:00.563Z"
+    }
+  ],
   "packageConsistency": {
-    "status": "Success"
+    "status": "NotRun",
+    "blocking": false,
+    "reason": "Validated by pre-commit only; not executed in this verification run"
   },
   "auditLogValidation": {
     "status": "Success"
@@ -129,5 +171,5 @@
     "status": "Success"
   },
   "overallResult": "Passed",
-  "resultHash": "d8d43990a4e7d1266d6172373a23bb12ee04d2ddc1a8e8caa6786d9eabc5ca24"
+  "resultHash": "b377cdb0af81e24d35e35de650333913ceb0f1a0c4ba18f3fca965f1b7c6f838"
 }
