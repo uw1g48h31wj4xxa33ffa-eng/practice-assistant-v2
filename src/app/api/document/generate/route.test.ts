@@ -17,10 +17,13 @@ test('UI Generate API - 正常系', async () => {
   });
   const res = await POST(req);
   const data = await res.json();
-  assert.ok(data.success === true || data.success === false);
-  if (data.success) {
-    assert.ok(data.downloadId);
-  }
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(data.success, true);
+  assert.ok(data.downloadId);
+  assert.ok(data.outputFileName);
+  assert.strictEqual(data.verification.outputVerifier, 'Success');
+  assert.strictEqual(data.verification.domSerializationVerifier, 'Success');
+  assert.strictEqual(data.humanReview, true);
 });
 
 test('UI Generate API - 空confirmedFields', async () => {
