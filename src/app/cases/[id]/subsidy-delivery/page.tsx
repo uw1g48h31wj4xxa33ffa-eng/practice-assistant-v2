@@ -7,6 +7,8 @@ import { useCases } from '@/hooks/useCases';
 import { workflowTemplates } from '@/config/workflowTemplates';
 import { SubsidyDeliveryItem } from '@/types';
 import { buildMockDeliveryItems } from '@/lib/ai/mockDeliveryGenerator';
+import { GenerationResultDTO } from '@/lib/document-generation/dto';
+import { HATARAKIKATA_MAPPINGS } from '@/lib/document-generation/field-mappings/hatarakikata-r8-form1';
 
 export default function SubsidyDeliveryPage() {
   const params = useParams();
@@ -18,9 +20,10 @@ export default function SubsidyDeliveryPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingWord, setIsGeneratingWord] = useState(false);
   const [downloadId, setDownloadId] = useState<string | null>(null);
-  const [generationResult, setGenerationResult] = useState<any>(null);
+  const [generationResult, setGenerationResult] = useState<GenerationResultDTO | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true);
   }, []);
 
@@ -38,6 +41,7 @@ export default function SubsidyDeliveryPage() {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const template = currentCase.templateId 
     ? workflowTemplates.find(t => t.id === currentCase.templateId) 
     : undefined;
@@ -85,24 +89,49 @@ export default function SubsidyDeliveryPage() {
     setDownloadId(null);
     setGenerationResult(null);
     try {
+      // Build WordGenerationRequestDTO
+      const confirmedFields = (currentCase.extractedItems || [])
+        .filter(item => item.status === 'verified' || item.status === 'modified')
+        .map(item => {
+          const mapping = HATARAKIKATA_MAPPINGS.find(m => m.extractedCategory === item.category);
+          if (!mapping) return null;
+          return {
+            fieldId: mapping.documentFieldId,
+            value: item.content,
+            sourceExtractedInfoId: item.id,
+            verificationStatus: item.status as "verified" | "modified"
+          };
+        })
+        .filter((f): f is NonNullable<typeof f> => f !== null);
+
+      const requestDto = {
+        caseId: currentCase.id,
+        templateId: 'hatarakikata-r8-form1',
+        effectiveDate: new Date().toISOString(),
+        confirmedFields
+      };
+
       const res = await fetch('/api/document/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(currentCase),
+        body: JSON.stringify(requestDto),
       });
 
       const data = await res.json();
       setGenerationResult(data);
 
       if (!res.ok || !data.success) {
-        throw new Error(data.errors?.join(', ') || 'Word文書の生成に失敗しました');
+        // Find errors
+        const errorMsg = data.errors?.map((e: {message?: string} | string) => typeof e === 'string' ? e : e.message).join(', ') || 'Word文書の生成に失敗しました';
+        throw new Error(errorMsg);
       }
 
       setDownloadId(data.downloadId);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      alert(err.message);
     } finally {
       setIsGeneratingWord(false);
     }
@@ -111,20 +140,21 @@ export default function SubsidyDeliveryPage() {
   const handleDownloadWord = async () => {
     if (!downloadId) return;
     try {
-      const res = await fetch(`/api/document/generate?downloadId=${downloadId}`);
+      const res = await fetch(`/api/document/download/${downloadId}`);
       if (!res.ok) throw new Error('ダウンロードに失敗しました');
       
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = generationResult?.outputFileName || `practice_assistant_${currentCase.id}_output.docx`;
+      a.download = (generationResult as {outputFileName?: string})?.outputFileName || `practice_assistant_${currentCase.id}_output.docx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      alert(err.message);
     }
   };
 
@@ -343,17 +373,17 @@ export default function SubsidyDeliveryPage() {
                   <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700">
                     <p className="font-bold mb-1">生成結果:</p>
                     <p>成功: {generationResult.success ? 'はい' : 'いいえ'}</p>
-                    {generationResult.manualCheck?.length > 0 && (
-                      <p className="text-yellow-600">Manual Check: {generationResult.manualCheck.length}件</p>
+                    {generationResult.manualCheck && (
+                      <p className="text-yellow-600">Manual Check Required</p>
                     )}
-                    {generationResult.humanReview?.length > 0 && (
-                      <p className="text-blue-600">Human Review: {generationResult.humanReview.length}件</p>
+                    {generationResult.humanReview && (
+                      <p className="text-blue-600">Human Review Required</p>
                     )}
-                    {generationResult.warnings?.length > 0 && (
-                      <p className="text-orange-600">Warnings: {generationResult.warnings.length}件</p>
+                    {(generationResult.warnings?.length ?? 0) > 0 && (
+                      <p className="text-orange-600">Warnings: {generationResult.warnings?.length}件</p>
                     )}
-                    {generationResult.errors?.length > 0 && (
-                      <p className="text-red-600">Errors: {generationResult.errors.join(', ')}</p>
+                    {(generationResult.errors?.length ?? 0) > 0 && (
+                      <p className="text-red-600">Errors: {generationResult.errors?.map((e: {message?: string} | string) => typeof e === 'string' ? e : e.message).join(', ')}</p>
                     )}
                   </div>
                 )}

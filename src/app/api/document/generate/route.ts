@@ -1,54 +1,61 @@
 import { NextResponse } from 'next/server';
 import { WordGenerationApplicationService } from '@/lib/document-generation/application-service';
+import { WordGenerationRequestDTO } from '@/lib/document-generation/dto';
 
 export async function POST(request: Request) {
   try {
-    const caseData = await request.json();
-    
-    // Application ServiceでWord文書を生成し、DTOを受け取る
-    // デモ用として templateId は固定
-    const result = await WordGenerationApplicationService.generateDocument(caseData, 'hatarakikata-r8-form1');
-    
-    // 生成した文書の結果DTOをクライアントに返す
-    return NextResponse.json(result, { status: result.success ? 200 : 400 });
-  } catch (error: any) {
+    const data = await request.json();
+
+    // Simple distinction between new DTO and legacy caseData
+    if (data.confirmedFields && Array.isArray(data.confirmedFields)) {
+      // New Phase 4 Path
+      const reqDto = data as WordGenerationRequestDTO;
+
+      // Basic validation
+      if (!reqDto.caseId) throw new Error('INVALID_REQUEST: caseId empty');
+      if (!reqDto.templateId) throw new Error('INVALID_REQUEST: templateId empty');
+      if (!reqDto.effectiveDate) throw new Error('INVALID_REQUEST: effectiveDate empty');
+
+      // We only support hatarakikata-r8-form1 currently for the new DTO
+      if (reqDto.templateId !== 'hatarakikata-r8-form1') {
+        return NextResponse.json(
+          { success: false, errors: [{ code: 'INVALID_REQUEST', message: 'UNKNOWN_TEMPLATE', retryable: false }] },
+          { status: 400 }
+        );
+      }
+
+      for (const f of reqDto.confirmedFields) {
+        if (!f.fieldId) throw new Error('INVALID_REQUEST: fieldId empty');
+        if (!f.sourceExtractedInfoId) throw new Error('INVALID_REQUEST: sourceExtractedInfoId empty');
+        if (f.verificationStatus !== 'verified' && f.verificationStatus !== 'modified') {
+          throw new Error('INVALID_VERIFICATION_STATUS');
+        }
+      }
+
+      // Check for duplicates
+      const ids = reqDto.confirmedFields.map(f => f.fieldId);
+      if (new Set(ids).size !== ids.length) {
+        return NextResponse.json(
+          { success: false, errors: [{ code: 'INVALID_REQUEST', message: 'DUPLICATE_FIELD', retryable: false }] },
+          { status: 400 }
+        );
+      }
+
+      const result = await WordGenerationApplicationService.generateFromRequest(reqDto);
+      return NextResponse.json(result, { status: result.success ? 200 : 400 });
+
+    } else {
+      // Legacy Path (Fallback)
+      const result = await WordGenerationApplicationService.generateDocument(data, 'hatarakikata-r8-form1');
+      return NextResponse.json(result, { status: result.success ? 200 : 400 });
+    }
+  } catch (error: unknown) {
     console.error('Document generation failed:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        errors: ['Document generation failed', error.message] 
+      {
+        success: false,
+        errors: [{ code: 'INTERNAL_ERROR', message: error instanceof Error ? error.message : String(error), retryable: false }]
       },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const downloadId = searchParams.get('downloadId');
-
-    if (!downloadId) {
-      return NextResponse.json({ error: 'Missing downloadId' }, { status: 400 });
-    }
-
-    const fileInfo = WordGenerationApplicationService.getGeneratedBuffer(downloadId);
-    
-    if (!fileInfo) {
-      return NextResponse.json({ error: 'File not found or expired' }, { status: 404 });
-    }
-
-    return new NextResponse(fileInfo.buffer as any, {
-      status: 200,
-      headers: {
-        'Content-Type': fileInfo.contentType,
-        'Content-Disposition': `attachment; filename="${fileInfo.fileName}"`,
-      },
-    });
-  } catch (error: any) {
-    console.error('File download failed:', error);
-    return NextResponse.json(
-      { error: 'File download failed' },
       { status: 500 }
     );
   }
